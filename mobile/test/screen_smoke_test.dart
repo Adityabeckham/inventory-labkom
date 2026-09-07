@@ -417,7 +417,7 @@ void main() {
       expect(find.text('PC Rakitan Core i5'), findsOne);
       expect(find.text(namaPanjang), findsOne);
       // jumlah 20, stok 18 → dua unit sedang di tangan peminjam.
-      expect(find.text('Stok 18 dari 20 · 2 dipinjam'), findsOne);
+      expect(find.text('Stok 18 dari 20 · 2 dipinjam atau diajukan'), findsOne);
       expect(find.text('Semua'), findsOne);
       expect(find.text('Komputer (12)'), findsOne);
       // stok 0 pada barang kedua.
@@ -767,6 +767,30 @@ void main() {
       expect(find.text('Setujui pengajuan?'), findsOne);
     });
 
+    testWidgets('Setujui sampai tuntas: PATCH, SnackBar, lalu sheet tertutup',
+        (tester) async {
+      await pasang(tester, const VerifikasiScreen(),
+          user: kaprog, respons: verifikasiRespons);
+
+      await tester.tap(find.text('Periksa & putuskan'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Setujui'));
+      await tester.pumpAndSettle();
+
+      // Konfirmasi ditekan — dari sini alurnya berjalan sampai habis:
+      // PATCH ke server, invalidate provider, SnackBar, lalu sheet ditutup.
+      await tester.tap(find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.widgetWithText(FilledButton, 'Setujui'),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.textContaining('disetujui'), findsOne);
+      // Sheet rincian sudah tidak ada lagi.
+      expect(find.text('Barang dipinjam'), findsNothing);
+    });
+
     testWidgets('Tolak mewajibkan alasan diisi', (tester) async {
       await pasang(tester, const VerifikasiScreen(),
           user: kaprog, respons: verifikasiRespons);
@@ -884,19 +908,19 @@ void main() {
   // 1,5 atau lebih. Inilah yang dulu memecahkan grid Dashboard — bukan lebar
   // layar — dan jadi alasan tinggi kartunya dipatok, bukan ikut rasio.
 
-  group('Skala teks 1,3', () {
-    testWidgets('Dashboard', (tester) async {
+  group('Skala teks sistem', () {
+    testWidgets('Dashboard pada 1,3', (tester) async {
       await pasang(tester, const DashboardScreen(), skalaTeks: 1.3);
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('Kelola User', (tester) async {
+    testWidgets('Kelola User pada 1,3', (tester) async {
       await pasang(tester, const UsersScreen(),
           respons: {'/api/users': usersJson}, skalaTeks: 1.3);
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('Aset Lab', (tester) async {
+    testWidgets('Aset Lab pada 1,3', (tester) async {
       await pasang(tester, const AsetScreen(), skalaTeks: 1.3, respons: {
         '/api/barang': barangJson,
         '/api/kategori': kategoriJson,
@@ -905,33 +929,82 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('Kategori', (tester) async {
+    testWidgets('Kategori pada 1,3', (tester) async {
       await pasang(tester, const KategoriScreen(),
           respons: {'/api/kategori': kategoriJson}, skalaTeks: 1.3);
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('Data Peminjam', (tester) async {
+    testWidgets('Data Peminjam pada 1,3', (tester) async {
       await pasang(tester, const PeminjamScreen(),
           respons: {'/api/peminjam': peminjamJson}, skalaTeks: 1.3);
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('Login', (tester) async {
+    testWidgets('Login pada 1,3', (tester) async {
       await pasang(tester, const LoginScreen(), skalaTeks: 1.3);
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('Transaksi', (tester) async {
+    testWidgets('Transaksi pada 1,3', (tester) async {
       await pasang(tester, const TransaksiScreen(),
           respons: transaksiRespons, skalaTeks: 1.3);
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('Verifikasi', (tester) async {
+    testWidgets('Verifikasi pada 1,3', (tester) async {
       await pasang(tester, const VerifikasiScreen(),
           user: kaprog, respons: transaksiRespons, skalaTeks: 1.3);
       expect(tester.takeException(), isNull);
+    });
+
+    // Sheet rincian tingginya diturunkan dari tinggi layar, sementara baris
+    // di atas daftar tumbuh mengikuti teks — bentuk yang sama dengan grid
+    // Dashboard yang tadi pecah. Dua varian diuji karena bagian tertingginya
+    // saling meniadakan: yang menunggu punya tombol keputusan, yang
+    // dibatalkan punya kotak alasan.
+    testWidgets('rincian pengajuan + tombol keputusan, 1,5 di layar pendek',
+        (tester) async {
+      await pasang(tester, const VerifikasiScreen(),
+          user: kaprog,
+          ukuran: _layarPendek,
+          respons: transaksiRespons,
+          skalaTeks: 1.5);
+
+      await tester.tap(find.text('Periksa & putuskan'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Setujui'), findsOne);
+    });
+
+    testWidgets('rincian transaksi ditolak + kotak alasan, 1,5 di layar pendek',
+        (tester) async {
+      // Daftarnya sengaja hanya berisi transaksi yang ditolak: di layar
+      // pendek berskala 1,3, kartu ketiga tidak pernah dibangun ListView
+      // yang malas, dan yang diuji di sini adalah sheet-nya, bukan scroll.
+      final ditolak = peminjamanJson(
+        id: 3,
+        kode: 'PMJ-2026-003',
+        status: 'dibatalkan',
+        alasan: 'Barang sedang dipakai praktik kelas XII sore ini.',
+      );
+      await pasang(
+        tester,
+        const TransaksiScreen(),
+        ukuran: _layarPendek,
+        skalaTeks: 1.5,
+        respons: {
+          '/api/peminjaman': [ditolak],
+          '/api/peminjaman/3': {...ditolak, 'items': itemsJson},
+        },
+      );
+
+      await tester.tap(find.text('PMJ-2026-003'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Alasan ditolak'), findsOne);
     });
   });
 }

@@ -33,8 +33,14 @@ class Barang {
   final String? kondisi;
   final String? serialNumber;
 
-  /// Unit yang sedang berada di tangan peminjam.
-  int get sedangDipinjam => jumlah - stok;
+  /// Unit yang tidak ada di rak: sudah diambil peminjam ATAU masih tertahan
+  /// pengajuan yang menunggu verifikasi.
+  ///
+  /// Keduanya tidak bisa dipisahkan dari sini, karena stok berkurang sejak
+  /// peminjaman diajukan (FR-05), bukan sejak disetujui. Karena itu namanya
+  /// bukan "sedangDipinjam" — sebagian di antaranya mungkin masih di rak
+  /// menunggu keputusan Kepala Program.
+  int get tidakDiRak => jumlah - stok;
 
   bool get tersedia => stok > 0;
 

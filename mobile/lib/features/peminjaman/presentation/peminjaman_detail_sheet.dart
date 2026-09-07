@@ -39,10 +39,8 @@ class PeminjamanDetailSheet extends ConsumerWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
       ),
-      builder: (_) => PeminjamanDetailSheet(
-        id: id,
-        bolehVerifikasi: bolehVerifikasi,
-      ),
+      builder: (_) =>
+          PeminjamanDetailSheet(id: id, bolehVerifikasi: bolehVerifikasi),
     );
   }
 
@@ -50,12 +48,17 @@ class PeminjamanDetailSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final detail = ref.watch(peminjamanDetailProvider(id));
 
-    return Padding
-      (
+    return Padding(
       padding: const EdgeInsets.all(AppSpacing.screenMargin),
-      child: SizedBox(
-        // Sheet tidak boleh menutupi seluruh layar; sisakan konteks di atasnya.
-        height: MediaQuery.sizeOf(context).height * 0.75,
+      child: ConstrainedBox(
+        // Batas ATAS, bukan tinggi tetap. Tinggi tetap yang diturunkan dari
+        // tinggi layar tidak tahu-menahu soal tinggi teks di dalamnya: begitu
+        // pengguna menaikkan ukuran font sistem, baris keterangan tumbuh dan
+        // isinya meluber. Dengan maxHeight, sheet pendek tetap pendek dan
+        // sheet panjang berhenti di ambang ini lalu isinya digulir.
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+        ),
         child: AsyncView<Peminjaman>(
           value: detail,
           onRetry: () => ref.invalidate(peminjamanDetailProvider(id)),
@@ -77,95 +80,117 @@ class _Isi extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
     final p = peminjaman;
 
+    // Kode dan tombol keputusan menempel di tempatnya; yang di antaranya
+    // digulir. Flexible membuat bagian tengah menyusut saat teks membesar,
+    // bukan mendorong isinya keluar.
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Row(
           children: [
-            Expanded(
-              child: Text(p.kode, style: text.headlineMedium),
-            ),
+            Expanded(child: Text(p.kode, style: text.headlineMedium)),
             const SizedBox(width: AppSpacing.xs),
             StatusPill(label: p.status.label, style: StatusStyle.of(p.status)),
           ],
         ),
         const SizedBox(height: AppSpacing.md),
 
-        _baris(text, 'Peminjam', p.namaPeminjam,
-            catatan: p.identitasPeminjam.isEmpty ? null : p.identitasPeminjam),
-        _baris(text, 'Dicatat oleh', p.dicatatOleh),
-        _baris(text, 'Tanggal pinjam', p.tanggalPinjam, kode: true),
-        _baris(text, 'Jatuh tempo', p.tanggalKembali, kode: true),
-
-        if (p.alasanDibatalkan != null && p.alasanDibatalkan!.isNotEmpty) ...[
-          const SizedBox(height: AppSpacing.xs),
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.sm),
-            decoration: BoxDecoration(
-              color: AppColors.dangerBg,
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              border: Border.all(color: AppColors.dangerBorder),
-            ),
+        Flexible(
+          child: SingleChildScrollView(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Alasan ditolak',
-                    style: text.labelMedium?.copyWith(color: AppColors.dangerFg)),
-                const SizedBox(height: AppSpacing.xxs),
-                Text(p.alasanDibatalkan!, style: text.bodyLarge),
+                _baris(
+                  text,
+                  'Peminjam',
+                  p.namaPeminjam,
+                  catatan: p.identitasPeminjam.isEmpty
+                      ? null
+                      : p.identitasPeminjam,
+                ),
+                _baris(text, 'Dicatat oleh', p.dicatatOleh),
+                _baris(text, 'Tanggal pinjam', p.tanggalPinjam, kode: true),
+                _baris(text, 'Jatuh tempo', p.tanggalKembali, kode: true),
+
+                if (p.alasanDibatalkan != null &&
+                    p.alasanDibatalkan!.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.xs),
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    decoration: BoxDecoration(
+                      color: AppColors.dangerBg,
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                      border: Border.all(color: AppColors.dangerBorder),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Alasan ditolak',
+                          style: text.labelMedium?.copyWith(
+                            color: AppColors.dangerFg,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.xxs),
+                        Text(p.alasanDibatalkan!, style: text.bodyLarge),
+                      ],
+                    ),
+                  ),
+                ],
+
+                const SizedBox(height: AppSpacing.md),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text('Barang dipinjam', style: text.titleMedium),
+                    ),
+                    Text(
+                      '${p.jumlahItem} jenis · ${p.totalUnit} unit',
+                      style: text.bodySmall,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.xs),
+
+                for (final item in p.items)
+                  Card(
+                    margin: const EdgeInsets.only(bottom: AppSpacing.xs),
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.sm),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item.namaBarang,
+                                  style: text.titleMedium,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Text(
+                                  item.merk == null || item.merk!.isEmpty
+                                      ? item.kodeBarang
+                                      : '${item.kodeBarang} · ${item.merk}',
+                                  style: AppTypography.code(
+                                    color: AppColors.textMuted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.xs),
+                          StatusPill(
+                            label: '${item.jumlahPinjam} unit',
+                            style: StatusStyle.kategori,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
               ],
             ),
-          ),
-        ],
-
-        const SizedBox(height: AppSpacing.md),
-        Row(
-          children: [
-            Expanded(child: Text('Barang dipinjam', style: text.titleMedium)),
-            Text('${p.jumlahItem} jenis · ${p.totalUnit} unit',
-                style: text.bodySmall),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.xs),
-
-        Expanded(
-          child: ListView.separated(
-            itemCount: p.items.length,
-            separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.xs),
-            itemBuilder: (context, i) {
-              final item = p.items[i];
-              return Card(
-                margin: EdgeInsets.zero,
-                child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.sm),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(item.namaBarang,
-                                style: text.titleMedium,
-                                overflow: TextOverflow.ellipsis),
-                            Text(
-                              item.merk == null || item.merk!.isEmpty
-                                  ? item.kodeBarang
-                                  : '${item.kodeBarang} · ${item.merk}',
-                              style: AppTypography.code(color: AppColors.textMuted),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
-                      StatusPill(
-                        label: '${item.jumlahPinjam} unit',
-                        style: StatusStyle.kategori,
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
           ),
         ),
 
@@ -218,18 +243,20 @@ class _Isi extends ConsumerWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 108,
-            child: Text(label, style: text.bodySmall),
-          ),
+          SizedBox(width: 108, child: Text(label, style: text.bodySmall)),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(nilai, style: kode ? AppTypography.code() : text.bodyLarge),
+                Text(
+                  nilai,
+                  style: kode ? AppTypography.code() : text.bodyLarge,
+                ),
                 if (catatan != null)
-                  Text(catatan,
-                      style: AppTypography.code(color: AppColors.textMuted)),
+                  Text(
+                    catatan,
+                    style: AppTypography.code(color: AppColors.textMuted),
+                  ),
               ],
             ),
           ),
@@ -238,7 +265,11 @@ class _Isi extends ConsumerWidget {
     );
   }
 
-  Future<void> _setujui(BuildContext context, WidgetRef ref, Peminjaman p) async {
+  Future<void> _setujui(
+    BuildContext context,
+    WidgetRef ref,
+    Peminjaman p,
+  ) async {
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
 
@@ -318,9 +349,8 @@ class _Isi extends ConsumerWidget {
                   hintText: 'mis. Barang sedang dipakai praktik kelas XII',
                   alignLabelWithHint: true,
                 ),
-                validator: (v) => (v?.trim().isEmpty ?? true)
-                    ? 'Alasan wajib diisi'
-                    : null,
+                validator: (v) =>
+                    (v?.trim().isEmpty ?? true) ? 'Alasan wajib diisi' : null,
               ),
             ],
           ),

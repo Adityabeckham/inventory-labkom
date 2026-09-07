@@ -27,9 +27,12 @@ void main() {
       expect(b.serialNumber, 'LNV-TP-0001');
     });
 
-    test('sedangDipinjam adalah selisih jumlah dan stok', () {
-      expect(buat(jumlah: 40, stok: 32).sedangDipinjam, 8);
-      expect(buat(jumlah: 40, stok: 40).sedangDipinjam, 0);
+    // Selisihnya mencakup unit yang masih tertahan pengajuan yang menunggu
+    // verifikasi, bukan hanya yang sudah diambil peminjam — stok berkurang
+    // sejak peminjaman diajukan (FR-05), bukan sejak disetujui.
+    test('tidakDiRak adalah selisih jumlah dan stok', () {
+      expect(buat(jumlah: 40, stok: 32).tidakDiRak, 8);
+      expect(buat(jumlah: 40, stok: 40).tidakDiRak, 0);
     });
 
     test('stok nol berarti tidak tersedia', () {

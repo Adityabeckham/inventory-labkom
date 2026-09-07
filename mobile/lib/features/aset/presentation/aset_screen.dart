@@ -258,9 +258,9 @@ class _BarangCard extends ConsumerWidget {
                       style: AppTypography.code(color: AppColors.textMuted),
                     ),
                     Text(
-                      barang.sedangDipinjam > 0
+                      barang.tidakDiRak > 0
                           ? 'Stok ${barang.stok} dari ${barang.jumlah} · '
-                              '${barang.sedangDipinjam} dipinjam'
+                              '${barang.tidakDiRak} dipinjam atau diajukan'
                           : 'Stok ${barang.stok} · ${barang.namaKategori}',
                       style: text.bodySmall,
                     ),
