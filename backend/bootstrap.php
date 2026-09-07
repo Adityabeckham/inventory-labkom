@@ -3,7 +3,10 @@ declare(strict_types=1);
 
 /**
  * Bootstrap Inventory Labkom API.
- * Autoloader manual — belum butuh Composer sampai Sprint 5 (library laporan).
+ *
+ * Kode aplikasi memakai autoloader manual di bawah; Composer hanya dipakai
+ * untuk library laporan Sprint 5 (mPDF, PHPWord, PhpSpreadsheet). Endpoint
+ * selain /api/laporan/* tetap jalan tanpa `composer install`.
  */
 
 use App\Core\Config;
@@ -16,6 +19,7 @@ spl_autoload_register(static function (string $class): void {
         'App\\Core\\'        => BASE_PATH . '/core/',
         'App\\Middleware\\'  => BASE_PATH . '/middleware/',
         'App\\Controllers\\' => BASE_PATH . '/controllers/',
+        'App\\Reports\\'     => BASE_PATH . '/reports/',
     ];
 
     foreach ($prefixes as $prefix => $dir) {

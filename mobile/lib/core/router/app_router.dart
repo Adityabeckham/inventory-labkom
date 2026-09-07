@@ -8,10 +8,10 @@ import '../../features/aset/presentation/aset_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/dashboard/presentation/dashboard_screen.dart';
 import '../../features/kategori/presentation/kategori_screen.dart';
+import '../../features/laporan/presentation/laporan_screen.dart';
 import '../../features/peminjam/presentation/peminjam_screen.dart';
 import '../../features/peminjaman/presentation/transaksi_screen.dart';
 import '../../features/pengembalian/presentation/pengaturan_denda_screen.dart';
-import '../../features/placeholder/sprint_placeholder_screen.dart';
 import '../../features/shell/presentation/app_shell.dart';
 import '../../features/users/presentation/users_screen.dart';
 import '../../features/verifikasi/presentation/verifikasi_screen.dart';
@@ -84,15 +84,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(path: '/transaksi', builder: (_, _) => const TransaksiScreen()),
           GoRoute(path: '/verifikasi', builder: (_, _) => const VerifikasiScreen()),
-          GoRoute(
-            path: '/laporan',
-            builder: (_, _) => const SprintPlaceholderScreen(
-              title: 'Laporan',
-              sprint: 5,
-              description:
-                  'Lima jenis laporan dalam format PDF, Word, dan Excel (FR-08, FR-09).',
-            ),
-          ),
+          GoRoute(path: '/laporan', builder: (_, _) => const LaporanScreen()),
         ],
       ),
     ],

@@ -12,8 +12,13 @@ Panduan menyiapkan lingkungan pengembangan dari nol.
 | **Flutter SDK** | 3.x (stable) | Aplikasi mobile |
 | **Android Studio** | terbaru | Android SDK, emulator, build APK |
 | **Git** | mana saja | Version control |
+| **Composer** | 2.x | Library laporan (mPDF, PHPWord, PhpSpreadsheet) |
 
 > Backend butuh PHP **8.1 ke atas** — kode memakai `readonly` properties (`core/Request.php`) dan tipe kembalian `never` (`core/Response.php`, `core/Router.php`), keduanya fitur 8.1. XAMPP versi lama dengan PHP 7.x atau 8.0 tidak akan jalan.
+>
+> Composer hanya dibutuhkan fitur **Laporan** (FR-08/FR-09). Seluruh endpoint lain — autentikasi, barang, peminjaman, pengembalian — jalan tanpanya. Kalau `composer install` belum dijalankan, `/api/laporan/*` membalas pesan yang menyebut paket mana yang belum ada, bukan "Class not found".
+>
+> Ekstensi PHP yang dibutuhkan library laporan: **mbstring**, **gd**, **zip**, dan **dom**. Semuanya sudah aktif di XAMPP bawaan; kalau salah satu mati, kegagalannya muncul di dalam library dengan pesan yang sulit dilacak. Periksa dengan `php -m`.
 
 ---
 
@@ -67,6 +72,16 @@ Buka `backend/config/config.php`, lalu isi minimal dua hal:
    ```
 
 Detail tiap opsi ada di [CONFIGURATION.md](CONFIGURATION.md).
+
+### Library laporan
+
+```bash
+composer install -d backend
+```
+
+Mengunduh mPDF, PHPWord, dan PhpSpreadsheet ke `backend/vendor/` (sekitar 100 MB, tidak ikut di repository). Lewati langkah ini kalau fitur Laporan belum diperlukan — endpoint lain tetap berfungsi.
+
+`composer.json` mematok platform ke PHP 8.1.0, jadi versi library yang di-resolve tetap sesuai target minimum di atas walaupun mesin Anda memakai PHP yang lebih baru.
 
 ### Jalankan backend
 
