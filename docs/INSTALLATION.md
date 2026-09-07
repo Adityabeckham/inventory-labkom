@@ -10,7 +10,8 @@ Panduan menyiapkan lingkungan pengembangan dari nol.
 |---|---|---|
 | **XAMPP** | PHP 8.1+ / MariaDB 10.4+ | Backend & database |
 | **Flutter SDK** | 3.x (stable) | Aplikasi mobile |
-| **Android Studio** | terbaru | Android SDK, emulator, build APK |
+| **Android SDK** | cmdline-tools **23.0+**, `platforms;android-37.0`, `build-tools;36.0.0` | Build APK |
+| **JDK** | 17 | Gradle |
 | **Git** | mana saja | Version control |
 | **Composer** | 2.x | Library laporan (mPDF, PHPWord, PhpSpreadsheet) |
 
@@ -19,6 +20,21 @@ Panduan menyiapkan lingkungan pengembangan dari nol.
 > Composer hanya dibutuhkan fitur **Laporan** (FR-08/FR-09). Seluruh endpoint lain — autentikasi, barang, peminjaman, pengembalian — jalan tanpanya. Kalau `composer install` belum dijalankan, `/api/laporan/*` membalas pesan yang menyebut paket mana yang belum ada, bukan "Class not found".
 >
 > Ekstensi PHP yang dibutuhkan library laporan: **mbstring**, **gd**, **zip**, dan **dom**. Semuanya sudah aktif di XAMPP bawaan; kalau salah satu mati, kegagalannya muncul di dalam library dengan pesan yang sulit dilacak. Periksa dengan `php -m`.
+>
+> **Versi Android SDK-nya penting dan bukan sekadar "yang terbaru".** Plugin
+> `flutter_secure_storage` dikompilasi terhadap API 37, jadi Gradle menolak
+> build kalau `compileSdk` di bawah itu — dan paket `platforms;android-37.0`
+> hanya terlihat oleh cmdline-tools **23.0 ke atas**. Android Studio versi lama
+> membawa cmdline-tools lama yang gagal membaca katalog paket versi baru dengan
+> pesan `Failed to find package`. Kalau itu terjadi, perbarui dulu
+> cmdline-tools-nya:
+>
+> ```bash
+> sdkmanager --install "cmdline-tools;latest"
+> ```
+>
+> Android Studio tidak wajib — cmdline-tools saja sudah cukup untuk membangun
+> APK. Studio hanya memudahkan kalau butuh emulator.
 
 ---
 
@@ -152,7 +168,13 @@ cd mobile
 flutter build apk --release
 ```
 
-Hasilnya di `mobile/build/app/outputs/flutter-apk/app-release.apk`.
+Hasilnya di `mobile/build/app/outputs/flutter-apk/app-release.apk` (sekitar 56 MB).
+
+`compileSdk` di `android/app/build.gradle.kts` **sengaja dipatok 37**, bukan
+mengikuti bawaan Flutter (36), karena `flutter_secure_storage` menuntutnya.
+Angka itu hanya menentukan API mana yang boleh dipakai saat kompilasi — ia
+tidak mengubah perilaku runtime (`targetSdk`) maupun perangkat mana yang bisa
+memasang (`minSdk` 24, yaitu Android 7.0 ke atas).
 
 ### Penandatanganan APK
 
@@ -196,10 +218,19 @@ tidak akan ikut ter-commit.
 ### Memeriksa APK ditandatangani apa
 
 ```bash
+# Sesuaikan 36.0.0 dengan versi build-tools yang terpasang:
+#   ls $ANDROID_HOME/build-tools
 $ANDROID_HOME/build-tools/36.0.0/apksigner verify --print-certs mobile/build/app/outputs/flutter-apk/app-release.apk
 ```
 
-Kunci debug bawaan Android selalu bernama `CN=Android Debug, OU=Android, O=Android, L=Mountain View, ST=California, C=US`.
+APK yang ditandatangani kunci debug memberi keluaran seperti ini:
+
+```
+Signer #1 certificate DN: C=US, O=Android, CN=Android Debug
+```
+
+Kalau `key.properties` sudah dipasang, yang muncul adalah data yang Anda isi
+saat menjalankan `keytool` — bukan `CN=Android Debug`.
 
 ---
 

@@ -27,7 +27,12 @@ val adaKunciRilis = fileKunci.exists() &&
 
 android {
     namespace = "id.sch.smkalmadani.inventory_labkom"
-    compileSdk = flutter.compileSdkVersion
+    // Dipatok 37, bukan flutter.compileSdkVersion (36): flutter_secure_storage
+    // dikompilasi terhadap API 37 dan Gradle MENOLAK build kalau aplikasinya
+    // lebih rendah. compileSdk cuma menentukan API mana yang boleh dipakai
+    // saat kompilasi — ia tidak mengubah perilaku runtime (targetSdk) maupun
+    // perangkat mana yang bisa memasang (minSdk), jadi menaikkannya aman.
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

@@ -71,7 +71,7 @@ Sumber kebenaran ada di `docs_project/`, semuanya berstatus FINAL:
 | 3 | Peminjaman multi-item & Verifikasi | Selesai — Transaksi, form keranjang multi-item, layar Verifikasi Kepala Program |
 | 4 | Pengembalian & Pengaturan Denda | Selesai — tab Pengembalian, form per item dengan denda otomatis, Pengaturan Denda |
 | 5 | Laporan | Selesai — 5 jenis laporan x 3 format (PDF/Word/Excel), filter periode |
-| 6 | Dashboard, polish, testing, build APK | Selesai — Dashboard data asli, pemetaan FR ke pengujian, panduan pengguna, APK rilis |
+| 6 | Dashboard, polish, testing, build APK | Selesai — Dashboard data asli, pemetaan FR ke pengujian, panduan pengguna, APK rilis terbangun (ditandatangani kunci debug, lihat [INSTALLATION.md §6](docs/INSTALLATION.md)) |
 
 ## Verifikasi
 
@@ -130,9 +130,9 @@ php backend/tests/api.php http://localhost/inventory
 
 Target aplikasi adalah **Android** (PRD §5), dan deliverable akhirnya APK.
 Platform `web` dulu diaktifkan sebagai alat bantu verifikasi visual saat Android
-SDK belum terpasang. Sekarang SDK-nya sudah ada dan APK rilis sudah dibangun,
-jadi `mobile/web` tinggal kemudahan saja — bukan lagi satu-satunya cara melihat
-tampilan.
+SDK belum terpasang. Sekarang SDK-nya sudah ada dan `flutter build apk --release`
+menghasilkan APK, jadi `mobile/web` tinggal kemudahan saja — bukan lagi
+satu-satunya cara melihat tampilan.
 
 Boleh dihapus sebelum penyerahan akhir:
 
