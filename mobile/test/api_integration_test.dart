@@ -12,6 +12,7 @@ import 'package:inventory_labkom/core/theme/status_style.dart';
 import 'package:inventory_labkom/features/auth/data/auth_repository.dart';
 import 'package:inventory_labkom/features/auth/domain/app_user.dart';
 import 'package:inventory_labkom/features/aset/data/barang_repository.dart';
+import 'package:inventory_labkom/features/dashboard/data/dashboard_repository.dart';
 import 'package:inventory_labkom/features/aset/domain/stok_mutasi.dart';
 import 'package:inventory_labkom/features/kategori/data/kategori_repository.dart';
 import 'package:inventory_labkom/features/peminjam/data/peminjam_repository.dart';
@@ -50,11 +51,13 @@ const baseUrl = 'http://127.0.0.1:8080';
 
 Future<bool> backendUp() async {
   try {
-    final dio = Dio(BaseOptions(
-      connectTimeout: const Duration(seconds: 2),
-      receiveTimeout: const Duration(seconds: 2),
-      validateStatus: (_) => true,
-    ));
+    final dio = Dio(
+      BaseOptions(
+        connectTimeout: const Duration(seconds: 2),
+        receiveTimeout: const Duration(seconds: 2),
+        validateStatus: (_) => true,
+      ),
+    );
     final res = await dio.get('$baseUrl/api/health');
     return res.statusCode == 200;
   } catch (_) {
@@ -131,9 +134,11 @@ void main() {
           password: 'jelas-salah',
           rememberMe: false,
         ),
-        throwsA(isA<ApiException>()
-            .having((e) => e.statusCode, 'statusCode', 401)
-            .having((e) => e.isUnauthorized, 'isUnauthorized', isTrue)),
+        throwsA(
+          isA<ApiException>()
+              .having((e) => e.statusCode, 'statusCode', 401)
+              .having((e) => e.isUnauthorized, 'isUnauthorized', isTrue),
+        ),
       );
     });
 
@@ -157,20 +162,24 @@ void main() {
       expect(restored!.level, UserLevel.kepalaProgram);
     });
 
-    test('token sampah membuat restore mengembalikan null, bukan melempar',
-        () async {
-      if (!up) return;
+    test(
+      'token sampah membuat restore mengembalikan null, bukan melempar',
+      () async {
+        if (!up) return;
 
-      final storage = InMemoryTokenStorage();
-      await storage.write('bukan.token.asli');
+        final storage = InMemoryTokenStorage();
+        await storage.write('bukan.token.asli');
 
-      final restored =
-          await AuthRepository(buildClient(storage), storage).restore();
+        final restored = await AuthRepository(
+          buildClient(storage),
+          storage,
+        ).restore();
 
-      expect(restored, isNull);
-      // Token tidak sah juga dibuang, supaya tidak dicoba lagi terus-menerus.
-      expect(await storage.read(), isNull);
-    });
+        expect(restored, isNull);
+        // Token tidak sah juga dibuang, supaya tidak dicoba lagi terus-menerus.
+        expect(await storage.read(), isNull);
+      },
+    );
   });
 
   group('FR-12 Kelola User & penegakan peran', () {
@@ -179,11 +188,10 @@ void main() {
 
       final storage = InMemoryTokenStorage();
       final client = buildClient(storage);
-      await AuthRepository(client, storage).login(
-        username: 'laboran',
-        password: 'laboran123',
-        rememberMe: true,
-      );
+      await AuthRepository(
+        client,
+        storage,
+      ).login(username: 'laboran', password: 'laboran123', rememberMe: true);
 
       final users = await UserRepository(client).fetchAll();
 
@@ -196,18 +204,22 @@ void main() {
 
       final storage = InMemoryTokenStorage();
       final client = buildClient(storage);
-      await AuthRepository(client, storage).login(
-        username: 'kaprog',
-        password: 'kaprog123',
-        rememberMe: true,
-      );
+      await AuthRepository(
+        client,
+        storage,
+      ).login(username: 'kaprog', password: 'kaprog123', rememberMe: true);
 
       // Penjaga rute di Flutter cuma kenyamanan. Ini membuktikan backend
       // menolak walaupun lapisan UI dilewati sepenuhnya.
       await expectLater(
         UserRepository(client).fetchAll(),
-        throwsA(isA<ApiException>()
-            .having((e) => e.isForbidden, 'isForbidden', isTrue)),
+        throwsA(
+          isA<ApiException>().having(
+            (e) => e.isForbidden,
+            'isForbidden',
+            isTrue,
+          ),
+        ),
       );
     });
 
@@ -216,11 +228,10 @@ void main() {
 
       final storage = InMemoryTokenStorage();
       final client = buildClient(storage);
-      await AuthRepository(client, storage).login(
-        username: 'laboran',
-        password: 'laboran123',
-        rememberMe: true,
-      );
+      await AuthRepository(
+        client,
+        storage,
+      ).login(username: 'laboran', password: 'laboran123', rememberMe: true);
 
       final repo = UserRepository(client);
       final username = 'uji_flutter_${DateTime.now().millisecondsSinceEpoch}';
@@ -239,14 +250,12 @@ void main() {
 
       // Password benar-benar berganti di server, bukan cuma di respons.
       final storageBaru = InMemoryTokenStorage();
-      final userBaru = await AuthRepository(
-        buildClient(storageBaru),
-        storageBaru,
-      ).login(
-        username: username,
-        password: 'passwordbaru123',
-        rememberMe: false,
-      );
+      final userBaru =
+          await AuthRepository(buildClient(storageBaru), storageBaru).login(
+            username: username,
+            password: 'passwordbaru123',
+            rememberMe: false,
+          );
       expect(userBaru.username, username);
 
       await repo.delete(dibuat.id);
@@ -260,20 +269,24 @@ void main() {
 
       final storage = InMemoryTokenStorage();
       final client = buildClient(storage);
-      final me = await AuthRepository(client, storage).login(
-        username: 'laboran',
-        password: 'laboran123',
-        rememberMe: true,
-      );
+      final me = await AuthRepository(
+        client,
+        storage,
+      ).login(username: 'laboran', password: 'laboran123', rememberMe: true);
 
       // Backend menolak dengan penjelasan spesifik; UI menampilkannya apa
       // adanya, jadi pesan itu tidak boleh hilang di lapisan jaringan.
       await expectLater(
         UserRepository(client).delete(me.id),
-        throwsA(isA<ApiException>()
-            .having((e) => e.statusCode, 'statusCode', 409)
-            .having((e) => e.message, 'message',
-                contains('akun yang sedang dipakai login'))),
+        throwsA(
+          isA<ApiException>()
+              .having((e) => e.statusCode, 'statusCode', 409)
+              .having(
+                (e) => e.message,
+                'message',
+                contains('akun yang sedang dipakai login'),
+              ),
+        ),
       );
     });
   });
@@ -283,11 +296,10 @@ void main() {
     Future<ApiClient> clientLaboran() async {
       final storage = InMemoryTokenStorage();
       final client = buildClient(storage);
-      await AuthRepository(client, storage).login(
-        username: 'laboran',
-        password: 'laboran123',
-        rememberMe: true,
-      );
+      await AuthRepository(
+        client,
+        storage,
+      ).login(username: 'laboran', password: 'laboran123', rememberMe: true);
       return client;
     }
 
@@ -326,7 +338,10 @@ void main() {
       if (!up) return;
 
       // Kalau escaping-nya bocor, ini akan mengembalikan seluruh barang.
-      expect(await BarangRepository(await clientLaboran()).fetch(cari: '%'), isEmpty);
+      expect(
+        await BarangRepository(await clientLaboran()).fetch(cari: '%'),
+        isEmpty,
+      );
     });
 
     test('mutasi menyesuaikan stok DAN jumlah (deviasi D-02)', () async {
@@ -367,32 +382,40 @@ void main() {
       expect(sesudah.stok, lessThanOrEqualTo(sesudah.jumlah));
     });
 
-    test('mutasi keluar melebihi stok ditolak dan tidak mengubah apa pun',
-        () async {
-      if (!up) return;
+    test(
+      'mutasi keluar melebihi stok ditolak dan tidak mengubah apa pun',
+      () async {
+        if (!up) return;
 
-      final repo = BarangRepository(await clientLaboran());
-      final barang = (await repo.fetch()).first;
+        final repo = BarangRepository(await clientLaboran());
+        final barang = (await repo.fetch()).first;
 
-      await expectLater(
-        repo.catatMutasi(
-          idBarang: barang.id,
-          jenis: JenisMutasi.keluar,
-          jumlah: 999999,
-        ),
-        throwsA(isA<ApiException>()
-            .having((e) => e.statusCode, 'statusCode', 422)),
-      );
+        await expectLater(
+          repo.catatMutasi(
+            idBarang: barang.id,
+            jenis: JenisMutasi.keluar,
+            jumlah: 999999,
+          ),
+          throwsA(
+            isA<ApiException>().having((e) => e.statusCode, 'statusCode', 422),
+          ),
+        );
 
-      final sesudah = (await repo.fetch(cari: barang.kode)).single;
-      expect(sesudah.stok, barang.stok, reason: 'transaksi harus di-rollback');
-      expect(sesudah.jumlah, barang.jumlah);
-    });
+        final sesudah = (await repo.fetch(cari: barang.kode)).single;
+        expect(
+          sesudah.stok,
+          barang.stok,
+          reason: 'transaksi harus di-rollback',
+        );
+        expect(sesudah.jumlah, barang.jumlah);
+      },
+    );
 
     test('riwayat mutasi mencatat siapa yang mencatat', () async {
       if (!up) return;
 
-      final riwayat = await BarangRepository(await clientLaboran()).fetchMutasi();
+      final riwayat = await BarangRepository(await clientLaboran())
+          .fetchMutasi();
 
       expect(riwayat, isNotEmpty);
       expect(riwayat.first.dicatatOleh, 'laboran');
@@ -411,12 +434,15 @@ void main() {
       if (!up) return;
 
       final repo = KategoriRepository(await clientLaboran());
-      final dipakai = (await repo.fetchAll()).firstWhere((k) => k.jumlahBarang > 0);
+      final dipakai = (await repo.fetchAll()).firstWhere(
+        (k) => k.jumlahBarang > 0,
+      );
 
       await expectLater(
         repo.delete(dipakai.id),
-        throwsA(isA<ApiException>()
-            .having((e) => e.statusCode, 'statusCode', 409)),
+        throwsA(
+          isA<ApiException>().having((e) => e.statusCode, 'statusCode', 409),
+        ),
       );
     });
 
@@ -433,8 +459,8 @@ void main() {
     test('pencarian peminjam menjangkau kelas', () async {
       if (!up) return;
 
-      final hasil =
-          await PeminjamRepository(await clientLaboran()).fetch(cari: 'XII TKJ 1');
+      final hasil = await PeminjamRepository(await clientLaboran())
+          .fetch(cari: 'XII TKJ 1');
 
       expect(hasil, isNotEmpty);
       expect(hasil.every((p) => p.kelasJabatan == 'XII TKJ 1'), isTrue);
@@ -450,8 +476,9 @@ void main() {
 
       await expectLater(
         repo.save(nama: 'Peminjam Kembar', nisNip: adaNis.nisNip),
-        throwsA(isA<ApiException>()
-            .having((e) => e.statusCode, 'statusCode', 409)),
+        throwsA(
+          isA<ApiException>().having((e) => e.statusCode, 'statusCode', 409),
+        ),
       );
     });
   });
@@ -460,8 +487,10 @@ void main() {
     Future<ApiClient> masuk(String username, String password) async {
       final storage = InMemoryTokenStorage();
       final client = buildClient(storage);
-      await AuthRepository(client, storage)
-          .login(username: username, password: password, rememberMe: true);
+      await AuthRepository(
+        client,
+        storage,
+      ).login(username: username, password: password, rememberMe: true);
       return client;
     }
 
@@ -475,20 +504,25 @@ void main() {
 
     /// Menyiapkan satu pengajuan dua item dan mengembalikan bahan ujinya.
     Future<
-        ({
-          Peminjaman peminjaman,
-          int idBarangA,
-          int idBarangB,
-          int stokA,
-          int stokB,
-          ApiClient client,
-        })> ajukanDuaItem() async {
+      ({
+        Peminjaman peminjaman,
+        int idBarangA,
+        int idBarangB,
+        int stokA,
+        int stokB,
+        ApiClient client,
+      })
+    >
+    ajukanDuaItem() async {
       final client = await laboran();
       final barang = await BarangRepository(client).fetch();
       final layak = barang.where((b) => b.stok >= 3).toList();
 
-      expect(layak.length, greaterThanOrEqualTo(2),
-          reason: 'impor ulang seed: butuh dua barang berstok >= 3');
+      expect(
+        layak.length,
+        greaterThanOrEqualTo(2),
+        reason: 'impor ulang seed: butuh dua barang berstok >= 3',
+      );
 
       final peminjam = (await PeminjamRepository(client).fetch()).first;
       final hariIni = DateTime.now();
@@ -530,24 +564,26 @@ void main() {
       return list.firstWhere((b) => b.id == idBarang).stok;
     }
 
-    test('pengajuan multi-item mengurangi stok dan berstatus menunggu',
-        () async {
-      if (!up) return;
+    test(
+      'pengajuan multi-item mengurangi stok dan berstatus menunggu',
+      () async {
+        if (!up) return;
 
-      final uji = await ajukanDuaItem();
-      final p = uji.peminjaman;
+        final uji = await ajukanDuaItem();
+        final p = uji.peminjaman;
 
-      expect(p.status, StatusPeminjaman.menungguVerifikasi);
-      expect(p.kode, matches(RegExp(r'^PMJ-\d{4}-\d{3,}$')));
-      expect(p.jumlahItem, 2);
-      expect(p.totalUnit, 3);
-      expect(p.items, hasLength(2));
-      expect(p.alasanDibatalkan, isNull);
-      expect(p.menungguVerifikasi, isTrue);
+        expect(p.status, StatusPeminjaman.menungguVerifikasi);
+        expect(p.kode, matches(RegExp(r'^PMJ-\d{4}-\d{3,}$')));
+        expect(p.jumlahItem, 2);
+        expect(p.totalUnit, 3);
+        expect(p.items, hasLength(2));
+        expect(p.alasanDibatalkan, isNull);
+        expect(p.menungguVerifikasi, isTrue);
 
-      expect(await stokKini(uji.client, uji.idBarangA), uji.stokA - 2);
-      expect(await stokKini(uji.client, uji.idBarangB), uji.stokB - 1);
-    });
+        expect(await stokKini(uji.client, uji.idBarangA), uji.stokA - 2);
+        expect(await stokKini(uji.client, uji.idBarangB), uji.stokB - 1);
+      },
+    );
 
     test('stok tidak cukup ditolak dengan 422', () async {
       if (!up) return;
@@ -572,8 +608,9 @@ void main() {
             ),
           ],
         ),
-        throwsA(isA<ApiException>()
-            .having((e) => e.statusCode, 'statusCode', 422)),
+        throwsA(
+          isA<ApiException>().having((e) => e.statusCode, 'statusCode', 422),
+        ),
       );
     });
 
@@ -599,8 +636,9 @@ void main() {
             ),
           ],
         ),
-        throwsA(isA<ApiException>()
-            .having((e) => e.statusCode, 'statusCode', 403)),
+        throwsA(
+          isA<ApiException>().having((e) => e.statusCode, 'statusCode', 403),
+        ),
       );
     });
 
@@ -612,24 +650,27 @@ void main() {
       await expectLater(
         PeminjamanRepository(uji.client)
             .verifikasi(uji.peminjaman.id, setujui: true),
-        throwsA(isA<ApiException>()
-            .having((e) => e.statusCode, 'statusCode', 403)),
+        throwsA(
+          isA<ApiException>().having((e) => e.statusCode, 'statusCode', 403),
+        ),
       );
     });
 
-    test('approve mengubah status jadi dipinjam tanpa menyentuh stok lagi',
-        () async {
-      if (!up) return;
+    test(
+      'approve mengubah status jadi dipinjam tanpa menyentuh stok lagi',
+      () async {
+        if (!up) return;
 
-      final uji = await ajukanDuaItem();
-      final stokSetelahAjukan = await stokKini(uji.client, uji.idBarangA);
+        final uji = await ajukanDuaItem();
+        final stokSetelahAjukan = await stokKini(uji.client, uji.idBarangA);
 
-      final hasil = await PeminjamanRepository(await kaprog())
-          .verifikasi(uji.peminjaman.id, setujui: true);
+        final hasil = await PeminjamanRepository(await kaprog())
+            .verifikasi(uji.peminjaman.id, setujui: true);
 
-      expect(hasil.status, StatusPeminjaman.dipinjam);
-      expect(await stokKini(uji.client, uji.idBarangA), stokSetelahAjukan);
-    });
+        expect(hasil.status, StatusPeminjaman.dipinjam);
+        expect(await stokKini(uji.client, uji.idBarangA), stokSetelahAjukan);
+      },
+    );
 
     test('reject memulihkan stok persis dan menyimpan alasannya', () async {
       if (!up) return;
@@ -649,41 +690,52 @@ void main() {
       expect(await stokKini(uji.client, uji.idBarangB), uji.stokB);
     });
 
-    test('reject kedua kali ditolak dan stok tidak bertambah dua kali',
-        () async {
-      if (!up) return;
+    test(
+      'reject kedua kali ditolak dan stok tidak bertambah dua kali',
+      () async {
+        if (!up) return;
 
-      final uji = await ajukanDuaItem();
-      final repoKaprog = PeminjamanRepository(await kaprog());
+        final uji = await ajukanDuaItem();
+        final repoKaprog = PeminjamanRepository(await kaprog());
 
-      await repoKaprog.verifikasi(uji.peminjaman.id,
-          setujui: false, alasan: 'penolakan pertama');
-      expect(await stokKini(uji.client, uji.idBarangA), uji.stokA);
+        await repoKaprog.verifikasi(
+          uji.peminjaman.id,
+          setujui: false,
+          alasan: 'penolakan pertama',
+        );
+        expect(await stokKini(uji.client, uji.idBarangA), uji.stokA);
 
-      await expectLater(
-        repoKaprog.verifikasi(uji.peminjaman.id,
-            setujui: false, alasan: 'penolakan kedua'),
-        throwsA(isA<ApiException>()
-            .having((e) => e.statusCode, 'statusCode', 409)),
-      );
+        await expectLater(
+          repoKaprog.verifikasi(
+            uji.peminjaman.id,
+            setujui: false,
+            alasan: 'penolakan kedua',
+          ),
+          throwsA(
+            isA<ApiException>().having((e) => e.statusCode, 'statusCode', 409),
+          ),
+        );
 
-      expect(await stokKini(uji.client, uji.idBarangA), uji.stokA);
-    });
+        expect(await stokKini(uji.client, uji.idBarangA), uji.stokA);
+      },
+    );
 
-    test('Kepala Program boleh membaca daftar pengajuan yang menunggu',
-        () async {
-      if (!up) return;
+    test(
+      'Kepala Program boleh membaca daftar pengajuan yang menunggu',
+      () async {
+        if (!up) return;
 
-      final uji = await ajukanDuaItem();
-      final daftar = await PeminjamanRepository(await kaprog())
-          .fetch(status: StatusPeminjaman.menungguVerifikasi);
+        final uji = await ajukanDuaItem();
+        final daftar = await PeminjamanRepository(await kaprog())
+            .fetch(status: StatusPeminjaman.menungguVerifikasi);
 
-      expect(daftar.map((p) => p.kode), contains(uji.peminjaman.kode));
-      expect(
-        daftar.every((p) => p.status == StatusPeminjaman.menungguVerifikasi),
-        isTrue,
-      );
-    });
+        expect(daftar.map((p) => p.kode), contains(uji.peminjaman.kode));
+        expect(
+          daftar.every((p) => p.status == StatusPeminjaman.menungguVerifikasi),
+          isTrue,
+        );
+      },
+    );
 
     test('detail membawa rincian barang hasil join', () async {
       if (!up) return;
@@ -714,8 +766,10 @@ void main() {
     Future<ApiClient> masuk(String username, String password) async {
       final storage = InMemoryTokenStorage();
       final client = buildClient(storage);
-      await AuthRepository(client, storage)
-          .login(username: username, password: password, rememberMe: true);
+      await AuthRepository(
+        client,
+        storage,
+      ).login(username: username, password: password, rememberMe: true);
       return client;
     }
 
@@ -743,37 +797,44 @@ void main() {
         tanggalPinjam: iso(kini.add(Duration(days: geserPinjam))),
         tanggalKembali: iso(kini.add(Duration(days: geserTempo))),
         items: items
-            .map((i) => ItemKeranjang(
-                  idBarang: i.id,
-                  kodeBarang: i.kode,
-                  namaBarang: i.nama,
-                  jumlah: i.jumlah,
-                  stokTersedia: i.stok,
-                ))
+            .map(
+              (i) => ItemKeranjang(
+                idBarang: i.id,
+                kodeBarang: i.kode,
+                namaBarang: i.nama,
+                jumlah: i.jumlah,
+                stokTersedia: i.stok,
+              ),
+            )
             .toList(),
       );
 
-      await PeminjamanRepository(await kaprog()).verifikasi(p.id, setujui: true);
+      await PeminjamanRepository(await kaprog())
+          .verifikasi(p.id, setujui: true);
       return PeminjamanRepository(client).show(p.id);
     }
 
     Future<List<({int id, String kode, String nama, int stok, int jumlah})>>
-        duaBarang(ApiClient client, {int jumlah = 1}) async {
-      final layak = (await BarangRepository(client).fetch())
-          .where((b) => b.stok >= 3)
-          .take(2)
-          .toList();
-      expect(layak.length, 2,
-          reason: 'impor ulang seed: butuh dua barang berstok >= 3');
+    duaBarang(ApiClient client, {int jumlah = 1}) async {
+      final layak = (await BarangRepository(
+        client,
+      ).fetch()).where((b) => b.stok >= 3).take(2).toList();
+      expect(
+        layak.length,
+        2,
+        reason: 'impor ulang seed: butuh dua barang berstok >= 3',
+      );
 
       return layak
-          .map((b) => (
-                id: b.id,
-                kode: b.kode,
-                nama: b.nama,
-                stok: b.stok,
-                jumlah: jumlah,
-              ))
+          .map(
+            (b) => (
+              id: b.id,
+              kode: b.kode,
+              nama: b.nama,
+              stok: b.stok,
+              jumlah: jumlah,
+            ),
+          )
           .toList();
     }
 
@@ -790,14 +851,15 @@ void main() {
       expect(tarif.tarifPerHari, greaterThanOrEqualTo(0));
 
       // Kepala Program perlu membacanya karena angka denda muncul di laporan.
-      final dibacaKaprog =
-          await PengaturanDendaRepository(await kaprog()).ambil();
+      final dibacaKaprog = await PengaturanDendaRepository(await kaprog())
+          .ambil();
       expect(dibacaKaprog.tarifPerHari, tarif.tarifPerHari);
 
       await expectLater(
         PengaturanDendaRepository(await kaprog()).simpan(1000),
-        throwsA(isA<ApiException>()
-            .having((e) => e.statusCode, 'statusCode', 403)),
+        throwsA(
+          isA<ApiException>().having((e) => e.statusCode, 'statusCode', 403),
+        ),
       );
     });
 
@@ -806,8 +868,9 @@ void main() {
 
       await expectLater(
         PengaturanDendaRepository(await laboran()).simpan(-1),
-        throwsA(isA<ApiException>()
-            .having((e) => e.statusCode, 'statusCode', 422)),
+        throwsA(
+          isA<ApiException>().having((e) => e.statusCode, 'statusCode', 422),
+        ),
       );
     });
 
@@ -816,77 +879,93 @@ void main() {
 
       final client = await laboran();
       final items = await duaBarang(client);
-      final p = await buatDisetujui(client, items.take(1).toList(),
-          geserPinjam: 0, geserTempo: 7);
-
-      final hasil = await PengembalianRepository(client).catat(
-        idDetail: p.items.first.idDetail,
-        kondisi: KondisiBarang.baik,
+      final p = await buatDisetujui(
+        client,
+        items.take(1).toList(),
+        geserPinjam: 0,
+        geserTempo: 7,
       );
+
+      final hasil = await PengembalianRepository(client)
+          .catat(idDetail: p.items.first.idDetail, kondisi: KondisiBarang.baik);
 
       expect(hasil.hariTelat, 0);
       expect(hasil.denda, 0);
       expect(hasil.telat, isFalse);
     });
 
-    test('kembali telat dikenai hari x tarif, tanpa dikali jumlah unit',
-        () async {
-      if (!up) return;
+    test(
+      'kembali telat dikenai hari x tarif, tanpa dikali jumlah unit',
+      () async {
+        if (!up) return;
 
-      final client = await laboran();
-      final tarif = (await PengaturanDendaRepository(client).ambil()).tarifPerHari;
+        final client = await laboran();
+        final tarif = (await PengaturanDendaRepository(
+          client,
+        ).ambil()).tarifPerHari;
 
-      // Dua unit dalam satu baris detail, telat 4 hari. §3.7 menetapkan
-      // denda = hari x tarif; jumlah unit BUKAN faktor.
-      final items = (await duaBarang(client, jumlah: 2)).take(1).toList();
-      final p = await buatDisetujui(client, items,
-          geserPinjam: -10, geserTempo: -4);
+        // Dua unit dalam satu baris detail, telat 4 hari. §3.7 menetapkan
+        // denda = hari x tarif; jumlah unit BUKAN faktor.
+        final items = (await duaBarang(client, jumlah: 2)).take(1).toList();
+        final p = await buatDisetujui(
+          client,
+          items,
+          geserPinjam: -10,
+          geserTempo: -4,
+        );
 
-      final hasil = await PengembalianRepository(client).catat(
-        idDetail: p.items.first.idDetail,
-        kondisi: KondisiBarang.baik,
-      );
+        final hasil = await PengembalianRepository(
+          client,
+        ).catat(idDetail: p.items.first.idDetail, kondisi: KondisiBarang.baik);
 
-      expect(hasil.hariTelat, 4);
-      expect(hasil.denda, 4 * tarif);
-      expect(p.items.first.jumlahPinjam, 2);
-    });
+        expect(hasil.hariTelat, 4);
+        expect(hasil.denda, 4 * tarif);
+        expect(p.items.first.jumlahPinjam, 2);
+      },
+    );
 
-    test('pengembalian sebagian membuat status jadi sebagian_kembali',
-        () async {
-      if (!up) return;
+    test(
+      'pengembalian sebagian membuat status jadi sebagian_kembali',
+      () async {
+        if (!up) return;
 
-      final client = await laboran();
-      final items = await duaBarang(client);
-      final p = await buatDisetujui(client, items,
-          geserPinjam: 0, geserTempo: 5);
-      final stokAwal = await stokKini(client, items.first.id);
+        final client = await laboran();
+        final items = await duaBarang(client);
+        final p = await buatDisetujui(
+          client,
+          items,
+          geserPinjam: 0,
+          geserTempo: 5,
+        );
+        final stokAwal = await stokKini(client, items.first.id);
 
-      await PengembalianRepository(client).catat(
-        idDetail: p.items.first.idDetail,
-        kondisi: KondisiBarang.baik,
-      );
+        await PengembalianRepository(
+          client,
+        ).catat(idDetail: p.items.first.idDetail, kondisi: KondisiBarang.baik);
 
-      final sesudah = await PeminjamanRepository(client).show(p.id);
-      expect(sesudah.status, StatusPeminjaman.sebagianKembali);
-      expect(sesudah.belumKembali, hasLength(1));
-      expect(sesudah.items.first.sudahKembali, isTrue);
-      expect(await stokKini(client, items.first.id), stokAwal + 1);
-    });
+        final sesudah = await PeminjamanRepository(client).show(p.id);
+        expect(sesudah.status, StatusPeminjaman.sebagianKembali);
+        expect(sesudah.belumKembali, hasLength(1));
+        expect(sesudah.items.first.sudahKembali, isTrue);
+        expect(await stokKini(client, items.first.id), stokAwal + 1);
+      },
+    );
 
     test('item terakhir kembali membuat status jadi dikembalikan', () async {
       if (!up) return;
 
       final client = await laboran();
       final items = await duaBarang(client);
-      final p = await buatDisetujui(client, items,
-          geserPinjam: 0, geserTempo: 5);
+      final p = await buatDisetujui(
+        client,
+        items,
+        geserPinjam: 0,
+        geserTempo: 5,
+      );
 
       for (final item in p.items) {
-        await PengembalianRepository(client).catat(
-          idDetail: item.idDetail,
-          kondisi: KondisiBarang.baik,
-        );
+        await PengembalianRepository(client)
+            .catat(idDetail: item.idDetail, kondisi: KondisiBarang.baik);
       }
 
       final sesudah = await PeminjamanRepository(client).show(p.id);
@@ -895,96 +974,121 @@ void main() {
       expect(sesudah.bisaDikembalikan, isFalse);
     });
 
-    test('barang rusak tetap dipulihkan ke stok, dan kepemilikan utuh (D-08)',
-        () async {
-      if (!up) return;
+    test(
+      'barang rusak tetap dipulihkan ke stok, dan kepemilikan utuh (D-08)',
+      () async {
+        if (!up) return;
 
-      final client = await laboran();
-      final items = (await duaBarang(client)).take(1).toList();
-      final sebelum = (await BarangRepository(client).fetch())
-          .firstWhere((b) => b.id == items.first.id);
-      final p = await buatDisetujui(client, items,
-          geserPinjam: 0, geserTempo: 5);
+        final client = await laboran();
+        final items = (await duaBarang(client)).take(1).toList();
+        final sebelum = (await BarangRepository(
+          client,
+        ).fetch()).firstWhere((b) => b.id == items.first.id);
+        final p = await buatDisetujui(
+          client,
+          items,
+          geserPinjam: 0,
+          geserTempo: 5,
+        );
 
-      await PengembalianRepository(client).catat(
-        idDetail: p.items.first.idDetail,
-        kondisi: KondisiBarang.rusak,
-      );
+        await PengembalianRepository(
+          client,
+        ).catat(idDetail: p.items.first.idDetail, kondisi: KondisiBarang.rusak);
 
-      final sesudah = (await BarangRepository(client).fetch())
-          .firstWhere((b) => b.id == items.first.id);
+        final sesudah = (await BarangRepository(
+          client,
+        ).fetch()).firstWhere((b) => b.id == items.first.id);
 
-      // tidakDiRak yang membedakan, bukan stok: memeriksa stok saja akan
-      // lolos juga kalau nanti kondisi rusak ditahan di luar stok sambil
-      // jumlah diturunkan untuk mengimbangi. Angka ini yang pecah kalau ada
-      // yang "memperbaiki" perilaku itu kemudian.
-      //
-      // Dibandingkan RELATIF terhadap keadaan sebelum, bukan terhadap nol:
-      // tes lain dalam rangkaian yang sama meninggalkan unit barang ini
-      // masih dipinjam, jadi nol bukan patokan yang sahih.
-      expect(sesudah.tidakDiRak, sebelum.tidakDiRak,
-          reason: 'unit rusak tidak boleh terbaca sebagai masih dipinjam');
-      expect(sesudah.stok, sebelum.stok);
-      // Pengurangan kepemilikan punya jalurnya sendiri: mutasi keluar.
-      expect(sesudah.jumlah, sebelum.jumlah);
-    });
+        // tidakDiRak yang membedakan, bukan stok: memeriksa stok saja akan
+        // lolos juga kalau nanti kondisi rusak ditahan di luar stok sambil
+        // jumlah diturunkan untuk mengimbangi. Angka ini yang pecah kalau ada
+        // yang "memperbaiki" perilaku itu kemudian.
+        //
+        // Dibandingkan RELATIF terhadap keadaan sebelum, bukan terhadap nol:
+        // tes lain dalam rangkaian yang sama meninggalkan unit barang ini
+        // masih dipinjam, jadi nol bukan patokan yang sahih.
+        expect(
+          sesudah.tidakDiRak,
+          sebelum.tidakDiRak,
+          reason: 'unit rusak tidak boleh terbaca sebagai masih dipinjam',
+        );
+        expect(sesudah.stok, sebelum.stok);
+        // Pengurangan kepemilikan punya jalurnya sendiri: mutasi keluar.
+        expect(sesudah.jumlah, sebelum.jumlah);
+      },
+    );
 
     test('mengembalikan item yang sama dua kali ditolak dengan 409', () async {
       if (!up) return;
 
       final client = await laboran();
       final items = (await duaBarang(client)).take(1).toList();
-      final p = await buatDisetujui(client, items,
-          geserPinjam: 0, geserTempo: 5);
+      final p = await buatDisetujui(
+        client,
+        items,
+        geserPinjam: 0,
+        geserTempo: 5,
+      );
       final repo = PengembalianRepository(client);
 
       await repo.catat(
-          idDetail: p.items.first.idDetail, kondisi: KondisiBarang.baik);
+        idDetail: p.items.first.idDetail,
+        kondisi: KondisiBarang.baik,
+      );
       final stokSetelahKembali = await stokKini(client, items.first.id);
 
       await expectLater(
         repo.catat(
-            idDetail: p.items.first.idDetail, kondisi: KondisiBarang.baik),
-        throwsA(isA<ApiException>()
-            .having((e) => e.statusCode, 'statusCode', 409)),
+          idDetail: p.items.first.idDetail,
+          kondisi: KondisiBarang.baik,
+        ),
+        throwsA(
+          isA<ApiException>().having((e) => e.statusCode, 'statusCode', 409),
+        ),
       );
 
       expect(await stokKini(client, items.first.id), stokSetelahKembali);
     });
 
-    test('pengembalian dari pengajuan yang belum diverifikasi ditolak',
-        () async {
-      if (!up) return;
+    test(
+      'pengembalian dari pengajuan yang belum diverifikasi ditolak',
+      () async {
+        if (!up) return;
 
-      final client = await laboran();
-      final barang = (await BarangRepository(client).fetch())
-          .firstWhere((b) => b.stok >= 1);
-      final peminjam = (await PeminjamRepository(client).fetch()).first;
-      final kini = DateTime.now();
+        final client = await laboran();
+        final barang = (await BarangRepository(
+          client,
+        ).fetch()).firstWhere((b) => b.stok >= 1);
+        final peminjam = (await PeminjamRepository(client).fetch()).first;
+        final kini = DateTime.now();
 
-      final p = await PeminjamanRepository(client).create(
-        idPeminjam: peminjam.id,
-        tanggalPinjam: iso(kini),
-        tanggalKembali: iso(kini.add(const Duration(days: 3))),
-        items: [
-          ItemKeranjang(
-            idBarang: barang.id,
-            kodeBarang: barang.kode,
-            namaBarang: barang.nama,
-            jumlah: 1,
-            stokTersedia: barang.stok,
+        final p = await PeminjamanRepository(client).create(
+          idPeminjam: peminjam.id,
+          tanggalPinjam: iso(kini),
+          tanggalKembali: iso(kini.add(const Duration(days: 3))),
+          items: [
+            ItemKeranjang(
+              idBarang: barang.id,
+              kodeBarang: barang.kode,
+              namaBarang: barang.nama,
+              jumlah: 1,
+              stokTersedia: barang.stok,
+            ),
+          ],
+        );
+
+        // Barangnya belum pernah diserahkan, jadi tidak ada yang bisa kembali.
+        await expectLater(
+          PengembalianRepository(client).catat(
+            idDetail: p.items.first.idDetail,
+            kondisi: KondisiBarang.baik,
           ),
-        ],
-      );
-
-      // Barangnya belum pernah diserahkan, jadi tidak ada yang bisa kembali.
-      await expectLater(
-        PengembalianRepository(client).catat(
-            idDetail: p.items.first.idDetail, kondisi: KondisiBarang.baik),
-        throwsA(isA<ApiException>()
-            .having((e) => e.statusCode, 'statusCode', 409)),
-      );
-    });
+          throwsA(
+            isA<ApiException>().having((e) => e.statusCode, 'statusCode', 409),
+          ),
+        );
+      },
+    );
 
     test('tab terlambat dan sudah_kembali menyaring dengan benar', () async {
       if (!up) return;
@@ -993,8 +1097,12 @@ void main() {
       final repo = PengembalianRepository(client);
       final items = (await duaBarang(client)).take(1).toList();
 
-      final telat = await buatDisetujui(client, items,
-          geserPinjam: -10, geserTempo: -2);
+      final telat = await buatDisetujui(
+        client,
+        items,
+        geserPinjam: -10,
+        geserTempo: -2,
+      );
 
       var daftar = await repo.fetch(tab: StatusPengembalian.terlambat);
       expect(daftar.map((t) => t.kode), contains(telat.kode));
@@ -1004,7 +1112,9 @@ void main() {
       );
 
       await repo.catat(
-          idDetail: telat.items.first.idDetail, kondisi: KondisiBarang.baik);
+        idDetail: telat.items.first.idDetail,
+        kondisi: KondisiBarang.baik,
+      );
 
       daftar = await repo.fetch(tab: StatusPengembalian.terlambat);
       expect(daftar.map((t) => t.kode), isNot(contains(telat.kode)));
@@ -1034,8 +1144,9 @@ void main() {
       await expectLater(
         PengembalianRepository(await kaprog())
             .catat(idDetail: 1, kondisi: KondisiBarang.baik),
-        throwsA(isA<ApiException>()
-            .having((e) => e.statusCode, 'statusCode', 403)),
+        throwsA(
+          isA<ApiException>().having((e) => e.statusCode, 'statusCode', 403),
+        ),
       );
     });
   });
@@ -1044,8 +1155,10 @@ void main() {
     Future<ApiClient> masuk(String username, String password) async {
       final storage = InMemoryTokenStorage();
       final client = buildClient(storage);
-      await AuthRepository(client, storage)
-          .login(username: username, password: password, rememberMe: true);
+      await AuthRepository(
+        client,
+        storage,
+      ).login(username: username, password: password, rememberMe: true);
       return client;
     }
 
@@ -1067,12 +1180,19 @@ void main() {
           final bytes = await repo.unduh(jenis: jenis, format: format);
           final awal = bytes.take(magic[format]!.length).toList();
 
-          expect(awal, magic[format],
-              reason: '${jenis.slug}/${format.value} bukan berkas $format yang sah');
+          expect(
+            awal,
+            magic[format],
+            reason:
+                '${jenis.slug}/${format.value} bukan berkas $format yang sah',
+          );
           // Berkas dengan magic bytes benar tapi isinya kosong tetap lolos
           // pemeriksaan awal, jadi ukurannya ikut diperiksa.
-          expect(bytes.length, greaterThan(3000),
-              reason: '${jenis.slug}/${format.value} terlalu kecil');
+          expect(
+            bytes.length,
+            greaterThan(3000),
+            reason: '${jenis.slug}/${format.value} terlalu kecil',
+          );
         }
       }
     });
@@ -1117,27 +1237,29 @@ void main() {
       expect(bytes.length, greaterThan(3000));
     });
 
-    test('periode menyaring: rentang lebar tidak lebih kecil dari sempit',
-        () async {
-      if (!up) return;
+    test(
+      'periode menyaring: rentang lebar tidak lebih kecil dari sempit',
+      () async {
+        if (!up) return;
 
-      final repo = LaporanRepository(await masuk('laboran', 'laboran123'));
+        final repo = LaporanRepository(await masuk('laboran', 'laboran123'));
 
-      final kosong = await repo.unduh(
-        jenis: JenisLaporan.peminjaman,
-        format: FormatLaporan.xlsx,
-        dari: '1990-01-01',
-        sampai: '1990-12-31',
-      );
-      final penuh = await repo.unduh(
-        jenis: JenisLaporan.peminjaman,
-        format: FormatLaporan.xlsx,
-      );
+        final kosong = await repo.unduh(
+          jenis: JenisLaporan.peminjaman,
+          format: FormatLaporan.xlsx,
+          dari: '1990-01-01',
+          sampai: '1990-12-31',
+        );
+        final penuh = await repo.unduh(
+          jenis: JenisLaporan.peminjaman,
+          format: FormatLaporan.xlsx,
+        );
 
-      // Bukti filternya benar-benar dipakai server: berkas seluruh periode
-      // memuat baris data, yang periode 1990 tidak punya.
-      expect(penuh.length, greaterThan(kosong.length));
-    });
+        // Bukti filternya benar-benar dipakai server: berkas seluruh periode
+        // memuat baris data, yang periode 1990 tidak punya.
+        expect(penuh.length, greaterThan(kosong.length));
+      },
+    );
 
     test('tanpa token, unduhan ditolak 401 dan bukan berkas rusak', () async {
       if (!up) return;
@@ -1147,24 +1269,85 @@ void main() {
 
       await expectLater(
         repo.unduh(jenis: JenisLaporan.barang, format: FormatLaporan.pdf),
-        throwsA(isA<ApiException>()
-            .having((e) => e.statusCode, 'statusCode', 401)),
+        throwsA(
+          isA<ApiException>().having((e) => e.statusCode, 'statusCode', 401),
+        ),
       );
     });
 
-    test('kegagalan server diterjemahkan jadi pesan, bukan byte JSON',
-        () async {
+    test(
+      'kegagalan server diterjemahkan jadi pesan, bukan byte JSON',
+      () async {
+        if (!up) return;
+
+        final client = await masuk('laboran', 'laboran123');
+
+        // Format tidak dikenal dibalas 400 berisi JSON; unduh() harus
+        // mengurainya jadi pesan, bukan mengembalikannya sebagai berkas.
+        await expectLater(
+          client.unduh('/api/laporan/barang', query: {'format': 'csv'}),
+          throwsA(
+            isA<ApiException>()
+                .having((e) => e.statusCode, 'statusCode', 400)
+                .having((e) => e.message, 'message', contains('Format harus')),
+          ),
+        );
+      },
+    );
+  });
+
+  group('Sprint 6 — ringkasan dashboard lewat lapisan jaringan', () {
+    Future<ApiClient> masuk(String username, String password) async {
+      final storage = InMemoryTokenStorage();
+      final client = buildClient(storage);
+      await AuthRepository(
+        client,
+        storage,
+      ).login(username: username, password: password, rememberMe: true);
+      return client;
+    }
+
+    test('parser membaca seluruh angka dari backend nyata', () async {
       if (!up) return;
 
-      final client = await masuk('laboran', 'laboran123');
+      final r = await DashboardRepository(await masuk('laboran', 'laboran123'))
+          .ambil();
 
-      // Format tidak dikenal dibalas 400 berisi JSON; unduh() harus
-      // mengurainya jadi pesan, bukan mengembalikannya sebagai berkas.
+      // Yang diuji di sini bukan nilai pastinya — data dev berubah tiap
+      // suite backend dijalankan — melainkan bahwa parser-nya tidak diam-diam
+      // memulangkan nol untuk field yang namanya salah eja.
+      expect(r.jenisBarang, greaterThan(0));
+      expect(r.totalUnit, greaterThan(0));
+      expect(r.unitTersedia, greaterThanOrEqualTo(0));
+      expect(r.unitTersedia, lessThanOrEqualTo(r.totalUnit));
+
+      // Identitas yang mengikat ketiga angka. Kalau parser salah memetakan
+      // salah satunya, identitas ini yang pertama pecah.
+      expect(r.totalUnit - r.unitTersedia, r.unitDipinjam + r.unitDiajukan);
+    });
+
+    test('Kepala Program membaca ringkasan yang sama, bukan 403', () async {
+      if (!up) return;
+
+      final laboran = await DashboardRepository(
+        await masuk('laboran', 'laboran123'),
+      ).ambil();
+      final kaprog = await DashboardRepository(
+        await masuk('kaprog', 'kaprog123'),
+      ).ambil();
+
+      expect(kaprog.totalUnit, laboran.totalUnit);
+      expect(kaprog.menungguVerifikasi, laboran.menungguVerifikasi);
+    });
+
+    test('tanpa token, ringkasan ditolak 401', () async {
+      if (!up) return;
+
       await expectLater(
-        client.unduh('/api/laporan/barang', query: {'format': 'csv'}),
-        throwsA(isA<ApiException>()
-            .having((e) => e.statusCode, 'statusCode', 400)
-            .having((e) => e.message, 'message', contains('Format harus'))),
+        DashboardRepository(buildClient(InMemoryTokenStorage())).ambil(),
+        throwsA(
+          isA<ApiException>().having((e) => e.statusCode, 'statusCode', 401),
+        ),
       );
     });
   });

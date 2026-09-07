@@ -53,9 +53,9 @@ void main() {
   // sungguhan, dan sebaliknya.
   setUpAll(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
-    await (FontLoader(AppTypography.family)
-          ..addFont(rootBundle.load('assets/fonts/Inter-Variable.ttf')))
-        .load();
+    await (FontLoader(
+      AppTypography.family,
+    )..addFont(rootBundle.load('assets/fonts/Inter-Variable.ttf'))).load();
   });
 
   // ── Data uji ───────────────────────────────────────────────────────
@@ -203,21 +203,46 @@ void main() {
     String? alasan,
     bool withItems = false,
   }) => {
-        'id_peminjaman': id,
-        'kode_peminjaman': kode,
-        'id_peminjam': 1,
-        'nama_peminjam': 'Raka Maulana Abdurrahman Wijayakusuma',
-        'nis_nip': '0051234567',
-        'kelas_jabatan': 'XI Rekayasa Perangkat Lunak 2',
-        'dicatat_oleh': 'laboran',
-        'tanggal_pinjam': '2026-09-01',
-        'tanggal_kembali': '2026-09-08',
-        'status': status,
-        'alasan_dibatalkan': alasan,
-        'jumlah_item': 2,
-        'total_unit': 3,
-        if (withItems) 'items': itemsJson,
-      };
+    'id_peminjaman': id,
+    'kode_peminjaman': kode,
+    'id_peminjam': 1,
+    'nama_peminjam': 'Raka Maulana Abdurrahman Wijayakusuma',
+    'nis_nip': '0051234567',
+    'kelas_jabatan': 'XI Rekayasa Perangkat Lunak 2',
+    'dicatat_oleh': 'laboran',
+    'tanggal_pinjam': '2026-09-01',
+    'tanggal_kembali': '2026-09-08',
+    'status': status,
+    'alasan_dibatalkan': alasan,
+    'jumlah_item': 2,
+    'total_unit': 3,
+    if (withItems) 'items': itemsJson,
+  };
+
+  // Angka ringkasan Dashboard. Nilainya sengaja konsisten satu sama lain:
+  // total_unit - unit_tersedia == unit_dipinjam + unit_diajukan
+  // (224 - 204 == 4 + 16). Pengujian di bawah ikut menegakkan identitas itu,
+  // karena kalau tidak konsisten angkanya di layar akan terbaca seperti bug.
+  Map<String, Object?> dashboardJson({
+    int terlambat = 0,
+    int menunggu = 6,
+    int jenisHabis = 0,
+  }) => {
+    'barang': {
+      'jenis': 8,
+      'total_unit': 224,
+      'unit_tersedia': 204,
+      'jenis_habis': jenisHabis,
+    },
+    'peminjaman': {
+      'unit_dipinjam': 4,
+      'transaksi_dipinjam': 2,
+      'unit_diajukan': 16,
+      'menunggu_verifikasi': menunggu,
+      'terlambat': terlambat,
+    },
+    'denda': {'total_tercatat': 30000},
+  };
 
   final transaksiRespons = <String, Object?>{
     '/api/peminjaman': [
@@ -238,8 +263,10 @@ void main() {
       alasan: 'Barang sedang dipakai praktik kelas XII sore ini.',
       withItems: true,
     ),
-    '/api/peminjaman/1/verifikasi':
-        peminjamanJson(status: 'dipinjam', withItems: true),
+    '/api/peminjaman/1/verifikasi': peminjamanJson(
+      status: 'dipinjam',
+      withItems: true,
+    ),
     '/api/barang': barangJson,
     '/api/kategori': kategoriJson,
     '/api/peminjam': peminjamJson,
@@ -282,22 +309,22 @@ void main() {
     int kembali = 1,
     double denda = 15000,
   }) => {
-        'id_peminjaman': id,
-        'kode_peminjaman': kode,
-        'nama_peminjam': 'Raka Maulana Abdurrahman Wijayakusuma',
-        'nis_nip': '0051234567',
-        'kelas_jabatan': 'XI Rekayasa Perangkat Lunak 2',
-        'dicatat_oleh': 'laboran',
-        'tanggal_pinjam': '2026-08-28',
-        'tanggal_kembali': '2026-09-02',
-        'status': sisa == 0 ? 'dikembalikan' : 'sebagian_kembali',
-        'jumlah_item': 2,
-        'total_unit': 3,
-        'item_sisa': sisa,
-        'item_kembali': kembali,
-        'total_denda': denda,
-        'tampilan_status': tampilan,
-      };
+    'id_peminjaman': id,
+    'kode_peminjaman': kode,
+    'nama_peminjam': 'Raka Maulana Abdurrahman Wijayakusuma',
+    'nis_nip': '0051234567',
+    'kelas_jabatan': 'XI Rekayasa Perangkat Lunak 2',
+    'dicatat_oleh': 'laboran',
+    'tanggal_pinjam': '2026-08-28',
+    'tanggal_kembali': '2026-09-02',
+    'status': sisa == 0 ? 'dikembalikan' : 'sebagian_kembali',
+    'jumlah_item': 2,
+    'total_unit': 3,
+    'item_sisa': sisa,
+    'item_kembali': kembali,
+    'total_denda': denda,
+    'tampilan_status': tampilan,
+  };
 
   final pengembalianRespons = <String, Object?>{
     '/api/pengembalian': [
@@ -398,8 +425,9 @@ void main() {
       expect(find.text('Lupa Password?'), findsOne);
     });
 
-    testWidgets('di layar 640dp tautan bawah masih terjangkau lewat scroll',
-        (tester) async {
+    testWidgets('di layar 640dp tautan bawah masih terjangkau lewat scroll', (
+      tester,
+    ) async {
       await pasang(tester, const LoginScreen(), ukuran: _layarPendek);
 
       // Di layar sependek ini tautannya jatuh di bawah lipatan; yang penting
@@ -417,19 +445,33 @@ void main() {
   // ── Dashboard ──────────────────────────────────────────────────────
 
   group('Dashboard', () {
+    final ringkasan = {'/api/dashboard': dashboardJson()};
+
     testWidgets('Laboran melihat sapaan dan empat pintasan', (tester) async {
-      await pasang(tester, const DashboardScreen());
+      await pasang(tester, const DashboardScreen(), respons: ringkasan);
 
       expect(tester.takeException(), isNull);
       expect(find.text('Halo Laboran'), findsOne);
       expect(find.text('Selamat datang kembali, laboran.'), findsOne);
-      for (final label in ['Kategori', 'Kelola User', 'Data Peminjam', 'Pengaturan Denda']) {
+      for (final label in [
+        'Kategori',
+        'Kelola User',
+        'Data Peminjam',
+        'Pengaturan Denda',
+      ]) {
         expect(find.text(label), findsOne, reason: 'pintasan $label hilang');
       }
     });
 
-    testWidgets('Kepala Program tidak melihat grid akses cepat', (tester) async {
-      await pasang(tester, const DashboardScreen(), user: kaprog);
+    testWidgets('Kepala Program tidak melihat grid akses cepat', (
+      tester,
+    ) async {
+      await pasang(
+        tester,
+        const DashboardScreen(),
+        user: kaprog,
+        respons: ringkasan,
+      );
 
       expect(tester.takeException(), isNull);
       expect(find.text('Halo Kepala Program'), findsOne);
@@ -441,7 +483,7 @@ void main() {
     });
 
     testWidgets('tombol logout membuka dialog konfirmasi', (tester) async {
-      await pasang(tester, const DashboardScreen());
+      await pasang(tester, const DashboardScreen(), respons: ringkasan);
 
       await tester.tap(find.byTooltip('Logout'));
       await tester.pumpAndSettle();
@@ -449,13 +491,130 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(find.text('Keluar dari aplikasi?'), findsOne);
     });
+
+    testWidgets('angka ringkasan diambil dari API, bukan placeholder', (
+      tester,
+    ) async {
+      await pasang(tester, const DashboardScreen(), respons: ringkasan);
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('224 unit'), findsOne);
+      expect(find.text('8 jenis barang, 204 unit ada di rak'), findsOne);
+      expect(find.text('4 unit'), findsOne);
+      expect(find.text('6 pengajuan'), findsOne);
+      expect(find.text('Rp 30.000'), findsOne);
+    });
+
+    testWidgets('unit tertahan pengajuan disebut, bukan digabung ke dipinjam', (
+      tester,
+    ) async {
+      // Ini pemisahan yang paling mudah salah dibaca. Stok berkurang sejak
+      // pengajuan dibuat, jadi 224 - 204 = 20 unit di luar rak, padahal yang
+      // benar-benar disetujui cuma 4. Keterangannya harus menjelaskan
+      // 16 unit sisanya, bukan menyembunyikannya di angka "Sedang Dipinjam".
+      await pasang(tester, const DashboardScreen(), respons: ringkasan);
+
+      expect(find.text('4 unit'), findsOne);
+      expect(find.text('20 unit'), findsNothing);
+      expect(
+        find.text('Menahan 16 unit dari stok sampai diputuskan'),
+        findsOne,
+      );
+    });
+
+    testWidgets('kartu Terlambat hanya muncul kalau ada yang terlambat', (
+      tester,
+    ) async {
+      await pasang(tester, const DashboardScreen(), respons: ringkasan);
+      expect(find.text('Terlambat'), findsNothing);
+
+      await pasang(
+        tester,
+        const DashboardScreen(),
+        respons: {'/api/dashboard': dashboardJson(terlambat: 3)},
+      );
+
+      expect(find.text('Terlambat'), findsOne);
+      expect(find.text('3 transaksi'), findsOne);
+    });
+
+    testWidgets('nol pengajuan berbunyi wajar, bukan "0 unit ditahan"', (
+      tester,
+    ) async {
+      await pasang(
+        tester,
+        const DashboardScreen(),
+        respons: {'/api/dashboard': dashboardJson(menunggu: 0)},
+      );
+
+      expect(find.text('0 pengajuan'), findsOne);
+      expect(find.text('Tidak ada pengajuan yang menggantung'), findsOne);
+    });
+
+    testWidgets('stok habis disebut hanya kalau memang ada', (tester) async {
+      await pasang(
+        tester,
+        const DashboardScreen(),
+        respons: {'/api/dashboard': dashboardJson(jenisHabis: 2)},
+      );
+
+      expect(
+        find.text(
+          '8 jenis barang, 204 unit ada di rak · 2 jenis stoknya habis',
+        ),
+        findsOne,
+      );
+    });
+
+    testWidgets('ringkasan gagal dimuat menawarkan Coba lagi', (tester) async {
+      await pasang(tester, const DashboardScreen(), mode: _ModeApi.gagal);
+
+      expect(tester.takeException(), isNull);
+      // Kegagalan ringkasan tidak boleh menjatuhkan seluruh Dashboard:
+      // pintasan dan sapaannya harus tetap ada.
+      expect(find.text('Halo Laboran'), findsOne);
+      expect(find.text('Ringkasan gagal dimuat'), findsOne);
+      expect(find.text('Coba lagi'), findsOne);
+    });
+
+    testWidgets('kartu Perlu Verifikasi bisa disentuh Kepala Program saja', (
+      tester,
+    ) async {
+      // Laboran tidak punya layar Verifikasi (Tabel 3.1), jadi kartunya
+      // memang tidak boleh jadi tautan — bukan disembunyikan, tapi tidak
+      // ada tujuan yang boleh dibuka.
+      for (final (user, adaTautan) in [(laboran, false), (kaprog, true)]) {
+        await pasang(
+          tester,
+          const DashboardScreen(),
+          user: user,
+          respons: ringkasan,
+        );
+
+        final kartu = find.ancestor(
+          of: find.text('Perlu Verifikasi'),
+          matching: find.byType(InkWell),
+        );
+        expect(
+          kartu,
+          adaTautan ? findsWidgets : findsNothing,
+          reason: 'tautan verifikasi untuk ${user.level.label}',
+        );
+      }
+    });
   });
 
   // ── Kelola User ────────────────────────────────────────────────────
 
   group('Kelola User', () {
-    testWidgets('menampilkan kartu akun dan menandai akun sendiri', (tester) async {
-      await pasang(tester, const UsersScreen(), respons: {'/api/users': usersJson});
+    testWidgets('menampilkan kartu akun dan menandai akun sendiri', (
+      tester,
+    ) async {
+      await pasang(
+        tester,
+        const UsersScreen(),
+        respons: {'/api/users': usersJson},
+      );
 
       expect(tester.takeException(), isNull);
       expect(find.text('laboran'), findsOne);
@@ -466,7 +625,11 @@ void main() {
     });
 
     testWidgets('tombol hapus akun sendiri dimatikan', (tester) async {
-      await pasang(tester, const UsersScreen(), respons: {'/api/users': usersJson});
+      await pasang(
+        tester,
+        const UsersScreen(),
+        respons: {'/api/users': usersJson},
+      );
 
       // byTooltip menunjuk widget Tooltip-nya; tombolnya ada di atasnya.
       final tombol = tester.widget<IconButton>(
@@ -485,7 +648,9 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsOne);
     });
 
-    testWidgets('keadaan gagal menampilkan pesan backend apa adanya', (tester) async {
+    testWidgets('keadaan gagal menampilkan pesan backend apa adanya', (
+      tester,
+    ) async {
       await pasang(tester, const UsersScreen(), mode: _ModeApi.gagal);
 
       expect(tester.takeException(), isNull);
@@ -494,7 +659,11 @@ void main() {
     });
 
     testWidgets('keadaan kosong memakai pesan sendiri', (tester) async {
-      await pasang(tester, const UsersScreen(), respons: {'/api/users': const []});
+      await pasang(
+        tester,
+        const UsersScreen(),
+        respons: {'/api/users': const []},
+      );
 
       expect(tester.takeException(), isNull);
       expect(find.text('Belum ada akun pengguna.'), findsOne);
@@ -538,7 +707,10 @@ void main() {
       expect(tester.takeException(), isNull);
       // Filter dikirim ke server; API palsu menyaring seperti backend.
       expect(find.text('PC Rakitan Core i5'), findsNothing);
-      expect(find.text('Tidak ada barang yang cocok dengan pencarian.'), findsOne);
+      expect(
+        find.text('Tidak ada barang yang cocok dengan pencarian.'),
+        findsOne,
+      );
     });
 
     testWidgets('beralih ke Mutasi Stok menampilkan riwayat', (tester) async {
@@ -574,8 +746,9 @@ void main() {
       expect(find.text('Hapus barang?'), findsOne);
     });
 
-    testWidgets('gagal memuat barang tetap menampilkan segmented control',
-        (tester) async {
+    testWidgets('gagal memuat barang tetap menampilkan segmented control', (
+      tester,
+    ) async {
       await pasang(tester, const AsetScreen(), mode: _ModeApi.gagal);
 
       expect(tester.takeException(), isNull);
@@ -649,8 +822,9 @@ void main() {
       expect(find.text('2'), findsOne);
     });
 
-    testWidgets('peminjam tanpa NIS dan kelas tidak menabrak layout',
-        (tester) async {
+    testWidgets('peminjam tanpa NIS dan kelas tidak menabrak layout', (
+      tester,
+    ) async {
       await pasang(
         tester,
         const PeminjamScreen(),
@@ -686,8 +860,9 @@ void main() {
   // ── Transaksi (FR-05) ──────────────────────────────────────────────
 
   group('Transaksi', () {
-    testWidgets('daftar peminjaman dengan kode, badge status, dan identitas',
-        (tester) async {
+    testWidgets('daftar peminjaman dengan kode, badge status, dan identitas', (
+      tester,
+    ) async {
       await pasang(tester, const TransaksiScreen(), respons: transaksiRespons);
 
       expect(tester.takeException(), isNull);
@@ -695,8 +870,10 @@ void main() {
       expect(find.text('MENUNGGU VERIFIKASI'), findsOne);
       expect(find.text('DIPINJAM'), findsOne);
       expect(find.text('DIBATALKAN'), findsOne);
-      expect(find.text('0051234567 · XI Rekayasa Perangkat Lunak 2'),
-          findsExactly(3));
+      expect(
+        find.text('0051234567 · XI Rekayasa Perangkat Lunak 2'),
+        findsExactly(3),
+      );
       expect(find.text('Peminjaman Baru'), findsOne);
     });
 
@@ -712,10 +889,11 @@ void main() {
     });
 
     testWidgets('beralih ke tab Pengembalian memuat daftarnya', (tester) async {
-      await pasang(tester, const TransaksiScreen(), respons: {
-        ...transaksiRespons,
-        ...pengembalianRespons,
-      });
+      await pasang(
+        tester,
+        const TransaksiScreen(),
+        respons: {...transaksiRespons, ...pengembalianRespons},
+      );
 
       await tester.tap(find.text('Pengembalian'));
       await tester.pumpAndSettle();
@@ -742,19 +920,24 @@ void main() {
       expect(find.text('Tolak'), findsNothing);
     });
 
-    testWidgets('rincian transaksi yang sudah kembali menampilkan denda juga',
-        (tester) async {
+    testWidgets('rincian transaksi yang sudah kembali menampilkan denda juga', (
+      tester,
+    ) async {
       // Sheet ini dibuka dari tab Peminjaman, bukan Pengembalian. Kalau
       // rincian pengembaliannya tidak ikut ditampilkan, dua layar akan
       // bercerita berbeda tentang transaksi yang sama.
-      await pasang(tester, const TransaksiScreen(), respons: {
-        ...transaksiRespons,
-        '/api/peminjaman/1': {
-          ...peminjamanJson(id: 1, status: 'sebagian_kembali'),
-          'total_denda': 15000,
-          'items': itemsSebagianJson,
+      await pasang(
+        tester,
+        const TransaksiScreen(),
+        respons: {
+          ...transaksiRespons,
+          '/api/peminjaman/1': {
+            ...peminjamanJson(id: 1, status: 'sebagian_kembali'),
+            'total_denda': 15000,
+            'items': itemsSebagianJson,
+          },
         },
-      });
+      );
 
       await tester.tap(find.text('PMJ-2026-001'));
       await tester.pumpAndSettle();
@@ -769,8 +952,9 @@ void main() {
       expect(find.text('1 dari 2 belum kembali'), findsOne);
     });
 
-    testWidgets('rincian transaksi yang ditolak menampilkan alasannya',
-        (tester) async {
+    testWidgets('rincian transaksi yang ditolak menampilkan alasannya', (
+      tester,
+    ) async {
       await pasang(tester, const TransaksiScreen(), respons: transaksiRespons);
 
       await tester.tap(find.text('PMJ-2026-003'));
@@ -778,13 +962,18 @@ void main() {
 
       expect(tester.takeException(), isNull);
       expect(find.text('Alasan ditolak'), findsOne);
-      expect(find.text('Barang sedang dipakai praktik kelas XII sore ini.'),
-          findsOne);
+      expect(
+        find.text('Barang sedang dipakai praktik kelas XII sore ini.'),
+        findsOne,
+      );
     });
 
     testWidgets('keadaan kosong dan gagal terender', (tester) async {
-      await pasang(tester, const TransaksiScreen(),
-          respons: {'/api/peminjaman': const []});
+      await pasang(
+        tester,
+        const TransaksiScreen(),
+        respons: {'/api/peminjaman': const []},
+      );
       expect(tester.takeException(), isNull);
       expect(find.textContaining('Belum ada transaksi peminjaman'), findsOne);
 
@@ -797,10 +986,15 @@ void main() {
   // ── Form Peminjaman Baru multi-item ────────────────────────────────
 
   group('Peminjaman Baru', () {
-    testWidgets('form terbuka di layar pendek dengan keranjang kosong',
-        (tester) async {
-      await pasang(tester, const TransaksiScreen(),
-          ukuran: _layarPendek, respons: transaksiRespons);
+    testWidgets('form terbuka di layar pendek dengan keranjang kosong', (
+      tester,
+    ) async {
+      await pasang(
+        tester,
+        const TransaksiScreen(),
+        ukuran: _layarPendek,
+        respons: transaksiRespons,
+      );
 
       await tester.tap(find.text('Peminjaman Baru'));
       await tester.pumpAndSettle();
@@ -813,8 +1007,9 @@ void main() {
       expect(find.text('Tambah Barang'), findsOne);
     });
 
-    testWidgets('mengajukan tanpa barang menyorot keranjang, bukan diam',
-        (tester) async {
+    testWidgets('mengajukan tanpa barang menyorot keranjang, bukan diam', (
+      tester,
+    ) async {
       await pasang(tester, const TransaksiScreen(), respons: transaksiRespons);
 
       await tester.tap(find.text('Peminjaman Baru'));
@@ -823,16 +1018,19 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
-      expect(find.text('Tambahkan minimal satu barang sebelum mengajukan.'),
-          findsOne);
+      expect(
+        find.text('Tambahkan minimal satu barang sebelum mengajukan.'),
+        findsOne,
+      );
       // Peminjam belum dipilih, jadi validator Form juga bicara.
       expect(find.text('Peminjam wajib dipilih'), findsOne);
       // Sheet tetap terbuka — tidak boleh tertutup diam-diam.
       expect(find.text('Ajukan Peminjaman'), findsOne);
     });
 
-    testWidgets('menambah barang ke keranjang menampilkan jumlah dan stok',
-        (tester) async {
+    testWidgets('menambah barang ke keranjang menampilkan jumlah dan stok', (
+      tester,
+    ) async {
       await pasang(tester, const TransaksiScreen(), respons: transaksiRespons);
 
       await tester.tap(find.text('Peminjaman Baru'));
@@ -859,10 +1057,15 @@ void main() {
     // apa adanya; yang tersisa nanti hanya satu pengajuan.
     final verifikasiRespons = transaksiRespons;
 
-    testWidgets('menampilkan pengajuan yang menunggu keputusan',
-        (tester) async {
-      await pasang(tester, const VerifikasiScreen(),
-          user: kaprog, respons: verifikasiRespons);
+    testWidgets('menampilkan pengajuan yang menunggu keputusan', (
+      tester,
+    ) async {
+      await pasang(
+        tester,
+        const VerifikasiScreen(),
+        user: kaprog,
+        respons: verifikasiRespons,
+      );
 
       expect(tester.takeException(), isNull);
       expect(find.text('1 pengajuan menunggu keputusan Anda.'), findsOne);
@@ -870,10 +1073,15 @@ void main() {
       expect(find.text('Periksa & putuskan'), findsOne);
     });
 
-    testWidgets('rincian pengajuan memunculkan tombol Setujui dan Tolak',
-        (tester) async {
-      await pasang(tester, const VerifikasiScreen(),
-          user: kaprog, respons: verifikasiRespons);
+    testWidgets('rincian pengajuan memunculkan tombol Setujui dan Tolak', (
+      tester,
+    ) async {
+      await pasang(
+        tester,
+        const VerifikasiScreen(),
+        user: kaprog,
+        respons: verifikasiRespons,
+      );
 
       await tester.tap(find.text('Periksa & putuskan'));
       await tester.pumpAndSettle();
@@ -885,8 +1093,12 @@ void main() {
     });
 
     testWidgets('Setujui meminta konfirmasi lebih dulu', (tester) async {
-      await pasang(tester, const VerifikasiScreen(),
-          user: kaprog, respons: verifikasiRespons);
+      await pasang(
+        tester,
+        const VerifikasiScreen(),
+        user: kaprog,
+        respons: verifikasiRespons,
+      );
 
       await tester.tap(find.text('Periksa & putuskan'));
       await tester.pumpAndSettle();
@@ -897,10 +1109,15 @@ void main() {
       expect(find.text('Setujui pengajuan?'), findsOne);
     });
 
-    testWidgets('Setujui sampai tuntas: PATCH, SnackBar, lalu sheet tertutup',
-        (tester) async {
-      await pasang(tester, const VerifikasiScreen(),
-          user: kaprog, respons: verifikasiRespons);
+    testWidgets('Setujui sampai tuntas: PATCH, SnackBar, lalu sheet tertutup', (
+      tester,
+    ) async {
+      await pasang(
+        tester,
+        const VerifikasiScreen(),
+        user: kaprog,
+        respons: verifikasiRespons,
+      );
 
       await tester.tap(find.text('Periksa & putuskan'));
       await tester.pumpAndSettle();
@@ -909,10 +1126,12 @@ void main() {
 
       // Konfirmasi ditekan — dari sini alurnya berjalan sampai habis:
       // PATCH ke server, invalidate provider, SnackBar, lalu sheet ditutup.
-      await tester.tap(find.descendant(
-        of: find.byType(AlertDialog),
-        matching: find.widgetWithText(FilledButton, 'Setujui'),
-      ));
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.widgetWithText(FilledButton, 'Setujui'),
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
@@ -922,8 +1141,12 @@ void main() {
     });
 
     testWidgets('Tolak mewajibkan alasan diisi', (tester) async {
-      await pasang(tester, const VerifikasiScreen(),
-          user: kaprog, respons: verifikasiRespons);
+      await pasang(
+        tester,
+        const VerifikasiScreen(),
+        user: kaprog,
+        respons: verifikasiRespons,
+      );
 
       await tester.tap(find.text('Periksa & putuskan'));
       await tester.pumpAndSettle();
@@ -942,14 +1165,21 @@ void main() {
       expect(find.text('Tolak pengajuan'), findsOne);
     });
 
-    testWidgets('tidak ada pengajuan menampilkan keadaan kosong',
-        (tester) async {
-      await pasang(tester, const VerifikasiScreen(),
-          user: kaprog, respons: {'/api/peminjaman': const []});
+    testWidgets('tidak ada pengajuan menampilkan keadaan kosong', (
+      tester,
+    ) async {
+      await pasang(
+        tester,
+        const VerifikasiScreen(),
+        user: kaprog,
+        respons: {'/api/peminjaman': const []},
+      );
 
       expect(tester.takeException(), isNull);
-      expect(find.text('Tidak ada pengajuan yang menunggu verifikasi.'),
-          findsOne);
+      expect(
+        find.text('Tidak ada pengajuan yang menunggu verifikasi.'),
+        findsOne,
+      );
     });
   });
 
@@ -1035,7 +1265,11 @@ void main() {
   // ── Pengembalian (FR-06) ───────────────────────────────────────────
 
   group('Pengembalian', () {
-    Future<void> bukaTab(WidgetTester tester, {double skala = 1, Size? ukuran}) async {
+    Future<void> bukaTab(
+      WidgetTester tester, {
+      double skala = 1,
+      Size? ukuran,
+    }) async {
       await pasang(
         tester,
         const TransaksiScreen(),
@@ -1078,8 +1312,9 @@ void main() {
       expect(find.text('PMJ-2026-001'), findsNothing);
     });
 
-    testWidgets('rincian memisahkan item yang sudah dan belum kembali',
-        (tester) async {
+    testWidgets('rincian memisahkan item yang sudah dan belum kembali', (
+      tester,
+    ) async {
       await bukaTab(tester);
 
       await tester.tap(find.text('PMJ-2026-001'));
@@ -1096,8 +1331,9 @@ void main() {
       expect(find.text('Kembalikan'), findsOne);
     });
 
-    testWidgets('form pengembalian menampilkan pratinjau denda read-only',
-        (tester) async {
+    testWidgets('form pengembalian menampilkan pratinjau denda read-only', (
+      tester,
+    ) async {
       await bukaTab(tester);
       await tester.tap(find.text('PMJ-2026-001'));
       await tester.pumpAndSettle();
@@ -1117,8 +1353,9 @@ void main() {
       expect(find.textContaining('per hari'), findsOne);
     });
 
-    testWidgets('memilih kondisi rusak menjelaskan stok tetap dipulihkan',
-        (tester) async {
+    testWidgets('memilih kondisi rusak menjelaskan stok tetap dipulihkan', (
+      tester,
+    ) async {
       await bukaTab(tester);
       await tester.tap(find.text('PMJ-2026-001'));
       await tester.pumpAndSettle();
@@ -1132,8 +1369,9 @@ void main() {
       expect(find.textContaining('tetap masuk kembali ke stok'), findsOne);
     });
 
-    testWidgets('konfirmasi sampai tuntas: POST lalu SnackBar berisi denda',
-        (tester) async {
+    testWidgets('konfirmasi sampai tuntas: POST lalu SnackBar berisi denda', (
+      tester,
+    ) async {
       await bukaTab(tester);
       await tester.tap(find.text('PMJ-2026-001'));
       await tester.pumpAndSettle();
@@ -1150,16 +1388,19 @@ void main() {
     });
 
     testWidgets('keadaan kosong dan gagal terender', (tester) async {
-      await pasang(tester, const TransaksiScreen(), respons: {
-        ...transaksiRespons,
-        '/api/pengembalian': const [],
-      });
+      await pasang(
+        tester,
+        const TransaksiScreen(),
+        respons: {...transaksiRespons, '/api/pengembalian': const []},
+      );
       await tester.tap(find.text('Pengembalian'));
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
-      expect(find.textContaining('Belum ada barang yang perlu dikembalikan'),
-          findsOne);
+      expect(
+        find.textContaining('Belum ada barang yang perlu dikembalikan'),
+        findsOne,
+      );
     });
 
     testWidgets('rincian di layar pendek pada skala 1,5', (tester) async {
@@ -1176,10 +1417,14 @@ void main() {
   // ── Pengaturan Denda (FR-11) ───────────────────────────────────────
 
   group('Pengaturan Denda', () {
-    testWidgets('menampilkan tarif berjalan dan contoh perhitungannya',
-        (tester) async {
-      await pasang(tester, const PengaturanDendaScreen(),
-          respons: pengembalianRespons);
+    testWidgets('menampilkan tarif berjalan dan contoh perhitungannya', (
+      tester,
+    ) async {
+      await pasang(
+        tester,
+        const PengaturanDendaScreen(),
+        respons: pengembalianRespons,
+      );
 
       expect(tester.takeException(), isNull);
       expect(find.text('Tarif denda keterlambatan'), findsOne);
@@ -1187,10 +1432,14 @@ void main() {
       expect(find.textContaining('3 × Rp 5.000 = Rp 15.000'), findsOne);
     });
 
-    testWidgets('tarif negatif tidak bisa diketik, kosong ditolak validator',
-        (tester) async {
-      await pasang(tester, const PengaturanDendaScreen(),
-          respons: pengembalianRespons);
+    testWidgets('tarif negatif tidak bisa diketik, kosong ditolak validator', (
+      tester,
+    ) async {
+      await pasang(
+        tester,
+        const PengaturanDendaScreen(),
+        respons: pengembalianRespons,
+      );
 
       // FilteringTextInputFormatter.digitsOnly menyaring tanda minus.
       await tester.enterText(find.byType(TextFormField), '-500');
@@ -1207,8 +1456,11 @@ void main() {
     });
 
     testWidgets('tarif di atas batas ditolak validator', (tester) async {
-      await pasang(tester, const PengaturanDendaScreen(),
-          respons: pengembalianRespons);
+      await pasang(
+        tester,
+        const PengaturanDendaScreen(),
+        respons: pengembalianRespons,
+      );
 
       await tester.enterText(find.byType(TextFormField), '2000000');
       await tester.pumpAndSettle();
@@ -1219,8 +1471,11 @@ void main() {
     });
 
     testWidgets('tarif 0 dijelaskan artinya, bukan ditolak', (tester) async {
-      await pasang(tester, const PengaturanDendaScreen(),
-          respons: pengembalianRespons);
+      await pasang(
+        tester,
+        const PengaturanDendaScreen(),
+        respons: pengembalianRespons,
+      );
 
       await tester.enterText(find.byType(TextFormField), '0');
       await tester.pumpAndSettle();
@@ -1230,8 +1485,11 @@ void main() {
     });
 
     testWidgets('menyimpan tarif melaporkan hasilnya', (tester) async {
-      await pasang(tester, const PengaturanDendaScreen(),
-          respons: pengembalianRespons);
+      await pasang(
+        tester,
+        const PengaturanDendaScreen(),
+        respons: pengembalianRespons,
+      );
 
       await tester.enterText(find.byType(TextFormField), '7500');
       await tester.pumpAndSettle();
@@ -1269,12 +1527,14 @@ void main() {
             tokenStorageProvider.overrideWithValue(InMemoryTokenStorage()),
             apiClientProvider.overrideWithValue(_ApiPalsu(const {}, mode)),
             currentUserProvider.overrideWithValue(user),
-            penyimpanBerkasProvider.overrideWithValue(
-              (bytes, nama, mime) async {
-                tersimpan.add((panjang: bytes.length, nama: nama, mime: mime));
-                return '$nama diunduh browser.';
-              },
-            ),
+            penyimpanBerkasProvider.overrideWithValue((
+              bytes,
+              nama,
+              mime,
+            ) async {
+              tersimpan.add((panjang: bytes.length, nama: nama, mime: mime));
+              return '$nama diunduh browser.';
+            }),
           ],
           child: MaterialApp(
             theme: AppTheme.light(),
@@ -1304,25 +1564,35 @@ void main() {
     }
 
     Finder tombolDiKartu(String judul, String format) => find.descendant(
-          of: find.ancestor(
-            of: find.text(judul),
-            matching: find.byType(Card),
-          ),
-          matching: find.text(format),
-        );
+      of: find.ancestor(of: find.text(judul), matching: find.byType(Card)),
+      matching: find.text(format),
+    );
 
-    testWidgets('lima kartu laporan, masing-masing bertombol tiga format',
-        (tester) async {
+    testWidgets('lima kartu laporan, masing-masing bertombol tiga format', (
+      tester,
+    ) async {
       await pasangLaporan(tester);
       expect(tester.takeException(), isNull);
 
-      for (final judul in ['Data Barang', 'Peminjaman', 'Pengembalian',
-                           'Stok Barang', 'Denda']) {
+      for (final judul in [
+        'Data Barang',
+        'Peminjaman',
+        'Pengembalian',
+        'Stok Barang',
+        'Denda',
+      ]) {
         await gulirKe(tester, judul);
-        expect(find.text(judul), findsOne, reason: 'kartu $judul tak terjangkau');
+        expect(
+          find.text(judul),
+          findsOne,
+          reason: 'kartu $judul tak terjangkau',
+        );
         for (final format in ['PDF', 'Word', 'Excel']) {
-          expect(tombolDiKartu(judul, format), findsOne,
-              reason: 'tombol $format di kartu $judul hilang');
+          expect(
+            tombolDiKartu(judul, format),
+            findsOne,
+            reason: 'tombol $format di kartu $judul hilang',
+          );
         }
       }
 
@@ -1336,8 +1606,9 @@ void main() {
       expect(find.textContaining('Buat dan cetak laporan'), findsOne);
     });
 
-    testWidgets('Kepala Program ditandai Mode Lihat Saja (FR-09)',
-        (tester) async {
+    testWidgets('Kepala Program ditandai Mode Lihat Saja (FR-09)', (
+      tester,
+    ) async {
       await pasangLaporan(tester, user: kaprog);
 
       expect(tester.takeException(), isNull);
@@ -1347,8 +1618,9 @@ void main() {
       expect(tombolDiKartu('Data Barang', 'PDF'), findsOne);
     });
 
-    testWidgets('laporan Stok dijelaskan tidak terpengaruh periode',
-        (tester) async {
+    testWidgets('laporan Stok dijelaskan tidak terpengaruh periode', (
+      tester,
+    ) async {
       await pasangLaporan(tester);
 
       await gulirKe(tester, 'Peminjaman');
@@ -1358,8 +1630,9 @@ void main() {
       expect(find.text('Tidak terpengaruh filter periode.'), findsOne);
     });
 
-    testWidgets('periode kosong ditampilkan sebagai seluruh periode',
-        (tester) async {
+    testWidgets('periode kosong ditampilkan sebagai seluruh periode', (
+      tester,
+    ) async {
       await pasangLaporan(tester);
 
       expect(find.text('Seluruh periode'), findsOne);
@@ -1369,8 +1642,9 @@ void main() {
       expect(find.text('Bersihkan'), findsNothing);
     });
 
-    testWidgets('menekan format mengunduh dan meneruskan nama serta mime',
-        (tester) async {
+    testWidgets('menekan format mengunduh dan meneruskan nama serta mime', (
+      tester,
+    ) async {
       await pasangLaporan(tester);
 
       await tester.tap(find.text('Excel').first);
@@ -1385,8 +1659,9 @@ void main() {
       expect(find.textContaining('diunduh browser'), findsOne);
     });
 
-    testWidgets('laporan Stok tidak mengirim filter periode ke server',
-        (tester) async {
+    testWidgets('laporan Stok tidak mengirim filter periode ke server', (
+      tester,
+    ) async {
       // Backend menolak parameter tanggal pada laporan Stok, jadi UI harus
       // menyaringnya sendiri, bukan meneruskannya lalu memunculkan error.
       final api = _ApiPalsu(const {}, _ModeApi.data);
@@ -1399,16 +1674,22 @@ void main() {
             tokenStorageProvider.overrideWithValue(InMemoryTokenStorage()),
             apiClientProvider.overrideWithValue(api),
             currentUserProvider.overrideWithValue(laboran),
-            periodeLaporanProvider.overrideWith(() => _PeriodeTetap(
-                  PeriodeLaporan(
-                    dari: DateTime(2026, 1, 1),
-                    sampai: DateTime(2026, 12, 31),
-                  ),
-                )),
-            penyimpanBerkasProvider
-                .overrideWithValue((bytes, nama, mime) async => nama),
+            periodeLaporanProvider.overrideWith(
+              () => _PeriodeTetap(
+                PeriodeLaporan(
+                  dari: DateTime(2026, 1, 1),
+                  sampai: DateTime(2026, 12, 31),
+                ),
+              ),
+            ),
+            penyimpanBerkasProvider.overrideWithValue(
+              (bytes, nama, mime) async => nama,
+            ),
           ],
-          child: MaterialApp(theme: AppTheme.light(), home: const LaporanScreen()),
+          child: MaterialApp(
+            theme: AppTheme.light(),
+            home: const LaporanScreen(),
+          ),
         ),
       );
       await tester.pumpAndSettle();
@@ -1430,8 +1711,9 @@ void main() {
       expect(api.queryUnduhTerakhir?.containsKey('sampai'), isFalse);
     });
 
-    testWidgets('unduhan gagal melaporkan pesan server, bukan diam',
-        (tester) async {
+    testWidgets('unduhan gagal melaporkan pesan server, bukan diam', (
+      tester,
+    ) async {
       await pasangLaporan(tester, mode: _ModeApi.gagal);
 
       await tester.tap(find.text('PDF').first);
@@ -1442,8 +1724,9 @@ void main() {
       expect(tersimpan, isEmpty);
     });
 
-    testWidgets('di layar pendek pada skala 1,5 seluruh kartu tetap utuh',
-        (tester) async {
+    testWidgets('di layar pendek pada skala 1,5 seluruh kartu tetap utuh', (
+      tester,
+    ) async {
       await pasangLaporan(tester, ukuran: _layarPendek, skalaTeks: 1.5);
 
       expect(tester.takeException(), isNull);
@@ -1459,34 +1742,61 @@ void main() {
 
   group('Skala teks sistem', () {
     testWidgets('Dashboard pada 1,3', (tester) async {
-      await pasang(tester, const DashboardScreen(), skalaTeks: 1.3);
+      // Ringkasannya ikut dipasang: kartu angka adalah bagian terbaru dan
+      // paling padat teksnya di layar ini, jadi menguji Dashboard tanpa
+      // datanya berarti tidak menguji bagian yang paling mungkin meluber.
+      await pasang(
+        tester,
+        const DashboardScreen(),
+        respons: {'/api/dashboard': dashboardJson(terlambat: 3)},
+        skalaTeks: 1.3,
+      );
+      expect(tester.takeException(), isNull);
+
       expect(tester.takeException(), isNull);
     });
 
     testWidgets('Kelola User pada 1,3', (tester) async {
-      await pasang(tester, const UsersScreen(),
-          respons: {'/api/users': usersJson}, skalaTeks: 1.3);
+      await pasang(
+        tester,
+        const UsersScreen(),
+        respons: {'/api/users': usersJson},
+        skalaTeks: 1.3,
+      );
       expect(tester.takeException(), isNull);
     });
 
     testWidgets('Aset Lab pada 1,3', (tester) async {
-      await pasang(tester, const AsetScreen(), skalaTeks: 1.3, respons: {
-        '/api/barang': barangJson,
-        '/api/kategori': kategoriJson,
-        '/api/stok-mutasi': mutasiJson,
-      });
+      await pasang(
+        tester,
+        const AsetScreen(),
+        skalaTeks: 1.3,
+        respons: {
+          '/api/barang': barangJson,
+          '/api/kategori': kategoriJson,
+          '/api/stok-mutasi': mutasiJson,
+        },
+      );
       expect(tester.takeException(), isNull);
     });
 
     testWidgets('Kategori pada 1,3', (tester) async {
-      await pasang(tester, const KategoriScreen(),
-          respons: {'/api/kategori': kategoriJson}, skalaTeks: 1.3);
+      await pasang(
+        tester,
+        const KategoriScreen(),
+        respons: {'/api/kategori': kategoriJson},
+        skalaTeks: 1.3,
+      );
       expect(tester.takeException(), isNull);
     });
 
     testWidgets('Data Peminjam pada 1,3', (tester) async {
-      await pasang(tester, const PeminjamScreen(),
-          respons: {'/api/peminjam': peminjamJson}, skalaTeks: 1.3);
+      await pasang(
+        tester,
+        const PeminjamScreen(),
+        respons: {'/api/peminjam': peminjamJson},
+        skalaTeks: 1.3,
+      );
       expect(tester.takeException(), isNull);
     });
 
@@ -1496,8 +1806,12 @@ void main() {
     });
 
     testWidgets('Transaksi pada 1,3', (tester) async {
-      await pasang(tester, const TransaksiScreen(),
-          respons: transaksiRespons, skalaTeks: 1.3);
+      await pasang(
+        tester,
+        const TransaksiScreen(),
+        respons: transaksiRespons,
+        skalaTeks: 1.3,
+      );
       expect(tester.takeException(), isNull);
     });
 
@@ -1507,14 +1821,23 @@ void main() {
     });
 
     testWidgets('Pengaturan Denda pada 1,3', (tester) async {
-      await pasang(tester, const PengaturanDendaScreen(),
-          respons: pengembalianRespons, skalaTeks: 1.3);
+      await pasang(
+        tester,
+        const PengaturanDendaScreen(),
+        respons: pengembalianRespons,
+        skalaTeks: 1.3,
+      );
       expect(tester.takeException(), isNull);
     });
 
     testWidgets('Verifikasi pada 1,3', (tester) async {
-      await pasang(tester, const VerifikasiScreen(),
-          user: kaprog, respons: transaksiRespons, skalaTeks: 1.3);
+      await pasang(
+        tester,
+        const VerifikasiScreen(),
+        user: kaprog,
+        respons: transaksiRespons,
+        skalaTeks: 1.3,
+      );
       expect(tester.takeException(), isNull);
     });
 
@@ -1523,13 +1846,17 @@ void main() {
     // Dashboard yang tadi pecah. Dua varian diuji karena bagian tertingginya
     // saling meniadakan: yang menunggu punya tombol keputusan, yang
     // dibatalkan punya kotak alasan.
-    testWidgets('rincian pengajuan + tombol keputusan, 1,5 di layar pendek',
-        (tester) async {
-      await pasang(tester, const VerifikasiScreen(),
-          user: kaprog,
-          ukuran: _layarPendek,
-          respons: transaksiRespons,
-          skalaTeks: 1.5);
+    testWidgets('rincian pengajuan + tombol keputusan, 1,5 di layar pendek', (
+      tester,
+    ) async {
+      await pasang(
+        tester,
+        const VerifikasiScreen(),
+        user: kaprog,
+        ukuran: _layarPendek,
+        respons: transaksiRespons,
+        skalaTeks: 1.5,
+      );
 
       await tester.tap(find.text('Periksa & putuskan'));
       await tester.pumpAndSettle();
@@ -1538,34 +1865,36 @@ void main() {
       expect(find.text('Setujui'), findsOne);
     });
 
-    testWidgets('rincian transaksi ditolak + kotak alasan, 1,5 di layar pendek',
-        (tester) async {
-      // Daftarnya sengaja hanya berisi transaksi yang ditolak: di layar
-      // pendek berskala 1,3, kartu ketiga tidak pernah dibangun ListView
-      // yang malas, dan yang diuji di sini adalah sheet-nya, bukan scroll.
-      final ditolak = peminjamanJson(
-        id: 3,
-        kode: 'PMJ-2026-003',
-        status: 'dibatalkan',
-        alasan: 'Barang sedang dipakai praktik kelas XII sore ini.',
-      );
-      await pasang(
-        tester,
-        const TransaksiScreen(),
-        ukuran: _layarPendek,
-        skalaTeks: 1.5,
-        respons: {
-          '/api/peminjaman': [ditolak],
-          '/api/peminjaman/3': {...ditolak, 'items': itemsJson},
-        },
-      );
+    testWidgets(
+      'rincian transaksi ditolak + kotak alasan, 1,5 di layar pendek',
+      (tester) async {
+        // Daftarnya sengaja hanya berisi transaksi yang ditolak: di layar
+        // pendek berskala 1,3, kartu ketiga tidak pernah dibangun ListView
+        // yang malas, dan yang diuji di sini adalah sheet-nya, bukan scroll.
+        final ditolak = peminjamanJson(
+          id: 3,
+          kode: 'PMJ-2026-003',
+          status: 'dibatalkan',
+          alasan: 'Barang sedang dipakai praktik kelas XII sore ini.',
+        );
+        await pasang(
+          tester,
+          const TransaksiScreen(),
+          ukuran: _layarPendek,
+          skalaTeks: 1.5,
+          respons: {
+            '/api/peminjaman': [ditolak],
+            '/api/peminjaman/3': {...ditolak, 'items': itemsJson},
+          },
+        );
 
-      await tester.tap(find.text('PMJ-2026-003'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('PMJ-2026-003'));
+        await tester.pumpAndSettle();
 
-      expect(tester.takeException(), isNull);
-      expect(find.text('Alasan ditolak'), findsOne);
-    });
+        expect(tester.takeException(), isNull);
+        expect(find.text('Alasan ditolak'), findsOne);
+      },
+    );
   });
 }
 
@@ -1581,7 +1910,7 @@ enum _ModeApi { data, gagal, menggantung }
 /// filter di layar benar-benar mengubah hasil, bukan hanya memicu rebuild.
 class _ApiPalsu extends ApiClient {
   _ApiPalsu(this._respons, this._mode)
-      : super(InMemoryTokenStorage(), baseUrl: 'http://uji.lokal');
+    : super(InMemoryTokenStorage(), baseUrl: 'http://uji.lokal');
 
   static const pesanGagal = 'Sesi Anda berakhir. Silakan login kembali.';
 
@@ -1605,7 +1934,9 @@ class _ApiPalsu extends ApiClient {
     }
     if (data is! List) return data;
 
-    return data.where((baris) => _cocok(baris as Map<String, Object?>, query)).toList();
+    return data
+        .where((baris) => _cocok(baris as Map<String, Object?>, query))
+        .toList();
   }
 
   bool _cocok(Map<String, Object?> baris, Map<String, dynamic>? query) {
