@@ -18,6 +18,8 @@ use App\Controllers\HealthController;
 use App\Controllers\KategoriController;
 use App\Controllers\PeminjamController;
 use App\Controllers\PeminjamanController;
+use App\Controllers\PengaturanDendaController;
+use App\Controllers\PengembalianController;
 use App\Controllers\StokMutasiController;
 use App\Controllers\UserController;
 use App\Core\Router;
@@ -33,6 +35,8 @@ $barang   = new BarangController();
 $peminjam = new PeminjamController();
 $mutasi   = new StokMutasiController();
 $pinjam   = new PeminjamanController();
+$kembali  = new PengembalianController();
+$denda    = new PengaturanDendaController();
 
 $laboran   = [Auth::role(Auth::LABORAN)];
 $kaprog    = [Auth::role(Auth::KEPALA_PROGRAM)];
@@ -92,7 +96,18 @@ $router->post('/api/peminjaman',      [$pinjam, 'store'], $laboran);
 // pengajuannya sendiri, verifikasinya kehilangan makna.
 $router->patch('/api/peminjaman/{id}/verifikasi', [$pinjam, 'verifikasi'], $kaprog);
 
-// ── Sprint 4 — FR-06 Pengembalian, FR-11 Pengaturan Denda
+// ── Sprint 4 — FR-06 Pengembalian per item ───────────────────────────
+$router->get ('/api/pengembalian', [$kembali, 'index'], $laboran);
+$router->post('/api/pengembalian', [$kembali, 'store'], $laboran);
+
+// ── Sprint 4 — FR-11 Pengaturan Denda ────────────────────────────────
+//
+// GET dibuka untuk kedua level: tarif yang berlaku ikut menjelaskan angka
+// denda di laporan, yang boleh dibaca Kepala Program. Yang MENGUBAH tarif
+// tetap hanya Laboran (PRD FR-11).
+$router->get('/api/pengaturan-denda', [$denda, 'show'],   $terdaftar);
+$router->put('/api/pengaturan-denda', [$denda, 'update'], $laboran);
+
 // ── Sprint 5 — FR-08/FR-09 Laporan (5 jenis × 3 format)
 
 return $router;

@@ -503,11 +503,17 @@ final class PeminjamanController
             throw HttpException::notFound('Peminjaman tidak ditemukan.');
         }
 
+        // LEFT JOIN, bukan JOIN: item yang belum dikembalikan tetap harus
+        // muncul. Datanya dipakai layar Pengembalian untuk menandai mana yang
+        // sudah masuk dan mana yang masih di tangan peminjam (FR-06).
         $detail = Database::select(
             'SELECT d.id_detail, d.id_barang, d.jumlah_pinjam,
-                    b.kode_barang, b.nama_barang, b.merk
+                    b.kode_barang, b.nama_barang, b.merk,
+                    pg.id_pengembalian, pg.tanggal_pengembalian, pg.kondisi,
+                    pg.jumlah_hari_telat, pg.denda
                FROM peminjaman_detail d
                JOIN barang b ON b.id_barang = d.id_barang
+               LEFT JOIN pengembalian pg ON pg.id_detail = d.id_detail
               WHERE d.id_peminjaman = :id
               ORDER BY d.id_detail',
             ['id' => $id]
@@ -521,7 +527,18 @@ final class PeminjamanController
                 'nama_barang'   => $d['nama_barang'],
                 'merk'          => $d['merk'],
                 'jumlah_pinjam' => (int) $d['jumlah_pinjam'],
+                'pengembalian'  => $d['id_pengembalian'] === null ? null : [
+                    'id_pengembalian'      => (int) $d['id_pengembalian'],
+                    'tanggal_pengembalian' => $d['tanggal_pengembalian'],
+                    'kondisi'              => $d['kondisi'],
+                    'jumlah_hari_telat'    => (int) $d['jumlah_hari_telat'],
+                    'denda'                => (float) $d['denda'],
+                ],
             ], $detail),
+            'total_denda' => array_sum(array_map(
+                static fn (array $d): float => (float) ($d['denda'] ?? 0),
+                $detail
+            )),
         ];
     }
 }

@@ -546,6 +546,252 @@ if (count($layak) >= 2) {
        'stok jadi ' . var_export(stokBarang($barangA, $tokenLaboran), true) . ", seharusnya $stokA1");
 }
 
+// ── FR-11 Pengaturan Denda ───────────────────────────────────────────
+echo "\nFR-11 Pengaturan Denda\n";
+
+$r = req('GET', '/api/pengaturan-denda', null, $tokenLaboran);
+status('Laboran membaca tarif denda', $r, 200);
+$tarifAwal = $r['json']['data']['tarif_per_hari'] ?? null;
+ok('tarif terbaca sebagai angka', is_numeric($tarifAwal), 'dapat: ' . var_export($tarifAwal, true));
+ok('baris pengaturan sudah terkonfigurasi',
+   ($r['json']['data']['terkonfigurasi'] ?? false) === true);
+
+status('Kepala Program BOLEH membaca tarif',
+    req('GET', '/api/pengaturan-denda', null, $tokenKaprog), 200);
+status('Kepala Program DITOLAK mengubah tarif',
+    req('PUT', '/api/pengaturan-denda', ['tarif_per_hari' => 1000], $tokenKaprog), 403);
+status('tarif negatif ditolak',
+    req('PUT', '/api/pengaturan-denda', ['tarif_per_hari' => -1], $tokenLaboran), 422);
+status('tarif bukan angka ditolak',
+    req('PUT', '/api/pengaturan-denda', ['tarif_per_hari' => 'gratis'], $tokenLaboran), 422);
+status('tarif melebihi batas ditolak',
+    req('PUT', '/api/pengaturan-denda', ['tarif_per_hari' => 99999999], $tokenLaboran), 422);
+
+$r = req('PUT', '/api/pengaturan-denda', ['tarif_per_hari' => 0], $tokenLaboran);
+status('tarif 0 diterima — lab boleh membebaskan denda', $r, 200);
+ok('tarif 0 tersimpan', (float) ($r['json']['data']['tarif_per_hari'] ?? -1) === 0.0);
+
+// Dikembalikan ke nilai seed; angka ini yang dipakai pengujian denda di bawah.
+$TARIF = 5000.0;
+$r = req('PUT', '/api/pengaturan-denda', ['tarif_per_hari' => $TARIF], $tokenLaboran);
+status('tarif dipulihkan ke 5000', $r, 200);
+
+// ── FR-06 Pengembalian per item ──────────────────────────────────────
+echo "\nFR-06 Pengembalian per item\n";
+
+/**
+ * Membuat peminjaman yang sudah disetujui, dengan tanggal bisa digeser ke
+ * masa lalu supaya keterlambatan bisa diuji tanpa memanipulasi jam sistem.
+ *
+ * @param list<array{id_barang:int,jumlah:int}> $items
+ * @return array<string,mixed>|null
+ */
+function buatDisetujui(array $items, int $geserPinjam, int $geserTempo): ?array
+{
+    global $tokenLaboran, $tokenKaprog;
+
+    $idPeminjam = req('GET', '/api/peminjam', null, $tokenLaboran)['json']['data'][0]['id_peminjam'] ?? null;
+    if (!is_int($idPeminjam)) { return null; }
+
+    $r = req('POST', '/api/peminjaman', [
+        'id_peminjam'     => $idPeminjam,
+        'tanggal_pinjam'  => date('Y-m-d', strtotime("$geserPinjam days")),
+        'tanggal_kembali' => date('Y-m-d', strtotime("$geserTempo days")),
+        'items'           => $items,
+    ], $tokenLaboran);
+    if ($r['status'] !== 201) { return null; }
+
+    $id = $r['json']['data']['id_peminjaman'];
+    $v  = req('PATCH', "/api/peminjaman/$id/verifikasi", ['aksi' => 'approve'], $tokenKaprog);
+    if ($v['status'] !== 200) { return null; }
+
+    return $r['json']['data'];
+}
+
+$semuaBarang2 = req('GET', '/api/barang', null, $tokenLaboran)['json']['data'] ?? [];
+$layak2 = array_values(array_filter(
+    $semuaBarang2,
+    static fn (array $b): bool => ($b['stok'] ?? 0) >= 3
+));
+
+ok('ada dua barang berstok cukup untuk uji pengembalian', count($layak2) >= 2);
+
+if (count($layak2) >= 2) {
+    $bA = (int) $layak2[0]['id_barang'];
+    $bB = (int) $layak2[1]['id_barang'];
+
+    // ── Kasus TELAT: dipinjam 10 hari lalu, jatuh tempo 3 hari lalu ──
+    $telat = buatDisetujui(
+        [['id_barang' => $bA, 'jumlah' => 2], ['id_barang' => $bB, 'jumlah' => 1]],
+        -10,
+        -3
+    );
+    ok('siapkan peminjaman yang sudah lewat jatuh tempo', $telat !== null);
+
+    if ($telat !== null) {
+        $detailA = $telat['items'][0]['id_detail'];
+        $detailB = $telat['items'][1]['id_detail'];
+        $idT     = $telat['id_peminjaman'];
+
+        $stokSaatDipinjam = stokBarang($bA, $tokenLaboran);
+
+        status('daftar pengembalian tanpa tab bisa dibaca',
+            req('GET', '/api/pengembalian', null, $tokenLaboran), 200);
+        status('tab semua bisa dibaca',
+            req('GET', '/api/pengembalian?tab=semua', null, $tokenLaboran), 200);
+        status('tab sudah_kembali bisa dibaca',
+            req('GET', '/api/pengembalian?tab=sudah_kembali', null, $tokenLaboran), 200);
+        status('tab sebagian_kembali bisa dibaca',
+            req('GET', '/api/pengembalian?tab=sebagian_kembali', null, $tokenLaboran), 200);
+        status('tab belum_kembali bisa dibaca',
+            req('GET', '/api/pengembalian?tab=belum_kembali', null, $tokenLaboran), 200);
+
+        $r = req('GET', '/api/pengembalian?tab=terlambat', null, $tokenLaboran);
+        status('tab terlambat bisa dibaca', $r, 200);
+        $kodeTerlambat = array_column($r['json']['data'] ?? [], 'kode_peminjaman');
+        ok('transaksi lewat tempo muncul di tab terlambat',
+           in_array($telat['kode_peminjaman'], $kodeTerlambat, true));
+
+        // Kembalikan item pertama HARI INI → telat 3 hari.
+        $r = req('POST', '/api/pengembalian', [
+            'id_detail' => $detailA,
+            'kondisi'   => 'baik',
+        ], $tokenLaboran);
+        status('catat pengembalian item pertama', $r, 201);
+
+        $pg = $r['json']['data'] ?? [];
+        ok('hari telat dihitung 3',
+           ($pg['jumlah_hari_telat'] ?? null) === 3,
+           'dapat: ' . var_export($pg['jumlah_hari_telat'] ?? null, true));
+        // §3.7: denda = jumlah_hari_telat x tarif_per_hari. jumlah_pinjam
+        // BUKAN faktor, walaupun item ini berisi 2 unit.
+        ok('denda = 3 hari x 5000 = 15000, tidak dikali jumlah unit',
+           (float) ($pg['denda'] ?? -1) === 3 * $TARIF,
+           'dapat: ' . var_export($pg['denda'] ?? null, true));
+        ok('status header jadi sebagian_kembali',
+           ($pg['status_peminjaman'] ?? '') === 'sebagian_kembali');
+        ok('stok item pertama dipulihkan sebanyak jumlah pinjamnya',
+           stokBarang($bA, $tokenLaboran) === $stokSaatDipinjam + 2,
+           'stok jadi ' . var_export(stokBarang($bA, $tokenLaboran), true));
+
+        status('mengembalikan item yang sama dua kali ditolak',
+            req('POST', '/api/pengembalian', [
+                'id_detail' => $detailA, 'kondisi' => 'baik',
+            ], $tokenLaboran), 409);
+        ok('penolakan ganda tidak menambah stok lagi',
+           stokBarang($bA, $tokenLaboran) === $stokSaatDipinjam + 2);
+
+        $r = req('GET', '/api/pengembalian?tab=sebagian_kembali', null, $tokenLaboran);
+        ok('transaksi muncul di tab sebagian kembali',
+           in_array($telat['kode_peminjaman'],
+                    array_column($r['json']['data'] ?? [], 'kode_peminjaman'), true));
+
+        // Tab bukan pembagian yang saling lepas: satu transaksi bisa
+        // memenuhi "sebagian" dan "terlambat" sekaligus.
+        $r = req('GET', '/api/pengembalian?tab=terlambat', null, $tokenLaboran);
+        $baris = null;
+        foreach ($r['json']['data'] ?? [] as $b) {
+            if ($b['kode_peminjaman'] === $telat['kode_peminjaman']) { $baris = $b; }
+        }
+        ok('masih terhitung terlambat karena satu item belum kembali', $baris !== null);
+        ok('badge memilih terlambat, bukan sebagian',
+           ($baris['tampilan_status'] ?? '') === 'terlambat',
+           'dapat: ' . var_export($baris['tampilan_status'] ?? null, true));
+        ok('denda terakumulasi di ringkasan transaksi',
+           (float) ($baris['total_denda'] ?? -1) === 3 * $TARIF);
+
+        // Item terakhir → header jadi dikembalikan.
+        $r = req('POST', '/api/pengembalian', [
+            'id_detail' => $detailB, 'kondisi' => 'rusak',
+        ], $tokenLaboran);
+        status('catat pengembalian item terakhir, kondisi rusak', $r, 201);
+        ok('status header jadi dikembalikan',
+           ($r['json']['data']['status_peminjaman'] ?? '') === 'dikembalikan');
+        ok('barang rusak TETAP dipulihkan ke stok',
+           stokBarang($bB, $tokenLaboran) === (int) $layak2[1]['stok'],
+           'stok jadi ' . var_export(stokBarang($bB, $tokenLaboran), true));
+
+        $r = req('GET', '/api/pengembalian?tab=sudah_kembali', null, $tokenLaboran);
+        ok('transaksi pindah ke tab sudah kembali',
+           in_array($telat['kode_peminjaman'],
+                    array_column($r['json']['data'] ?? [], 'kode_peminjaman'), true));
+
+        $r = req('GET', '/api/pengembalian?tab=terlambat', null, $tokenLaboran);
+        ok('tidak lagi terhitung terlambat setelah semua item kembali',
+           !in_array($telat['kode_peminjaman'],
+                     array_column($r['json']['data'] ?? [], 'kode_peminjaman'), true));
+
+        $r = req('GET', "/api/peminjaman/$idT", null, $tokenLaboran);
+        ok('detail peminjaman membawa info pengembalian per item',
+           ($r['json']['data']['items'][0]['pengembalian']['denda'] ?? null) !== null);
+        // Kedua item sama-sama telat 3 hari, dan denda dihitung PER BARIS
+        // detail (§3.7) — jadi transaksi ini kena dua kali.
+        ok('total denda transaksi menjumlahkan denda kedua item',
+           (float) ($r['json']['data']['total_denda'] ?? -1) === 2 * 3 * $TARIF,
+           'dapat: ' . var_export($r['json']['data']['total_denda'] ?? null, true));
+
+        // Mengubah tarif TIDAK boleh mengubah denda yang sudah tercatat.
+        req('PUT', '/api/pengaturan-denda', ['tarif_per_hari' => 9000], $tokenLaboran);
+        $r = req('GET', "/api/peminjaman/$idT", null, $tokenLaboran);
+        ok('denda yang sudah tercatat tidak berubah saat tarif diubah',
+           (float) ($r['json']['data']['total_denda'] ?? -1) === 2 * 3 * $TARIF,
+           'dapat: ' . var_export($r['json']['data']['total_denda'] ?? null, true));
+        req('PUT', '/api/pengaturan-denda', ['tarif_per_hari' => $TARIF], $tokenLaboran);
+    }
+
+    // ── Kasus TEPAT WAKTU: denda harus 0 ─────────────────────────────
+    $tepat = buatDisetujui([['id_barang' => $bA, 'jumlah' => 1]], 0, 7);
+    ok('siapkan peminjaman yang belum jatuh tempo', $tepat !== null);
+
+    if ($tepat !== null) {
+        $r = req('POST', '/api/pengembalian', [
+            'id_detail' => $tepat['items'][0]['id_detail'],
+            'kondisi'   => 'baik',
+        ], $tokenLaboran);
+        status('kembalikan sebelum jatuh tempo', $r, 201);
+        ok('hari telat 0', ($r['json']['data']['jumlah_hari_telat'] ?? null) === 0);
+        ok('denda 0', (float) ($r['json']['data']['denda'] ?? -1) === 0.0);
+
+        $r = req('GET', '/api/pengembalian?tab=belum_kembali', null, $tokenLaboran);
+        ok('transaksi yang sudah lunas tidak muncul di tab belum kembali',
+           !in_array($tepat['kode_peminjaman'],
+                     array_column($r['json']['data'] ?? [], 'kode_peminjaman'), true));
+    }
+
+    // ── Pengembalian dari transaksi yang belum diverifikasi ──────────
+    $r = req('POST', '/api/peminjaman', [
+        'id_peminjam'     => req('GET', '/api/peminjam', null, $tokenLaboran)['json']['data'][0]['id_peminjam'],
+        'tanggal_pinjam'  => date('Y-m-d'),
+        'tanggal_kembali' => date('Y-m-d', strtotime('+3 days')),
+        'items'           => [['id_barang' => $bA, 'jumlah' => 1]],
+    ], $tokenLaboran);
+    status('siapkan pengajuan yang belum diverifikasi', $r, 201);
+    $belumVerif = $r['json']['data']['items'][0]['id_detail'] ?? null;
+
+    if (is_int($belumVerif)) {
+        // Barangnya belum pernah diserahkan, jadi tidak ada yang bisa kembali.
+        status('pengembalian dari transaksi yang belum diverifikasi ditolak',
+            req('POST', '/api/pengembalian', [
+                'id_detail' => $belumVerif, 'kondisi' => 'baik',
+            ], $tokenLaboran), 409);
+    }
+
+    status('id_detail tidak ada balas 404',
+        req('POST', '/api/pengembalian', [
+            'id_detail' => 999999, 'kondisi' => 'baik',
+        ], $tokenLaboran), 404);
+    status('kondisi di luar baik/rusak ditolak',
+        req('POST', '/api/pengembalian', [
+            'id_detail' => 1, 'kondisi' => 'hilang',
+        ], $tokenLaboran), 422);
+    status('tab tidak dikenal ditolak',
+        req('GET', '/api/pengembalian?tab=ngawur', null, $tokenLaboran), 400);
+    status('Kepala Program DITOLAK mencatat pengembalian',
+        req('POST', '/api/pengembalian', [
+            'id_detail' => 1, 'kondisi' => 'baik',
+        ], $tokenKaprog), 403);
+}
+
 // ── Catatan data uji ─────────────────────────────────────────────────
 echo "\n  Catatan: kategori, barang, peminjam, dan peminjaman uji sengaja\n"
    . "  ditinggalkan — barang berriwayat mutasi dan peminjam berriwayat\n"
