@@ -1,28 +1,68 @@
 # Panduan Instalasi — Inventory Labkom
 
-Panduan menyiapkan lingkungan pengembangan dari nol.
+Panduan lengkap menyiapkan lingkungan pengembangan dari nol di laptop lokal, mulai dari instalasi PHP/XAMPP, Composer, Flutter SDK, hingga database dan aplikasi.
 
 ---
 
-## 1. Prasyarat
+## 1. Prasyarat & Perangkat Lunak Utama
 
-| Kebutuhan | Versi | Untuk |
-|---|---|---|
-| **XAMPP** | PHP 8.1+ / MariaDB 10.4+ | Backend & database |
-| **Flutter SDK** | 3.x (stable) | Aplikasi mobile |
-| **Android Studio** | terbaru | Android SDK, emulator, build APK |
-| **Git** | mana saja | Version control |
-| **Composer** | 2.x | Library laporan (mPDF, PHPWord, PhpSpreadsheet) |
+Jika laptop Anda belum memiliki perangkat lunak pendukung, lakukan instalasi sesuai daftar berikut:
 
-> Backend butuh PHP **8.1 ke atas** — kode memakai `readonly` properties (`core/Request.php`) dan tipe kembalian `never` (`core/Response.php`, `core/Router.php`), keduanya fitur 8.1. XAMPP versi lama dengan PHP 7.x atau 8.0 tidak akan jalan.
->
-> Composer hanya dibutuhkan fitur **Laporan** (FR-08/FR-09). Seluruh endpoint lain — autentikasi, barang, peminjaman, pengembalian — jalan tanpanya. Kalau `composer install` belum dijalankan, `/api/laporan/*` membalas pesan yang menyebut paket mana yang belum ada, bukan "Class not found".
->
-> Ekstensi PHP yang dibutuhkan library laporan: **mbstring**, **gd**, **zip**, dan **dom**. Semuanya sudah aktif di XAMPP bawaan; kalau salah satu mati, kegagalannya muncul di dalam library dengan pesan yang sulit dilacak. Periksa dengan `php -m`.
+| Perangkat Lunak | Versi Minimum | Fungsi / Untuk | Link Download Resmi |
+|---|---|---|---|
+| **XAMPP / PHP** | PHP 8.1+ & MariaDB 10.4+ | Server Backend & Database MySQL | [apachefriends.org](https://www.apachefriends.org) |
+| **Composer** | 2.x | Dependency Manager PHP (Library Laporan) | [getcomposer.org](https://getcomposer.org) |
+| **Flutter SDK** | 3.x (stable) | Framework Aplikasi Mobile | [flutter.dev](https://docs.flutter.dev/get-started/install) |
+| **Android Studio** | Terbaru | Android SDK, Emulator, Build APK | [developer.android.com](https://developer.android.com/studio) |
+| **Git** | 2.x+ | Version Control System | [git-scm.com](https://git-scm.com) |
 
 ---
 
-## 2. Clone Repository
+## 2. Langkah Instalasi Tools (Jika Belum Ada di Laptop)
+
+### 2.1 Instalasi XAMPP & Konfigurasi PHP 8.1+
+1. Unduh installer **XAMPP for Windows** dengan PHP 8.1 ke atas dari [Apache Friends](https://www.apachefriends.org).
+2. Jalankan installer dan selesaikan proses instalasi (default: `C:\xampp`).
+3. **Tambahkan PHP & MySQL ke Environment Variable (PATH)**:
+   - Buka *System Properties* → *Environment Variables*.
+   - Pada *System Variables*, edit `Path` lalu tambahkan: `C:\xampp\php` dan `C:\xampp\mysql\bin`.
+4. **Aktifkan Ekstensi PHP di `php.ini`**:
+   - Buka file `C:\xampp\php\php.ini` menggunakan text editor.
+   - Pastikan baris ekstensi berikut tidak diawali tanda koma titik `;` (jika ada `;`, hapus tanda tersebut):
+     ```ini
+     extension=gd
+     extension=zip
+     extension=mbstring
+     extension=pdo_mysql
+     ```
+   - Simpan file `php.ini`.
+
+### 2.2 Instalasi Composer
+1. Unduh dan jalankan **`Composer-Setup.exe`** dari [getcomposer.org](https://getcomposer.org).
+2. Saat installer meminta lokasi `php.exe`, arahkan ke `C:\xampp\php\php.exe`.
+3. Selesaikan instalasi. Buka terminal baru dan ketik `composer --version` untuk memastikan Composer aktif.
+
+### 2.3 Instalasi Flutter SDK & Android Studio
+1. Unduh paket **Flutter SDK** (zip) untuk Windows dari [docs.flutter.dev](https://docs.flutter.dev/get-started/install).
+2. Ekstrak file zip tersebut ke folder lokal, contohnya: `C:\src\flutter`. (Jangan ekstrak di `Program Files` untuk menghindari masalah hak akses).
+3. **Tambahkan Flutter ke PATH**:
+   - Edit `Path` di Environment Variables, lalu tambahkan: `C:\src\flutter\bin`.
+4. Install **Android Studio**:
+   - Unduh dan install Android Studio.
+   - Buka Android Studio → *More Actions* → *SDK Manager* → *SDK Tools*.
+   - Centang **Android SDK Build-Tools** dan **Android SDK Command-line Tools (latest)**, lalu klik *Apply* untuk menginstall.
+5. **Verifikasi Instalasi**:
+   - Buka Command Prompt / PowerShell baru, lalu jalankan:
+     ```bash
+     flutter doctor
+     ```
+   - Pastikan Flutter SDK dan Android Toolchain sudah berstatus centang hijau (jika ada lisensi Android yang belum disetujui, jalankan `flutter doctor --android-licenses`).
+
+---
+
+## 3. Clone Repository
+
+Buka terminal dan clone repository dari GitHub:
 
 ```bash
 git clone https://github.com/Adityabeckham/inventory-labkom.git
@@ -31,77 +71,63 @@ cd inventory-labkom
 
 ---
 
-## 3. Setup Database
+## 4. Setup Database MySQL
 
-Jalankan MySQL lewat XAMPP Control Panel, lalu dari **folder root repository**:
+1. Buka **XAMPP Control Panel** lalu jalankan service **MySQL**.
+2. Dari root direktori proyek `inventory-labkom`, jalankan impor database via terminal:
 
-```bash
-mysql -u root < database/schema.sql
-mysql -u root < database/seed.sql
-```
+   **Menggunakan Windows Command Prompt (cmd):**
+   ```cmd
+   cmd /c "C:\xampp\mysql\bin\mysql.exe -u root inventory_labkom < database\schema.sql"
+   cmd /c "C:\xampp\mysql\bin\mysql.exe -u root inventory_labkom < database\seed.sql"
+   ```
 
-> **`schema.sql` menghapus data.** File ini memulai tiap tabel dengan `DROP TABLE IF EXISTS`, dan `seed.sql` menjalankan `TRUNCATE`. Aman dijalankan berulang saat development, tapi kalau database `inventory_labkom` sudah berisi data sungguhan, keduanya akan menghapusnya tanpa konfirmasi. Backup dulu.
+   **Atau via phpMyAdmin (`http://localhost/phpmyadmin`):**
+   - Buka browser ke `http://localhost/phpmyadmin`.
+   - Buat database baru bernama `inventory_labkom`.
+   - Buka tab **Import**, unggah file `database/schema.sql` terlebih dahulu, lalu klik *Go*.
+   - Buka tab **Import** kembali, unggah file `database/seed.sql`, lalu klik *Go*.
 
-Kalau lebih nyaman lewat phpMyAdmin (`http://localhost/phpmyadmin`): buka tab **Import**, unggah `database/schema.sql` dulu, baru `database/seed.sql`.
-
-Setelah berhasil akan ada database `inventory_labkom` dengan 9 tabel dan data awal.
-
-### Akun bawaan
+### Akun Bawaan Development:
 
 | Username | Password | Level | Peran |
 |---|---|---|---|
 | `laboran` | `laboran123` | `admin` | Laboran |
 | `kaprog` | `kaprog123` | `super_admin` | Kepala Program |
 
-> Password ini **hanya untuk development**. Ganti lewat menu Kelola User sebelum aplikasi dipakai sungguhan.
-
 ---
 
-## 4. Setup Backend
+## 5. Setup Backend PHP
 
+### 5.1 Konfigurasi File Environment
+Salin template konfigurasi:
 ```bash
-cp backend/config/config.example.php backend/config/config.php
+copy backend\config\config.example.php backend\config\config.php
 ```
 
-Buka `backend/config/config.php`, lalu isi minimal dua hal:
-1. Kredensial database (`db.username`, `db.password`) — XAMPP default: user `root`, password kosong.
-2. `jwt.secret` — **wajib diganti**. Generate string acak:
+Buka `backend/config/config.php` dan sesuaikan kredensial:
+- Kredensial database (`db.username`: `root`, `db.password`: `""`).
+- Kredensial JWT secret (`jwt.secret` wajib diganti dengan string acak 32+ karakter).
 
-   ```bash
-   php -r "echo bin2hex(random_bytes(32));"
-   ```
+### 5.2 Install Library Laporan (Composer)
+Jalankan Composer di dalam direktori `backend/`:
+```bash
+cd backend
+composer install
+cd ..
+```
+*Langkah ini mengunduh library mPDF, PHPWord, dan PhpSpreadsheet ke `backend/vendor/` untuk fitur pencetakan laporan.*
 
-Detail tiap opsi ada di [CONFIGURATION.md](CONFIGURATION.md).
-
-### Library laporan
+### 5.3 Jalankan Server Backend PHP
+Jalankan development server PHP dengan document root mengarah ke folder `public/`:
 
 ```bash
-composer install -d backend
+cd backend
+php -S 127.0.0.1:8080 -t public public/index.php
 ```
 
-Mengunduh mPDF, PHPWord, dan PhpSpreadsheet ke `backend/vendor/` (sekitar 100 MB, tidak ikut di repository). Lewati langkah ini kalau fitur Laporan belum diperlukan — endpoint lain tetap berfungsi.
-
-`composer.json` mematok platform ke PHP 8.1.0, jadi versi library yang di-resolve tetap sesuai target minimum di atas walaupun mesin Anda memakai PHP yang lebih baru.
-
-### Jalankan backend
-
-**Opsi A — server bawaan PHP (paling cepat untuk development):**
-
-```bash
-php -S localhost:8080 -t backend/public
-```
-
-**Opsi B — lewat Apache XAMPP:** arahkan DocumentRoot/VirtualHost, atau buat Alias, ke folder `backend/public`. Pastikan `mod_rewrite` aktif dan direktorinya `AllowOverride All` (keduanya dibutuhkan `public/.htaccess`).
-
-Deploy di sub-path juga didukung — router membuang prefix pemasangan secara otomatis, jadi `Alias /inventory` membuat endpoint tersedia di `http://localhost/inventory/api/health` tanpa perlu mengubah kode.
-
-### Verifikasi
-
-```bash
-curl http://localhost:8080/api/health
-```
-
-Balasan yang benar:
+### 5.4 Verifikasi Endpoint API
+Buka browser atau jalankan curl ke `http://127.0.0.1:8080/api/health`:
 
 ```json
 {
@@ -117,45 +143,47 @@ Balasan yang benar:
 }
 ```
 
-`env` dan `php` hanya muncul saat `app.debug` bernilai `true` — endpoint ini terbuka tanpa autentikasi, jadi detail lingkungan sengaja disembunyikan di production.
-
-Kalau `database` berisi `"disconnected"`, kredensial di `config.php` belum cocok atau MySQL belum jalan. Pesan error aslinya ada di log PHP, bukan di respons.
-
 ---
 
-## 5. Setup Aplikasi Flutter
+## 6. Setup Aplikasi Mobile Flutter
 
-> Bagian ini menunggu Sprint 0 tuntas — project Flutter di `mobile/` belum dibuat.
+Seluruh source code aplikasi Flutter berada di direktori `mobile/`.
 
-Setelah Flutter SDK terpasang:
-
+### 6.1 Install Dependencies
+Masuk ke direktori `mobile/` dan unduh paket Flutter:
 ```bash
-flutter doctor          # pastikan tidak ada masalah Android toolchain
 cd mobile
 flutter pub get
-flutter run
 ```
 
-### Alamat backend dari perangkat
+### 6.2 Konfigurasi Alamat API Backend
+Alamat API dipetakan di file `mobile/lib/core/config/app_config.dart`. Secara default, aplikasi sudah terkonfigurasi untuk emulator Android (`http://10.0.2.2:8080`).
 
-`localhost` di emulator/HP menunjuk ke perangkat itu sendiri, bukan ke komputer Anda:
-
-| Menjalankan di | Alamat backend |
+| Penggunaan | Alamat Backend API |
 |---|---|
-| Emulator Android | `http://10.0.2.2:8080` |
-| HP fisik (satu WiFi) | `http://<IP-komputer>:8080`, mis. `http://192.168.1.10:8080` |
+| **Emulator Android** | `http://10.0.2.2:8080` *(default)* |
+| **HP Fisik Android** | `http://<IP-Laptop-Anda>:8080` (misal `http://192.168.1.10:8080`) |
+| **Flutter Web / Chrome** | `http://127.0.0.1:8080` |
+
+### 6.3 Jalankan Aplikasi Mobile
+- **Di Emulator / Perangkat Android Connected**:
+  ```bash
+  flutter run
+  ```
+- **Build APK Release**:
+  ```bash
+  flutter build apk --release
+  ```
+  *File APK hasil build akan berada di `mobile/build/app/outputs/flutter-apk/app-release.apk`.*
 
 ---
 
-## 6. Masalah Umum
+## 7. Masalah Umum & Pertanyaan Frequent (FAQ)
 
-Semua endpoint membalas JSON, termasuk saat gagal. Pesan yang dikirim ke klien sengaja tidak detail — **penyebab sebenarnya selalu ada di log error PHP** (XAMPP: `xampp/apache/logs/error_log`; server bawaan PHP: keluaran terminal). Cari baris berawalan `[inventory-labkom]`.
-
-| Gejala | Penyebab & solusi |
+| Gejala | Penyebab & Solusi |
 |---|---|
-| Semua endpoint balas HTTP 500 `Terjadi kesalahan pada server.` | Cek log. Tiga penyebab paling umum: `config.php` belum disalin dari `config.example.php`, `jwt.secret` masih placeholder (backend sengaja menolak jalan), atau file config-nya rusak sintaks. |
-| `"database": "disconnected"` di `/api/health` | MySQL belum jalan, kredensial di `config.php` salah, atau database `inventory_labkom` belum di-import. Set `app.debug` ke `true` untuk melihat pesan PDO aslinya. |
-| `Access denied` padahal user & password benar | Kalau MySQL-nya bukan XAMPP (mis. MariaDB dari Homebrew), akun `root` sering memakai autentikasi `unix_socket` yang hanya bekerja lewat soket lokal — sedangkan `db.host` di config memakai `127.0.0.1`, yang memaksa koneksi TCP. Buat user berpassword: `CREATE USER 'labkom'@'127.0.0.1' IDENTIFIED BY '...'; GRANT ALL ON inventory_labkom.* TO 'labkom'@'127.0.0.1';` |
-| Semua endpoint balas 404 | `mod_rewrite` Apache belum aktif, atau direktorinya belum `AllowOverride All` sehingga `public/.htaccess` diabaikan. Deploy di sub-path sendiri sudah didukung dan bukan penyebab 404. |
-| Login selalu 401 padahal password benar | Apache memotong header `Authorization`. Pastikan blok `RewriteCond %{HTTP:Authorization}` di `public/.htaccess` ikut terbaca (`AllowOverride All`). |
-| HP fisik tidak bisa konek | Firewall komputer memblokir port 8080, atau HP dan komputer beda jaringan. |
+| `flutter` atau `php` tidak dikenali di terminal | Path variabel environment belum ditambahkan ke System PATH. Tambahkan `C:\xampp\php` dan `C:\src\flutter\bin` ke System PATH, lalu buka terminal baru. |
+| Error `ext-gd` / `ext-zip` saat `composer install` | Ekstensi PHP belum diaktifkan di `php.ini`. Edit `C:\xampp\php\php.ini`, buang tanda `;` pada `extension=gd` dan `extension=zip`, lalu simpan. |
+| API membalas `"database": "disconnected"` | Service MySQL di XAMPP belum di-start atau nama database/kredensial di `backend/config/config.php` salah. |
+| Aplikasi mobile di HP fisik tidak bisa login | HP dan Laptop tidak berada di satu jaringan Wi-Fi yang sama, atau firewall Windows memblokir port 8080. Gunakan IP lokal laptop Anda pada `app_config.dart`. |
+

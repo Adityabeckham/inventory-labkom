@@ -69,16 +69,38 @@ denda = jumlah_hari_telat × tarif_per_hari
 
 ---
 
-## Konfigurasi Sisi Flutter
+## Konfigurasi Sisi Flutter (Aplikasi Mobile)
 
-Alamat backend disimpan di aplikasi Flutter, bukan di file ini. Lihat [INSTALLATION.md §5](INSTALLATION.md) untuk pemetaan alamat emulator vs HP fisik.
+Konfigurasi aplikasi mobile Flutter tersimpan pada file `mobile/lib/core/config/app_config.dart`.
+
+```dart
+abstract final class AppConfig {
+  static const String apiBaseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://10.0.2.2:8080',
+  );
+}
+```
+
+### Opsi Mengubah Alamat API Backend:
+1. **Lewat parameter `dart-define` (Rekomendasi tanpa mengubah file)**:
+   ```bash
+   flutter run --dart-define=API_BASE_URL=http://192.168.1.10:8080
+   ```
+2. **Ubah langsung nilai `defaultValue` di `mobile/lib/core/config/app_config.dart`**:
+   - Untuk **Emulator Android**: `http://10.0.2.2:8080`
+   - Untuk **HP Fisik / Wi-Fi**: `http://<IP-Laptop-Anda>:8080`
+   - Untuk **Flutter Web**: `http://127.0.0.1:8080`
 
 ---
 
-## Checklist Sebelum Production
+## Checklist Sebelum Development / Run Local
 
-- [ ] `app.debug` = `false`
-- [ ] `jwt.secret` diganti dengan string acak, tidak pernah di-commit
-- [ ] User MySQL khusus, bukan `root`, dengan hak akses terbatas
-- [ ] Password akun bawaan (`laboran123`, `kaprog123`) sudah diganti lewat Kelola User
-- [ ] Backend dilayani lewat HTTPS — JWT dikirim di header setiap request
+- [ ] Node/XAMPP: MySQL service aktif di XAMPP Control Panel.
+- [ ] PHP PATH: `php.ini` mengaktifkan `extension=gd`, `extension=zip`, `extension=mbstring`, `extension=pdo_mysql`.
+- [ ] Backend Config: `backend/config/config.php` terbuat dan `jwt.secret` terisi string 32+ karakter.
+- [ ] Database: `schema.sql` dan `seed.sql` sukses ter-import ke database `inventory_labkom`.
+- [ ] Composer: `composer install` selesai dieksekusi di folder `backend/`.
+- [ ] Flutter: `flutter doctor` tidak ada error, `flutter pub get` selesai di folder `mobile/`.
+- [ ] Backend Running: Development server backend aktif di `http://127.0.0.1:8080`.
+
