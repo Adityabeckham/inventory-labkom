@@ -266,7 +266,7 @@ DESIGN.md mendefinisikan 3 gaya badge dasar (Nominal/Hijau, Pending/Gold, Critic
 ## 5. Wireframe Ringkas (ASCII — layar kunci, gaya DESIGN.md)
 
 ### 5.1 Login
-<img width="1024" height="2322" alt="LOGIN-Laboran" src="https://github.com/user-attachments/assets/dc1aebb7-e322-4d24-aaf9-c08b7b587d18" />
+<img width="390" height="1447" alt="LOGIN-Laboran" src="https://github.com/user-attachments/assets/dc1aebb7-e322-4d24-aaf9-c08b7b587d18" />
 
 ### 5.2 Dashboard Laboran (dengan Bottom Nav + FAB)
 <img width="390" height="1447" alt="2 2 Dashboard Laboran" src="https://github.com/user-attachments/assets/9ea70120-e18b-4a97-89f9-7ae39e084210" />
