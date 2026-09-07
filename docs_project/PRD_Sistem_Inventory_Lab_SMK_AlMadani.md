@@ -225,7 +225,7 @@ Skema final ada di dokumen terpisah: **`Database_Final_dan_Arsitektur.md`** (v1.
 1. ✅ PRD — final.
 2. ✅ Database Schema final + ERD + Arsitektur teknis — lihat `Database_Final_dan_Arsitektur.md`.
 3. ✅ UI/UX wireframe & flow — lihat `UIUX_Wireframe_dan_Flow.md` (navigasi hybrid + `DESIGN.md`).
-4. ✅ Prompt AI desain UI — lihat `Prompt_AI_Desain_UI.md` (token dari `DESIGN.md`).
-5. **Sprint planning / task breakdown** (dipecah per fitur FR-01 s/d FR-12, estimasi per sprint) — dokumen selanjutnya.
+4. ✅ System Desain UI — lihat `design/DESIGN.md` (design system resmi).
+5. **Sprint planning / task breakdown** (dipecah per fitur FR-01 s/d FR-13, estimasi per sprint) — lihat `Sprint_Planning_Task_Breakdown.md`.
 
 **Status dokumen: FINAL.** Tidak ada pertanyaan terbuka tersisa.

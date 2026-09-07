@@ -4,7 +4,7 @@
 | | |
 |---|---|
 | **Versi** | 1.5 (Final — hasil review Flowchart/Use Case/Activity/Sequence Diagram skripsi asli) |
-| **Rujukan** | PRD_Sistem_Inventory_Lab_SMK_AlMadani.md v1.3 |
+| **Rujukan** | PRD_Sistem_Inventory_Lab_SMK_AlMadani.md v1.6 |
 
 ---
 
@@ -272,4 +272,4 @@ GitHub Release akan berisi file `.apk` hasil build (`flutter build apk --release
 
 ## 6. Next Step
 
-Lanjut ke **Sprint Planning / Task Breakdown** — pecah FR-01 s/d FR-12 jadi task teknis per sprint dengan estimasi.
+Lanjut ke **Sprint Planning / Task Breakdown** — pecah FR-01 s/d FR-13 jadi task teknis per sprint dengan estimasi.

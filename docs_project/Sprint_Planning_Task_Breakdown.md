@@ -157,7 +157,7 @@
 | Hubungkan Dashboard (ringkasan angka: Total Barang, Sedang Dipinjam, Perlu Verifikasi) ke data backend asli | Frontend + Backend | 1 hari |
 | Samakan terminologi status jadi "Dipinjam/Dibatalkan" konsisten di semua layar (termasuk layar Verifikasi) | Frontend | 0.5 hari |
 | Perbaiki label header/tab yang salah (hasil review Figma — Data Peminjam, Detail Pengembalian, Pengaturan Denda) | Frontend | 0.5 hari |
-| Uji seluruh FR-01–FR-12 dengan Black Box Testing menyeluruh (sesuai metode skripsi Bab III) | Semua | 2 hari |
+| Uji seluruh FR-01–FR-13 dengan Black Box Testing menyeluruh (sesuai metode skripsi Bab III) | Semua | 2 hari |
 | Perbaikan bug dari hasil testing | Semua | 1-2 hari |
 | Build APK release (`flutter build apk --release`) | Frontend | 0.5 hari |
 | Tulis `INSTALLATION.md`, `CONFIGURATION.md`, `USER_GUIDE.md` | Siapa saja | 1 hari |
@@ -186,7 +186,7 @@
 
 | Risiko | Mitigasi |
 |---|---|
-| Generate laporan 3 format × 4 jenis (Sprint 5) berpotensi paling makan waktu | Kerjakan PDF dulu (paling penting/umum), Word & Excel menyusul; bisa reuse query data yang sama untuk 3 format |
+| Generate laporan 3 format × 5 jenis (Sprint 5) berpotensi paling makan waktu | Kerjakan PDF dulu (paling penting/umum), Word & Excel menyusul; bisa reuse query data yang sama untuk 3 format |
 | Alur multi-item peminjaman (Sprint 3) adalah bagian paling kompleks secara logika (stok, status, verifikasi) | Testing paling ketat di sprint ini, jangan lanjut ke Sprint 4 sebelum alur ini benar-benar teruji |
 | Kalau dikerjakan 1 orang, total ~7-9 minggu penuh mepet buat timeline skripsi — cek kalender sidang | Kalau perlu dipercepat, Sprint 2 & 5 paling mungkin dipangkas/disederhanakan tanpa mengubah fitur inti |
 
