@@ -4,7 +4,7 @@
 | | |
 |---|---|
 | **Versi** | 1.5 (Final — hasil review Flowchart/Use Case/Activity/Sequence Diagram skripsi asli) |
-| **Rujukan** | PRD v1.4, Database_Final_dan_Arsitektur.md v1.3, `DESIGN.md` (design system resmi klien) |
+| **Rujukan** | PRD v1.6, Database_Final_dan_Arsitektur.md v1.5, `DESIGN.md` (design system resmi klien) |
 
 > Struktur layar & flow mengikuti mockup asli skripsi (Gambar 3.19–3.25). Gaya visual (warna, tipografi, shape, elevation, komponen) sekarang mengikuti **`DESIGN.md`** yang disediakan klien — klien konfirmasi warna boleh beda dari mockup skripsi. Navigasi memakai struktur **hybrid**: Bottom Navigation Bar untuk 4 menu utama + Dashboard grid untuk fitur sekunder.
 
@@ -12,26 +12,28 @@
 
 ## 1. Struktur Navigasi (Hybrid — dikonfirmasi klien)
 
-### Laboran — Bottom Navigation Bar (5 tab)
+### Laboran — Bottom Navigation Bar (4 tab)
 | Tab | Isi |
 |---|---|
 | **Dashboard** | Ringkasan + grid akses fitur sekunder: Kategori, Kelola User, Data Peminjam, Pengaturan Denda |
 | **Aset Lab** | Segmented control internal "Daftar Barang \| Mutasi Stok" — Daftar Barang (list, tambah, ubah, hapus); Mutasi Stok (riwayat + catat mutasi masuk/keluar, FR-13) |
 | **Transaksi** | Segmented control internal "Peminjaman \| Pengembalian" (masing-masing dengan filter tab status sendiri) |
-| **Laporan** | 5 jenis laporan |
-| **Settings** | Edit Profile, Ubah Password, Logout |
+| **Laporan** | 5 jenis laporan (Data Barang, Peminjaman, Pengembalian, Stok Barang, Denda) |
+
+> Profil/Pengaturan Akun (Edit Profile, Ubah Password, Logout) diakses melalui ikon Profil pada Top App Bar.
 
 **FAB (Floating Action Button)**: shortcut global **"+ Peminjaman Baru"**, muncul di atas Bottom Nav pada tab Dashboard & Transaksi. Warna Crimson Red (`#D8232A`) sesuai DESIGN.md, ikon "+" polos (bukan barcode scanner — barcode scanning tetap di luar scope Fase 1). Didesain future-proof: kalau fase 2 menambah fitur scan barcode, FAB bisa diperluas jadi Extended/Speed-dial FAB dengan 2 opsi ("Scan Barcode" & "Tambah Manual") tanpa mengubah struktur navigasi.
 
-### Kepala Program — Bottom Navigation Bar (4 tab)
+### Kepala Program — Bottom Navigation Bar (3 tab)
 | Tab | Isi |
 |---|---|
 | **Dashboard** | Ringkasan pengawasan |
-| **Verifikasi** | Daftar pengajuan `menunggu_verifikasi` → approve/reject |
+| **Verifikasi** | Daftar pengajuan `menunggu_verifikasi` → Setuju/Tolak |
 | **Laporan** | Read-only, 5 jenis sama seperti Laboran |
-| **Settings** | Edit Profile, Ubah Password, Logout |
 
 > Menu Verifikasi **tidak** muncul di Bottom Nav Laboran — kalau Laboran perlu lihat status pengajuan, aksesnya lewat grid Dashboard (read-only, tanpa tombol approve/reject; otorisasi tetap ditegakkan di backend).
+
+> Profil/Pengaturan Akun (Edit Profile, Ubah Password, Logout) diakses melalui ikon Profil pada Top App Bar.
 
 ---
 
@@ -47,13 +49,13 @@
 6. Data Peminjam (dari grid — tabel: nama, NIS/NIP, kelas/jabatan, no HP)
 7. Transaksi → Peminjaman (list + form Peminjaman Baru multi-item, via segmented control)
 8. Transaksi → Pengembalian (list + form pengembalian per-item, via segmented control)
-9. Laporan (4 jenis)
+9. Laporan (5 jenis — Data Barang, Peminjaman, Pengembalian, Stok Barang, Denda)
 10. Pengaturan Denda (dari grid)
 
 ### Kepala Program
 1. Login
 2. Dashboard (ringkasan pengawasan)
-3. Verifikasi — daftar pengajuan → detail → approve/reject
+3. Verifikasi — daftar pengajuan → detail → Setuju/Tolak
 4. Laporan (read-only)
 
 ---
@@ -77,8 +79,8 @@
 "Ingat saya" dicentang → refresh token disimpan lebih lama
    │
    ▼
-Redirect sesuai role → Dashboard Laboran (Bottom Nav 4 tab) /
-                        Dashboard Kepala Program (Bottom Nav 3 tab)
+Redirect sesuai role → Dashboard Laboran (Bottom Nav 5 tab) /
+                        Dashboard Kepala Program (Bottom Nav 4 tab)
 
 [Lupa Password?] → instruksi: "Hubungi Laboran/Admin untuk reset password
 akun Anda" (reset manual lewat menu Kelola User)
@@ -265,30 +267,14 @@ DESIGN.md mendefinisikan 3 gaya badge dasar (Nominal/Hijau, Pending/Gold, Critic
 
 ## 5. Wireframe Ringkas (ASCII — layar kunci, gaya DESIGN.md)
 
-### 5.1 Dashboard Laboran (dengan Bottom Nav + FAB)
-```
-┌─────────────────────────────┐
-│ ╭─── Dashboard ───────────╮ │  ← Deep Navy #384C9D, sudut bawah 24px
-│ │ Halo Laboran              │ │
-│ │ Selamat Datang Kembali    │ │
-│ ╰──────────────────────────╯ │
-│  🔍 Cari Produk               │
-│  ┌───────────┐┌───────────┐  │
-│  │ Kategori  ││ Kelola User│  │
-│  └───────────┘└───────────┘  │
-│  ┌───────────┐┌───────────┐  │
-│  │Data Peminjam││Pengaturan│  │
-│  └───────────┘└───────────┘  │
-│  Total Barang: 128            │
-│  Sedang Dipinjam: 14          │
-│  Perlu Verifikasi: 3          │
-│                          ⊕FAB │  ← Crimson #D8232A, "+ Peminjaman"
-├─────────────────────────────┤
-│ [Dashboard][Aset Lab][Transaksi][Laporan] │ ← Bottom Nav, aktif = navy
-└─────────────────────────────┘
-```
+### 5.1 Login
+<img width="390" height="1447" alt="LOGIN-Laboran" src="https://github.com/user-attachments/assets/dc1aebb7-e322-4d24-aaf9-c08b7b587d18" />
 
-### 5.2 Transaksi — Peminjaman (segmented control)
+### 5.2 Dashboard Laboran (dengan Bottom Nav + FAB)
+<img width="390" height="1447" alt="2 2 Dashboard Laboran" src="https://github.com/user-attachments/assets/9ea70120-e18b-4a97-89f9-7ae39e084210" />
+
+
+### 5.3 Transaksi — Peminjaman (segmented control)
 ```
 ┌─────────────────────────────┐
 │ ←   Transaksi                  │
@@ -310,7 +296,7 @@ DESIGN.md mendefinisikan 3 gaya badge dasar (Nominal/Hijau, Pending/Gold, Critic
 └─────────────────────────────┘
 ```
 
-### 5.3 Data Peminjam — Tabel
+### 5.4 Data Peminjam — Tabel
 ```
 ┌─────────────────────────────────────┐
 │ ←   Kelola Peminjam                    │
@@ -322,7 +308,7 @@ DESIGN.md mendefinisikan 3 gaya badge dasar (Nominal/Hijau, Pending/Gold, Critic
 └─────────────────────────────────────┘
 ```
 
-### 5.4 Verifikasi (Kepala Program)
+### 5.5 Verifikasi (Kepala Program)
 ```
 ┌─────────────────────────────┐
 │ ← Detail Pengajuan            │
@@ -387,4 +373,4 @@ Setelah desain Figma, dilakukan review lanjutan terhadap dokumen perancangan for
 ---
 
 ## 7. Next Step
-Lanjut ke **Sprint Planning / Task Breakdown** — pecah FR-01 s/d FR-12 jadi task teknis per sprint dengan estimasi.
+Lanjut ke **Sprint Planning / Task Breakdown** — pecah FR-01 s/d FR-13 jadi task teknis per sprint dengan estimasi.
