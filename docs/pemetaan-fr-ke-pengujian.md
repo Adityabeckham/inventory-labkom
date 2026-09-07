@@ -69,8 +69,21 @@ Dicatat terbuka supaya tidak terbaca sebagai "semua sudah teruji".
    pembuktiannya lewat pembacaan kode, bukan uji otomatis.
 2. **Isi visual PDF.** Diperiksa manual dengan `pdftotext`. Yang otomatis baru
    struktur berkas dan isi XLSX/DOCX.
-3. **Pengujian di perangkat sungguhan.** Uji layar berjalan di mesin uji Flutter
-   dengan ukuran layar disimulasikan (360×740 dan 360×640), bukan di HP.
+3. **Pengujian di perangkat sungguhan — ini celah terbesar.** Uji layar berjalan
+   di mesin uji Flutter dengan ukuran layar disimulasikan (360×740 dan 360×640),
+   bukan di HP maupun emulator.
+
+   `flutter build apk --release` menghasilkan APK 56,3 MB dan tanda tangannya
+   sudah diperiksa dengan `apksigner`, tapi **APK itu belum pernah dipasang dan
+   dijalankan**. Definition of Done Sprint 6 berbunyi "APK bisa di-install &
+   dipakai penuh sesuai PRD" — bagian "bisa di-install & dipakai" itu belum
+   terbukti, dan build yang hijau bukan penggantinya.
+
+   Yang menutupnya: pasang APK-nya di HP Android (atau emulator), lalu tempuh
+   satu putaran penuh — login sebagai Laboran, ajukan peminjaman, login sebagai
+   Kepala Program, setujui, kembalikan barangnya, unduh satu laporan. Emulator
+   belum bisa dijalankan di mesin ini karena disk bootnya tinggal ~3 GB,
+   sedangkan system image + AVD butuh lebih dari itu.
 4. **Uji beban.** Tidak ada, dan tidak diminta PRD. Skala pemakaiannya satu lab
    satu sekolah.
 
