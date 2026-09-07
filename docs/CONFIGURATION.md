@@ -71,7 +71,17 @@ denda = jumlah_hari_telat × tarif_per_hari
 
 ## Konfigurasi Sisi Flutter
 
-Alamat backend disimpan di aplikasi Flutter, bukan di file ini. Lihat [INSTALLATION.md §5](INSTALLATION.md) untuk pemetaan alamat emulator vs HP fisik.
+Alamat backend **ditanam ke dalam APK saat build**, bukan disimpan di berkas ini
+dan bukan bisa diubah dari dalam aplikasi:
+
+```bash
+flutter build apk --release --dart-define=API_BASE_URL=http://192.168.1.10:8080
+```
+
+Kalau IP server berubah, APK-nya harus dibangun ulang. Tanpa flag itu,
+bawaannya `http://10.0.2.2:8080` — alias host dari emulator Android, yang tidak
+berarti apa-apa di HP sungguhan. Lihat [INSTALLATION.md §6](INSTALLATION.md)
+untuk perintah lengkapnya dan cara mencari IP komputer.
 
 ---
 
@@ -81,4 +91,10 @@ Alamat backend disimpan di aplikasi Flutter, bukan di file ini. Lihat [INSTALLAT
 - [ ] `jwt.secret` diganti dengan string acak, tidak pernah di-commit
 - [ ] User MySQL khusus, bukan `root`, dengan hak akses terbatas
 - [ ] Password akun bawaan (`laboran123`, `kaprog123`) sudah diganti lewat Kelola User
-- [ ] Backend dilayani lewat HTTPS — JWT dikirim di header setiap request
+- [ ] Backend dilayani lewat HTTPS — JWT dikirim di header setiap request.
+      Aplikasi Android saat ini **mengizinkan HTTP polos** (lihat
+      [D-09](deviasi-dari-spesifikasi.md)); setelah HTTPS aktif, ubah
+      `mobile/android/app/src/main/res/xml/network_security_config.xml` menjadi
+      `cleartextTrafficPermitted="false"` lalu bangun ulang APK-nya
+- [ ] Backend **tidak** diekspos ke internet selagi lalu lintasnya masih HTTP
+      polos — token login bisa dibaca penyadap jaringan
