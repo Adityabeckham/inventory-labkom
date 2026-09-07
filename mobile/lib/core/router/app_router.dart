@@ -4,8 +4,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/application/auth_controller.dart';
 import '../../features/auth/domain/app_user.dart';
+import '../../features/aset/presentation/aset_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/dashboard/presentation/dashboard_screen.dart';
+import '../../features/kategori/presentation/kategori_screen.dart';
+import '../../features/peminjam/presentation/peminjam_screen.dart';
 import '../../features/placeholder/sprint_placeholder_screen.dart';
 import '../../features/shell/presentation/app_shell.dart';
 import '../../features/users/presentation/users_screen.dart';
@@ -69,15 +72,9 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (_, _) => const DashboardScreen(),
           ),
           GoRoute(path: '/users', builder: (_, _) => const UsersScreen()),
-          GoRoute(
-            path: '/aset',
-            builder: (_, _) => const SprintPlaceholderScreen(
-              title: 'Aset Lab',
-              sprint: 2,
-              description:
-                  'Daftar Barang, filter kategori, dan Mutasi Stok (FR-02, FR-03, FR-13).',
-            ),
-          ),
+          GoRoute(path: '/aset', builder: (_, _) => const AsetScreen()),
+          GoRoute(path: '/kategori', builder: (_, _) => const KategoriScreen()),
+          GoRoute(path: '/peminjam', builder: (_, _) => const PeminjamScreen()),
           GoRoute(
             path: '/transaksi',
             builder: (_, _) => const SprintPlaceholderScreen(
@@ -119,7 +116,7 @@ bool _isAllowed(String path, UserLevel level) {
   const umum = {'/dashboard'};
   if (umum.contains(path)) return true;
 
-  final khususLaboran = {'/users', '/aset', '/transaksi'};
+  final khususLaboran = {'/users', '/aset', '/kategori', '/peminjam', '/transaksi'};
   final khususKepalaProgram = {'/verifikasi'};
 
   return switch (level) {

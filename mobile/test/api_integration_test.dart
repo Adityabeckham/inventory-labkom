@@ -10,6 +10,10 @@ import 'package:inventory_labkom/core/network/api_exception.dart';
 import 'package:inventory_labkom/core/storage/token_storage.dart';
 import 'package:inventory_labkom/features/auth/data/auth_repository.dart';
 import 'package:inventory_labkom/features/auth/domain/app_user.dart';
+import 'package:inventory_labkom/features/aset/data/barang_repository.dart';
+import 'package:inventory_labkom/features/aset/domain/stok_mutasi.dart';
+import 'package:inventory_labkom/features/kategori/data/kategori_repository.dart';
+import 'package:inventory_labkom/features/peminjam/data/peminjam_repository.dart';
 import 'package:inventory_labkom/features/users/data/user_repository.dart';
 
 /// Integration test: lapisan jaringan Flutter diuji terhadap backend SUNGGUHAN.
@@ -255,6 +259,184 @@ void main() {
             .having((e) => e.statusCode, 'statusCode', 409)
             .having((e) => e.message, 'message',
                 contains('akun yang sedang dipakai login'))),
+      );
+    });
+  });
+
+  group('Sprint 2 — master data lewat lapisan jaringan Flutter', () {
+    /// Login sebagai Laboran dan kembalikan client yang sudah bertoken.
+    Future<ApiClient> clientLaboran() async {
+      final storage = InMemoryTokenStorage();
+      final client = buildClient(storage);
+      await AuthRepository(client, storage).login(
+        username: 'laboran',
+        password: 'laboran123',
+        rememberMe: true,
+      );
+      return client;
+    }
+
+    test('daftar barang membawa nama kategori hasil join', () async {
+      if (!up) return;
+
+      final list = await BarangRepository(await clientLaboran()).fetch();
+
+      expect(list, isNotEmpty);
+      expect(list.first.namaKategori, isNot('-'));
+    });
+
+    test('filter kategori hanya mengembalikan kategori itu', () async {
+      if (!up) return;
+
+      final repo = BarangRepository(await clientLaboran());
+      final semua = await repo.fetch();
+      final idKategori = semua.first.idKategori;
+      final tersaring = await repo.fetch(idKategori: idKategori);
+
+      expect(tersaring, isNotEmpty);
+      expect(tersaring.every((b) => b.idKategori == idKategori), isTrue);
+      expect(tersaring.length, lessThanOrEqualTo(semua.length));
+    });
+
+    test('pencarian menjangkau nama maupun kode barang', () async {
+      if (!up) return;
+
+      final repo = BarangRepository(await clientLaboran());
+
+      expect(await repo.fetch(cari: 'Lenovo'), isNotEmpty);
+      expect((await repo.fetch(cari: 'A05')).first.kode, 'A05');
+    });
+
+    test('wildcard % diperlakukan sebagai teks, bukan cocok-semua', () async {
+      if (!up) return;
+
+      // Kalau escaping-nya bocor, ini akan mengembalikan seluruh barang.
+      expect(await BarangRepository(await clientLaboran()).fetch(cari: '%'), isEmpty);
+    });
+
+    test('mutasi menyesuaikan stok DAN jumlah (deviasi D-02)', () async {
+      if (!up) return;
+
+      final client = await clientLaboran();
+      final repo = BarangRepository(client);
+      final kategoriRepo = KategoriRepository(client);
+
+      final kategori = await kategoriRepo.fetchAll();
+      final kode = 'IT${DateTime.now().millisecondsSinceEpoch % 100000}';
+
+      final barang = await repo.save({
+        'id_kategori': kategori.first.id,
+        'kode_barang': kode,
+        'nama_barang': 'Barang Integrasi',
+        'merk': '',
+        'jumlah': 10,
+        'kondisi': 'Baik',
+        'stok': 10,
+        'tanggal_input': '2026-09-01',
+        'serial_number': '',
+      });
+
+      await repo.catatMutasi(
+        idBarang: barang.id,
+        jenis: JenisMutasi.masuk,
+        jumlah: 5,
+        keterangan: 'Integration test',
+      );
+
+      final sesudah = (await repo.fetch(cari: kode)).single;
+
+      // Kalau hanya stok yang naik, stok akan jadi 15 dari jumlah 10 —
+      // tersedia lebih banyak dari yang dimiliki. Lihat D-02.
+      expect(sesudah.stok, 15);
+      expect(sesudah.jumlah, 15);
+      expect(sesudah.stok, lessThanOrEqualTo(sesudah.jumlah));
+    });
+
+    test('mutasi keluar melebihi stok ditolak dan tidak mengubah apa pun',
+        () async {
+      if (!up) return;
+
+      final repo = BarangRepository(await clientLaboran());
+      final barang = (await repo.fetch()).first;
+
+      await expectLater(
+        repo.catatMutasi(
+          idBarang: barang.id,
+          jenis: JenisMutasi.keluar,
+          jumlah: 999999,
+        ),
+        throwsA(isA<ApiException>()
+            .having((e) => e.statusCode, 'statusCode', 422)),
+      );
+
+      final sesudah = (await repo.fetch(cari: barang.kode)).single;
+      expect(sesudah.stok, barang.stok, reason: 'transaksi harus di-rollback');
+      expect(sesudah.jumlah, barang.jumlah);
+    });
+
+    test('riwayat mutasi mencatat siapa yang mencatat', () async {
+      if (!up) return;
+
+      final riwayat = await BarangRepository(await clientLaboran()).fetchMutasi();
+
+      expect(riwayat, isNotEmpty);
+      expect(riwayat.first.dicatatOleh, 'laboran');
+    });
+
+    test('kategori membawa hitungan barang', () async {
+      if (!up) return;
+
+      final list = await KategoriRepository(await clientLaboran()).fetchAll();
+
+      expect(list, isNotEmpty);
+      expect(list.any((k) => k.jumlahBarang > 0), isTrue);
+    });
+
+    test('kategori yang masih dipakai barang menolak dihapus', () async {
+      if (!up) return;
+
+      final repo = KategoriRepository(await clientLaboran());
+      final dipakai = (await repo.fetchAll()).firstWhere((k) => k.jumlahBarang > 0);
+
+      await expectLater(
+        repo.delete(dipakai.id),
+        throwsA(isA<ApiException>()
+            .having((e) => e.statusCode, 'statusCode', 409)),
+      );
+    });
+
+    test('peminjam membawa NIS/NIP dan kelas', () async {
+      if (!up) return;
+
+      final list = await PeminjamRepository(await clientLaboran()).fetch();
+
+      expect(list, isNotEmpty);
+      expect(list.any((p) => (p.nisNip ?? '').isNotEmpty), isTrue);
+      expect(list.any((p) => (p.kelasJabatan ?? '').isNotEmpty), isTrue);
+    });
+
+    test('pencarian peminjam menjangkau kelas', () async {
+      if (!up) return;
+
+      final hasil =
+          await PeminjamRepository(await clientLaboran()).fetch(cari: 'XII TKJ 1');
+
+      expect(hasil, isNotEmpty);
+      expect(hasil.every((p) => p.kelasJabatan == 'XII TKJ 1'), isTrue);
+    });
+
+    test('NIS duplikat ditolak dengan 409', () async {
+      if (!up) return;
+
+      final repo = PeminjamRepository(await clientLaboran());
+      final adaNis = (await repo.fetch()).firstWhere(
+        (p) => (p.nisNip ?? '').isNotEmpty,
+      );
+
+      await expectLater(
+        repo.save(nama: 'Peminjam Kembar', nisNip: adaNis.nisNip),
+        throwsA(isA<ApiException>()
+            .having((e) => e.statusCode, 'statusCode', 409)),
       );
     });
   });

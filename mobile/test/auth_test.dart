@@ -99,14 +99,17 @@ void main() {
     // baru ditambahkan di sprint berikutnya.
 
     test('Laboran boleh mengakses seluruh rute kelola', () {
-      for (final path in ['/dashboard', '/users', '/aset', '/transaksi', '/laporan']) {
+      for (final path in [
+        '/dashboard', '/users', '/aset', '/kategori', '/peminjam',
+        '/transaksi', '/laporan',
+      ]) {
         expect(isPathAllowedForLevel(path, UserLevel.laboran), isTrue,
             reason: 'Laboran seharusnya boleh $path');
       }
     });
 
     test('Kepala Program DITOLAK dari seluruh rute kelola', () {
-      for (final path in ['/users', '/aset', '/transaksi']) {
+      for (final path in ['/users', '/aset', '/kategori', '/peminjam', '/transaksi']) {
         expect(isPathAllowedForLevel(path, UserLevel.kepalaProgram), isFalse,
             reason: 'Kepala Program seharusnya ditolak dari $path');
       }

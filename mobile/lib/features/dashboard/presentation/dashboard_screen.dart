@@ -51,7 +51,7 @@ class DashboardScreen extends ConsumerWidget {
                 _GridTile(
                   icon: Icons.category_outlined,
                   label: 'Kategori',
-                  onTap: () => _belumTersedia(context, 'Kategori', 2),
+                  onTap: () => context.go('/kategori'),
                 ),
                 _GridTile(
                   icon: Icons.manage_accounts_outlined,
@@ -61,7 +61,7 @@ class DashboardScreen extends ConsumerWidget {
                 _GridTile(
                   icon: Icons.groups_outlined,
                   label: 'Data Peminjam',
-                  onTap: () => _belumTersedia(context, 'Data Peminjam', 2),
+                  onTap: () => context.go('/peminjam'),
                 ),
                 _GridTile(
                   icon: Icons.payments_outlined,
