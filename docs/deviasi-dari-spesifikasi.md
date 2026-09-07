@@ -145,3 +145,17 @@ Pembatasan ke Kepala Program adalah penegasan Tabel 3.1 Use Case, bukan penambah
 **Catatan tambahan, bukan deviasi.** Tarif dibaca saat pengembalian dicatat lalu ikut disimpan di baris `pengembalian`. Mengubah tarif tidak pernah mengubah denda yang sudah tercatat — angka di laporan tetap seperti saat kejadian. Konsekuensinya, pratinjau denda di layar (memakai tarif berjalan) bisa berbeda dari denda yang tersimpan bulan lalu.
 
 Satu baris `peminjaman_detail` juga hanya bisa dikembalikan UTUH: tabel `pengembalian` tidak punya kolom jumlah dan `id_detail`-nya UNIQUE (lihat D-03). "2 dari 3 unit kembali" memang tidak punya tempat penyimpanan — ini batasan skema, dan karenanya form pengembalian menampilkan jumlahnya sebagai teks tetap, bukan field yang bisa diubah.
+
+---
+
+## D-09 · Aplikasi Android mengizinkan lalu lintas HTTP polos
+
+Dokumen tidak menyebut TLS sama sekali, dan `Database_Final_dan_Arsitektur.md` §4.1 menuliskan seluruh contoh endpoint sebagai `http://`. Server sekolah adalah satu komputer di jaringan lab, diakses lewat alamat IP, dan tidak punya sertifikat.
+
+Sejak Android 9 (API 28) lalu lintas cleartext **ditolak secara bawaan**, jadi aplikasinya membawa `android/app/src/main/res/xml/network_security_config.xml` dengan `cleartextTrafficPermitted="true"`. Tanpa itu, setiap permintaan gagal di HP modern.
+
+Izinnya berlaku untuk seluruh aplikasi, bukan dibatasi per host. Alamat server ditentukan sekolah saat build (`--dart-define=API_BASE_URL`) dan tidak diketahui saat kode ditulis, sedangkan elemen `<domain>` pada konfigurasi keamanan jaringan tidak menerima rentang subnet.
+
+**Konsekuensi yang harus disadari:** lalu lintas antara HP dan server bisa dibaca siapa pun yang menyadap jaringan lab, termasuk token login. Untuk satu jaringan lab tertutup ini masih sepadan dengan kerumitan memasang TLS di komputer sekolah. Yang **tidak** boleh dilakukan adalah mengekspos backend-nya ke internet dalam keadaan ini. Kalau nanti dipasang HTTPS, ubah berkas itu menjadi `cleartextTrafficPermitted="false"`.
+
+**Catatan terkait, bukan deviasi.** `android.permission.INTERNET` harus dideklarasikan di `src/main/AndroidManifest.xml`. Flutter hanya menaruhnya di manifest `src/debug/`, sehingga `flutter run` selalu berhasil sementara build rilis menghasilkan APK yang tidak bisa berjaringan sama sekali — kegagalan yang tidak terlihat oleh satu pun pengujian di proyek ini, karena tidak ada yang melewati manifest Android. Cara memeriksanya ada di INSTALLATION.md §6 (`aapt dump badging`).

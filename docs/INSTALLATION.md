@@ -13,7 +13,7 @@ Jika laptop Anda belum memiliki perangkat lunak pendukung, lakukan instalasi ses
 | **XAMPP / PHP** | PHP 8.1+ & MariaDB 10.4+ | Server Backend & Database MySQL | [apachefriends.org](https://www.apachefriends.org) |
 | **Composer** | 2.x | Dependency Manager PHP (Library Laporan) | [getcomposer.org](https://getcomposer.org) |
 | **Flutter SDK** | 3.x (stable) | Framework Aplikasi Mobile | [flutter.dev](https://docs.flutter.dev/get-started/install) |
-| **Android Studio** | Terbaru | Android SDK, Emulator, Build APK | [developer.android.com](https://developer.android.com/studio) |
+| **Android Studio** | Terbaru | Android SDK (cmdline-tools 23.0+), Emulator, Build APK | [developer.android.com](https://developer.android.com/studio) |
 | **Git** | 2.x+ | Version Control System | [git-scm.com](https://git-scm.com) |
 
 ---
@@ -178,12 +178,133 @@ Alamat API dipetakan di file `mobile/lib/core/config/app_config.dart`. Secara de
 
 ---
 
+<<<<<<< HEAD
+## 6. Membangun APK Rilis
+
+```bash
+cd mobile
+flutter build apk --release --dart-define=API_BASE_URL=http://192.168.1.10:8080
+```
+
+Ganti `192.168.1.10` dengan **IP komputer yang menjalankan backend**, bukan
+`localhost`. Alamat ini **ditanam ke dalam APK saat build** dan tidak bisa
+diubah dari dalam aplikasi — kalau IP server berubah, APK-nya harus dibangun
+ulang.
+
+Tanpa `--dart-define`, alamat bawaannya `http://10.0.2.2:8080` (alias host dari
+emulator Android). APK seperti itu jalan di emulator tapi **tidak akan bisa
+terhubung dari HP mana pun**.
+
+Cara mengetahui IP komputer:
+
+```bash
+ipconfig getifaddr en0          # macOS
+ip addr show | grep "inet "     # Linux
+ipconfig                        # Windows — cari IPv4 Address
+```
+
+Hasilnya di `mobile/build/app/outputs/flutter-apk/app-release.apk` (sekitar 56 MB).
+
+> **Backend diakses lewat HTTP polos, dan itu disengaja.** Server sekolah tidak
+> punya sertifikat TLS, jadi aplikasi membawa `network_security_config.xml` yang
+> mengizinkan cleartext. Konsekuensinya: lalu lintasnya bisa dibaca siapa pun
+> yang menyadap jaringan lab, termasuk token login. Untuk satu jaringan lab
+> tertutup ini masih wajar, tapi **jangan mengekspos backend-nya ke internet**
+> dalam keadaan ini.
+
+`compileSdk` di `android/app/build.gradle.kts` **sengaja dipatok 37**, bukan
+mengikuti bawaan Flutter (36), karena `flutter_secure_storage` menuntutnya.
+Angka itu hanya menentukan API mana yang boleh dipakai saat kompilasi — ia
+tidak mengubah perilaku runtime (`targetSdk`) maupun perangkat mana yang bisa
+memasang (`minSdk` 24, yaitu Android 7.0 ke atas).
+
+### Penandatanganan APK
+
+**Tanpa persiapan apa pun, APK rilis ditandatangani kunci debug.** APK-nya
+tetap bisa dipasang dan dipakai penuh, tapi pembaruannya tidak terotentikasi —
+Android tidak bisa membuktikan bahwa versi baru berasal dari pembuat yang sama.
+Untuk pemakaian satu sekolah yang APK-nya dibagikan langsung, ini cukup.
+
+Kalau nanti aplikasinya mau diperbarui secara rapi (apalagi kalau suatu saat
+masuk Play Store), buat kunci rilis sendiri. **Kunci ini sengaja tidak
+disertakan di repo dan tidak dibuatkan oleh pengembang**, karena gunanya justru
+membuktikan bahwa pembaruan datang dari pemilik aplikasi. Kalau kuncinya
+dibuat di mesin lain lalu hilang, aplikasinya tidak akan pernah bisa diperbarui
+— pengguna harus mencabut pasang lebih dulu, dan datanya di perangkat hilang.
+
+**1. Buat keystore** (dijalankan pihak sekolah, satu kali seumur aplikasi):
+
+```bash
+keytool -genkey -v -keystore ~/inventory-labkom-release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+```
+
+Simpan berkas `.jks` dan passwordnya di tempat yang aman dan **tidak** di dalam
+repo. Kehilangan berkas ini tidak bisa dipulihkan siapa pun.
+
+**2. Buat `mobile/android/key.properties`:**
+
+```properties
+storeFile=/Users/nama-anda/inventory-labkom-release.jks
+storePassword=<password keystore>
+keyAlias=upload
+keyPassword=<password kunci>
+```
+
+**3. Bangun ulang.** Tidak ada langkah lain — begitu `key.properties` ada dan
+keempat isiannya terisi, build rilis otomatis memakainya. Kalau berkasnya tidak
+ada, build tetap jalan dengan kunci debug.
+
+`key.properties`, `*.jks`, dan `*.keystore` sudah masuk `.gitignore`, jadi
+tidak akan ikut ter-commit.
+
+```bash
+# Sesuaikan 36.0.0 dengan versi build-tools yang terpasang:
+#   ls $ANDROID_HOME/build-tools
+$ANDROID_HOME/build-tools/36.0.0/apksigner verify --print-certs mobile/build/app/outputs/flutter-apk/app-release.apk
+```
+
+### Memeriksa APK-nya benar-benar bisa berjaringan
+
+**Lakukan ini setiap kali membangun APK rilis.** Flutter hanya mendeklarasikan
+`android.permission.INTERNET` di manifest `src/debug/`, jadi kalau baris itu
+hilang dari `src/main/AndroidManifest.xml`, `flutter run` tetap berhasil
+sementara APK rilisnya tidak bisa membuat satu pun permintaan jaringan — dan
+tidak ada satu pun pengujian di proyek ini yang bisa melihatnya:
+
+```bash
+$ANDROID_HOME/build-tools/36.0.0/aapt dump badging   mobile/build/app/outputs/flutter-apk/app-release.apk | grep uses-permission
+```
+
+Harus memuat baris:
+
+```
+uses-permission: name='android.permission.INTERNET'
+```
+
+Kalau tidak ada, APK-nya tidak berguna berapa pun hijaunya build.
+
+### Memeriksa APK ditandatangani apa
+
+APK yang ditandatangani kunci debug memberi keluaran seperti ini:
+
+```
+Signer #1 certificate DN: C=US, O=Android, CN=Android Debug
+```
+
+Kalau `key.properties` sudah dipasang, yang muncul adalah data yang Anda isi
+saat menjalankan `keytool` — bukan `CN=Android Debug`.
+
+---
+
+## 7. Masalah Umum
 ## 7. Masalah Umum & Pertanyaan Frequent (FAQ)
 
 | Gejala | Penyebab & Solusi |
 |---|---|
 | `flutter` atau `php` tidak dikenali di terminal | Path variabel environment belum ditambahkan ke System PATH. Tambahkan `C:\xampp\php` dan `C:\src\flutter\bin` ke System PATH, lalu buka terminal baru. |
 | Error `ext-gd` / `ext-zip` saat `composer install` | Ekstensi PHP belum diaktifkan di `php.ini`. Edit `C:\xampp\php\php.ini`, buang tanda `;` pada `extension=gd` dan `extension=zip`, lalu simpan. |
-| API membalas `"database": "disconnected"` | Service MySQL di XAMPP belum di-start atau nama database/kredensial di `backend/config/config.php` salah. |
-| Aplikasi mobile di HP fisik tidak bisa login | HP dan Laptop tidak berada di satu jaringan Wi-Fi yang sama, atau firewall Windows memblokir port 8080. Gunakan IP lokal laptop Anda pada `app_config.dart`. |
-
+| Semua endpoint balas HTTP 500 `Terjadi kesalahan pada server.` | Cek log. Tiga penyebab paling umum: `config.php` belum disalin dari `config.example.php`, `jwt.secret` masih placeholder (backend sengaja menolak jalan), atau file config-nya rusak sintaks. |
+| `"database": "disconnected"` di `/api/health` | Service MySQL di XAMPP belum di-start atau nama database/kredensial di `backend/config/config.php` salah. |
+| Semua endpoint balas 404 | `mod_rewrite` Apache belum aktif, atau direktorinya belum `AllowOverride All` sehingga `public/.htaccess` diabaikan. Deploy di sub-path sendiri sudah didukung dan bukan penyebab 404. |
+| Login selalu 401 padahal password benar | Apache memotong header `Authorization`. Pastikan blok `RewriteCond %{HTTP:Authorization}` di `public/.htaccess` ikut terbaca (`AllowOverride All`). |
+| Aplikasi mobile di HP fisik tidak bisa login / konek | HP dan Laptop tidak berada di satu jaringan Wi-Fi yang sama, atau firewall Windows memblokir port 8080. Pastikan APK dibangun dengan `--dart-define=API_BASE_URL=http://<IP-laptop>:8080`. |

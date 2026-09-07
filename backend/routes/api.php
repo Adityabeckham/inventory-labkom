@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 use App\Controllers\AuthController;
 use App\Controllers\BarangController;
+use App\Controllers\DashboardController;
 use App\Controllers\HealthController;
 use App\Controllers\KategoriController;
 use App\Controllers\LaporanController;
@@ -39,6 +40,7 @@ $pinjam   = new PeminjamanController();
 $kembali  = new PengembalianController();
 $denda    = new PengaturanDendaController();
 $laporan  = new LaporanController();
+$dashboard = new DashboardController();
 
 $laboran   = [Auth::role(Auth::LABORAN)];
 $kaprog    = [Auth::role(Auth::KEPALA_PROGRAM)];
@@ -123,5 +125,11 @@ $router->get('/api/laporan/peminjaman',   [$laporan, 'peminjaman'],   $terdaftar
 $router->get('/api/laporan/pengembalian', [$laporan, 'pengembalian'], $terdaftar);
 $router->get('/api/laporan/stok',         [$laporan, 'stok'],         $terdaftar);
 $router->get('/api/laporan/denda',        [$laporan, 'denda'],        $terdaftar);
+
+// ── Sprint 6 — FR-10 Dashboard ───────────────────────────────────────
+//
+// Dibuka untuk kedua level: angkanya cuma ringkasan baca-saja dari data
+// yang sudah boleh dibaca masing-masing peran lewat endpoint lain.
+$router->get('/api/dashboard', [$dashboard, 'index'], $terdaftar);
 
 return $router;

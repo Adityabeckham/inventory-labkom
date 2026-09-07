@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Backend sekolah berjalan di jaringan lokal lewat HTTP polos, dengan alamat IP
+  (mis. http://192.168.1.10:8080) dan tanpa sertifikat TLS. Sejak Android 9
+  (API 28) lalu lintas cleartext ditolak secara bawaan, jadi tanpa berkas ini
+  SETIAP permintaan gagal di perangkat modern — dan kegagalannya tidak terlihat
+  saat `flutter run`, karena manifest debug Flutter sudah mengizinkannya.
+
+  Izinnya sengaja berlaku untuk seluruh aplikasi, bukan dibatasi per domain:
+  alamat servernya ditentukan sekolah saat build dan tidak diketahui di sini,
+  sementara <domain> tidak menerima rentang subnet.
+
+  Kalau nanti backend-nya dipasang di belakang HTTPS, ganti isi berkas ini
+  menjadi cleartextTrafficPermitted="false".
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

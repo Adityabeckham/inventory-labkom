@@ -5,11 +5,10 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
 import '../../auth/application/auth_controller.dart';
+import '../application/dashboard_controller.dart';
+import 'ringkasan_dashboard_view.dart';
 
-/// Tab Dashboard — sapaan, ringkasan, dan grid akses fitur sekunder.
-///
-/// Angka ringkasan masih placeholder; dihubungkan ke data asli di Sprint 6
-/// (Sprint_Planning_Task_Breakdown.md).
+/// Tab Dashboard — sapaan, ringkasan, dan grid akses fitur sekunder (FR-10).
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
@@ -29,61 +28,69 @@ class DashboardScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.screenMargin),
-        children: [
-          Text('Halo ${user.level.label}', style: text.headlineMedium),
-          Text('Selamat datang kembali, ${user.username}.',
-              style: text.bodyMedium),
-          const SizedBox(height: AppSpacing.xl),
-
-          if (user.isLaboran) ...[
-            Text('Akses cepat', style: text.titleMedium),
-            const SizedBox(height: AppSpacing.sm),
-            GridView(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              // Tinggi kartu dipatok, bukan lewat childAspectRatio. Rasio
-              // menghitung tinggi dari lebar layar dan sama sekali tidak
-              // tahu-menahu soal tinggi teks di dalamnya: begitu pengguna
-              // menaikkan ukuran font sistem satu takik (skala 1,15) grid
-              // sudah meluber. Angka tetap memberi ruang label dua baris.
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: AppSpacing.cardGap,
-                crossAxisSpacing: AppSpacing.cardGap,
-                mainAxisExtent: 100,
-              ),
-              children: [
-                _GridTile(
-                  icon: Icons.category_outlined,
-                  label: 'Kategori',
-                  onTap: () => context.go('/kategori'),
-                ),
-                _GridTile(
-                  icon: Icons.manage_accounts_outlined,
-                  label: 'Kelola User',
-                  onTap: () => context.go('/users'),
-                ),
-                _GridTile(
-                  icon: Icons.groups_outlined,
-                  label: 'Data Peminjam',
-                  onTap: () => context.go('/peminjam'),
-                ),
-                _GridTile(
-                  icon: Icons.payments_outlined,
-                  label: 'Pengaturan Denda',
-                  onTap: () => context.go('/pengaturan-denda'),
-                ),
-              ],
+      body: RefreshIndicator(
+        // Angka ringkasan diambil ulang tiap tab ini dibuka (provider-nya
+        // auto-dispose). Tarik-untuk-segarkan hanya menutup kasus pengguna
+        // yang berdiam di layar ini sementara data berubah dari perangkat lain.
+        onRefresh: () => ref.refresh(ringkasanDashboardProvider.future),
+        child: ListView(
+          padding: const EdgeInsets.all(AppSpacing.screenMargin),
+          children: [
+            Text('Halo ${user.level.label}', style: text.headlineMedium),
+            Text(
+              'Selamat datang kembali, ${user.username}.',
+              style: text.bodyMedium,
             ),
             const SizedBox(height: AppSpacing.xl),
-          ],
 
-          Text('Ringkasan', style: text.titleMedium),
-          const SizedBox(height: AppSpacing.sm),
-          const _SummaryPlaceholder(),
-        ],
+            if (user.isLaboran) ...[
+              Text('Akses cepat', style: text.titleMedium),
+              const SizedBox(height: AppSpacing.sm),
+              GridView(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                // Tinggi kartu dipatok, bukan lewat childAspectRatio. Rasio
+                // menghitung tinggi dari lebar layar dan sama sekali tidak
+                // tahu-menahu soal tinggi teks di dalamnya: begitu pengguna
+                // menaikkan ukuran font sistem satu takik (skala 1,15) grid
+                // sudah meluber. Angka tetap memberi ruang label dua baris.
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: AppSpacing.cardGap,
+                  crossAxisSpacing: AppSpacing.cardGap,
+                  mainAxisExtent: 100,
+                ),
+                children: [
+                  _GridTile(
+                    icon: Icons.category_outlined,
+                    label: 'Kategori',
+                    onTap: () => context.go('/kategori'),
+                  ),
+                  _GridTile(
+                    icon: Icons.manage_accounts_outlined,
+                    label: 'Kelola User',
+                    onTap: () => context.go('/users'),
+                  ),
+                  _GridTile(
+                    icon: Icons.groups_outlined,
+                    label: 'Data Peminjam',
+                    onTap: () => context.go('/peminjam'),
+                  ),
+                  _GridTile(
+                    icon: Icons.payments_outlined,
+                    label: 'Pengaturan Denda',
+                    onTap: () => context.go('/pengaturan-denda'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xl),
+            ],
+
+            Text('Ringkasan', style: text.titleMedium),
+            const SizedBox(height: AppSpacing.sm),
+            const RingkasanDashboardView(),
+          ],
+        ),
       ),
     );
   }
@@ -151,32 +158,6 @@ class _GridTile extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SummaryPlaceholder extends StatelessWidget {
-  const _SummaryPlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Row(
-          children: [
-            const Icon(Icons.insights_outlined, color: AppColors.textMuted),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: Text(
-                'Angka ringkasan (Total Barang, Sedang Dipinjam, Perlu '
-                'Verifikasi) dihubungkan ke data asli pada Sprint 6.',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            ),
-          ],
         ),
       ),
     );

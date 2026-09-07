@@ -1,8 +1,17 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+      WAJIB ada di manifest ini, bukan cuma di src/debug/. Flutter hanya
+      mendeklarasikan INTERNET pada manifest debug, jadi build rilis tanpa
+      baris ini menghasilkan APK yang tidak bisa membuat satu pun permintaan
+      jaringan — dan `flutter run` tidak akan pernah memperlihatkannya.
+    -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
-        android:label="inventory_labkom"
+        android:label="Inventory Labkom"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:networkSecurityConfig="@xml/network_security_config">
         <activity
             android:name=".MainActivity"
             android:exported="true"

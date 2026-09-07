@@ -967,6 +967,194 @@ $r = reqBerkas('/api/laporan/stok', $tokenLaboran);
 ok('tanpa parameter format, bawaannya PDF',
    $r['status'] === 200 && str_starts_with($r['body'], '%PDF-'));
 
+// ── FR-10 Dashboard ──────────────────────────────────────────────────
+echo "\nFR-10 Dashboard\n";
+
+/** @return array<string,mixed> */
+function ringkasan(string $token): array
+{
+    return req('GET', '/api/dashboard', null, $token)['json']['data'] ?? [];
+}
+
+status('dashboard terbuka untuk Laboran',
+    req('GET', '/api/dashboard', null, $tokenLaboran), 200);
+status('dashboard terbuka untuk Kepala Program',
+    req('GET', '/api/dashboard', null, $tokenKaprog), 200);
+status('dashboard menolak tanpa token',
+    req('GET', '/api/dashboard'), 401);
+
+$d = ringkasan($tokenLaboran);
+
+$BENTUK = [
+    'barang'     => ['jenis', 'total_unit', 'unit_tersedia', 'jenis_habis'],
+    'peminjaman' => ['unit_dipinjam', 'transaksi_dipinjam', 'unit_diajukan',
+                     'menunggu_verifikasi', 'terlambat'],
+];
+foreach ($BENTUK as $grup => $kunci) {
+    foreach ($kunci as $k) {
+        ok(str_pad("$grup.$k bilangan bulat", 42),
+           is_int($d[$grup][$k] ?? null),
+           'dapat: ' . var_export($d[$grup][$k] ?? null, true));
+    }
+}
+ok('denda.total_tercatat berupa angka', is_numeric($d['denda']['total_tercatat'] ?? null));
+
+// Kedua peran membaca angka yang SAMA. Kalau nanti ada yang menyaring
+// dashboard per peran, pengujian ini yang akan menangkapnya lebih dulu.
+$dk = ringkasan($tokenKaprog);
+ok('kedua peran melihat angka yang sama', $d == $dk);
+
+// Identitas yang mengikat ketiga angka. Stok berkurang sejak pengajuan
+// dibuat, jadi unit di luar rak = yang disetujui + yang masih diajukan.
+// Kalau identitas ini pecah, salah satu kueri menghitung ganda atau bolong.
+$diLuarRak = ($d['barang']['total_unit'] ?? 0) - ($d['barang']['unit_tersedia'] ?? 0);
+$terhitung = ($d['peminjaman']['unit_dipinjam'] ?? 0) + ($d['peminjaman']['unit_diajukan'] ?? 0);
+ok('unit di luar rak = dipinjam + diajukan',
+   $diLuarRak === $terhitung,
+   "di luar rak $diLuarRak, dipinjam+diajukan $terhitung");
+
+// ── Angkanya ikut bergerak mengikuti transaksi nyata ─────────────────
+//
+// Ini inti pengujian dashboard. Bentuk dan tipe boleh benar sementara
+// kueri-nya menghitung himpunan yang salah; yang membuktikan angkanya
+// bermakna adalah pergerakannya saat data benar-benar berubah.
+
+$stokCukup = array_values(array_filter(
+    req('GET', '/api/barang', null, $tokenLaboran)['json']['data'] ?? [],
+    static fn (array $b): bool => ($b['stok'] ?? 0) >= 4
+));
+ok('ada barang berstok cukup untuk uji pergerakan dashboard', $stokCukup !== []);
+
+if ($stokCukup !== []) {
+    $idBarang   = (int) $stokCukup[0]['id_barang'];
+    $idPeminjam = req('GET', '/api/peminjam', null, $tokenLaboran)['json']['data'][0]['id_peminjam'] ?? null;
+
+    $awal = ringkasan($tokenLaboran);
+
+    // (1) Ajukan 4 unit — belum diverifikasi.
+    $buat = req('POST', '/api/peminjaman', [
+        'id_peminjam'     => $idPeminjam,
+        'tanggal_pinjam'  => date('Y-m-d'),
+        'tanggal_kembali' => date('Y-m-d', strtotime('+7 days')),
+        'items'           => [['id_barang' => $idBarang, 'jumlah' => 4]],
+    ], $tokenLaboran);
+    ok('siapkan pengajuan 4 unit untuk uji dashboard', $buat['status'] === 201,
+       "HTTP {$buat['status']}");
+
+    if ($buat['status'] === 201) {
+        $idPeminjaman = (int) $buat['json']['data']['id_peminjaman'];
+        $diajukan = ringkasan($tokenLaboran);
+
+        ok('pengajuan menaikkan menunggu_verifikasi 1',
+           $diajukan['peminjaman']['menunggu_verifikasi']
+             === $awal['peminjaman']['menunggu_verifikasi'] + 1);
+        ok('pengajuan menaikkan unit_diajukan 4',
+           $diajukan['peminjaman']['unit_diajukan']
+             === $awal['peminjaman']['unit_diajukan'] + 4);
+        ok('pengajuan menurunkan unit_tersedia 4',
+           $diajukan['barang']['unit_tersedia']
+             === $awal['barang']['unit_tersedia'] - 4);
+        // Belum disetujui, jadi belum boleh terhitung sebagai dipinjam.
+        ok('pengajuan BELUM menaikkan unit_dipinjam',
+           $diajukan['peminjaman']['unit_dipinjam']
+             === $awal['peminjaman']['unit_dipinjam'],
+           'inilah alasan kedua angka itu dipisah di layar');
+        ok('total_unit tidak berubah karena pengajuan',
+           $diajukan['barang']['total_unit'] === $awal['barang']['total_unit']);
+
+        // (2) Setujui — unitnya berpindah dari "diajukan" ke "dipinjam".
+        $setuju = req('PATCH', "/api/peminjaman/$idPeminjaman/verifikasi",
+            ['aksi' => 'approve'], $tokenKaprog);
+        ok('setujui pengajuan uji dashboard', $setuju['status'] === 200);
+
+        $disetujui = ringkasan($tokenLaboran);
+        ok('persetujuan memindahkan 4 unit ke unit_dipinjam',
+           $disetujui['peminjaman']['unit_dipinjam']
+             === $awal['peminjaman']['unit_dipinjam'] + 4);
+        ok('persetujuan mengosongkan kembali unit_diajukan',
+           $disetujui['peminjaman']['unit_diajukan']
+             === $awal['peminjaman']['unit_diajukan']);
+        ok('persetujuan tidak mengubah unit_tersedia',
+           $disetujui['barang']['unit_tersedia']
+             === $awal['barang']['unit_tersedia'] - 4,
+           'stok sudah dipotong sejak diajukan, bukan saat disetujui');
+        ok('identitas tetap utuh setelah persetujuan',
+           $disetujui['barang']['total_unit'] - $disetujui['barang']['unit_tersedia']
+             === $disetujui['peminjaman']['unit_dipinjam']
+               + $disetujui['peminjaman']['unit_diajukan']);
+
+        // (3) Kembalikan — unitnya pulang ke rak dan hilang dari dipinjam.
+        $detail = req('GET', "/api/peminjaman/$idPeminjaman", null, $tokenLaboran);
+        $idDetail = $detail['json']['data']['items'][0]['id_detail'] ?? null;
+        ok('detail pengajuan uji dashboard bisa dibaca', is_int($idDetail));
+
+        if (is_int($idDetail)) {
+            $kembali = req('POST', '/api/pengembalian', [
+                'id_detail' => $idDetail,
+                'kondisi'   => 'baik',
+            ], $tokenLaboran);
+            ok('catat pengembalian uji dashboard', $kembali['status'] === 201,
+               "HTTP {$kembali['status']}");
+
+            $sesudah = ringkasan($tokenLaboran);
+            ok('pengembalian mengembalikan unit_dipinjam ke nilai awal',
+               $sesudah['peminjaman']['unit_dipinjam']
+                 === $awal['peminjaman']['unit_dipinjam']);
+            ok('pengembalian memulihkan unit_tersedia ke nilai awal',
+               $sesudah['barang']['unit_tersedia']
+                 === $awal['barang']['unit_tersedia']);
+            ok('pengembalian menurunkan transaksi_dipinjam kembali',
+               $sesudah['peminjaman']['transaksi_dipinjam']
+                 === $awal['peminjaman']['transaksi_dipinjam']);
+        }
+    }
+}
+
+// ── Hitungan terlambat ───────────────────────────────────────────────
+//
+// Transaksi telat yang dibuat bagian FR-06 di atas semuanya sudah
+// dikembalikan penuh, jadi angka ini memang 0 pada keadaan itu — bukan bug.
+// Supaya hitungannya benar-benar teruji, transaksi telat yang BELUM kembali
+// dibuat di sini, lalu deltanya yang diperiksa.
+$terlambatAwal = ringkasan($tokenLaboran)['peminjaman']['terlambat'] ?? -1;
+ok('hitungan terlambat terbaca sebagai angka', $terlambatAwal >= 0);
+
+if ($stokCukup !== []) {
+    $molor = buatDisetujui(
+        [['id_barang' => (int) $stokCukup[0]['id_barang'], 'jumlah' => 1]],
+        -9,
+        -2
+    );
+    ok('siapkan transaksi telat yang belum dikembalikan', $molor !== null);
+
+    if ($molor !== null) {
+        $sesudahMolor = ringkasan($tokenLaboran);
+        ok('transaksi lewat jatuh tempo menaikkan hitungan terlambat 1',
+           ($sesudahMolor['peminjaman']['terlambat'] ?? -1) === $terlambatAwal + 1,
+           "dari $terlambatAwal jadi "
+             . ($sesudahMolor['peminjaman']['terlambat'] ?? 'null'));
+
+        // Yang terlambat tetap terhitung dipinjam — dua angka yang berbeda
+        // pertanyaannya, bukan dua keadaan yang saling menggantikan.
+        ok('transaksi terlambat tetap ikut terhitung sedang dipinjam',
+           ($sesudahMolor['peminjaman']['unit_dipinjam'] ?? 0)
+             > ($d['peminjaman']['unit_dipinjam'] ?? 0));
+
+        // Dikembalikan lagi supaya angka terlambat kembali ke nilai awal —
+        // pengujian ini tidak meninggalkan tunggakan buatan di data.
+        $detailMolor = req('GET', "/api/peminjaman/{$molor['id_peminjaman']}",
+            null, $tokenLaboran)['json']['data']['items'][0]['id_detail'] ?? null;
+        if (is_int($detailMolor)) {
+            $r = req('POST', '/api/pengembalian',
+                ['id_detail' => $detailMolor, 'kondisi' => 'baik'], $tokenLaboran);
+            ok('kembalikan transaksi telat uji dashboard', $r['status'] === 201);
+            ok('pengembalian menurunkan hitungan terlambat kembali',
+               (ringkasan($tokenLaboran)['peminjaman']['terlambat'] ?? -1)
+                 === $terlambatAwal);
+        }
+    }
+}
+
 // ── Catatan data uji ─────────────────────────────────────────────────
 echo "\n  Catatan: kategori, barang, peminjam, dan peminjaman uji sengaja\n"
    . "  ditinggalkan — barang berriwayat mutasi dan peminjam berriwayat\n"
