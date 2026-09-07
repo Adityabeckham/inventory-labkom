@@ -336,9 +336,221 @@ if (is_int($idPeminjam)) {
         req('DELETE', "/api/peminjam/$idPeminjam", null, $tokenLaboran), 200);
 }
 
+// ── FR-05 Peminjaman Multi-Item ──────────────────────────────────────
+echo "\nFR-05 Peminjaman Multi-Item\n";
+
+/** Stok terkini satu barang, dibaca ulang dari API. */
+function stokBarang(int $id, string $token): ?int
+{
+    $r = req('GET', "/api/barang/$id", null, $token);
+    $v = $r['json']['data']['stok'] ?? null;
+    return is_int($v) ? $v : null;
+}
+
+// Dua barang dari seed yang stoknya cukup untuk diuji. Dibaca dari API,
+// bukan ditulis angkanya di sini — seed bisa berubah.
+$semuaBarang = req('GET', '/api/barang', null, $tokenLaboran)['json']['data'] ?? [];
+$layak = array_values(array_filter(
+    $semuaBarang,
+    static fn (array $b): bool => ($b['stok'] ?? 0) >= 3
+));
+
+ok('ada minimal dua barang berstok >= 3 untuk diuji', count($layak) >= 2,
+   'impor ulang seed: mysql ... < database/seed.sql');
+
+if (count($layak) >= 2) {
+    $barangA = (int) $layak[0]['id_barang'];
+    $barangB = (int) $layak[1]['id_barang'];
+    $stokA0  = (int) $layak[0]['stok'];
+    $stokB0  = (int) $layak[1]['stok'];
+
+    // Peminjam khusus untuk blok ini, supaya pengujian "punya riwayat tidak
+    // bisa dihapus" tidak menyentuh baris seed.
+    $nisPinjam = '88' . substr((string) getmypid(), -4);
+    $r = req('POST', '/api/peminjam', [
+        'nama_peminjam' => 'Peminjam Transaksi Uji',
+        'nis_nip'       => $nisPinjam,
+        'kelas_jabatan' => 'XII RPL 1',
+    ], $tokenLaboran);
+    status('siapkan peminjam untuk transaksi', $r, 201);
+    $idPinjamUji = $r['json']['data']['id_peminjam'] ?? null;
+
+    $hariIni = date('Y-m-d');
+    $jatuhTempo = date('Y-m-d', strtotime('+7 days'));
+
+    $bodyValid = static fn (array $items, ?int $idp): array => [
+        'id_peminjam'     => $idp,
+        'tanggal_pinjam'  => $hariIni,
+        'tanggal_kembali' => $jatuhTempo,
+        'items'           => $items,
+    ];
+
+    // ── Otorisasi ────────────────────────────────────────────────────
+    status('Kepala Program DITOLAK membuat peminjaman',
+        req('POST', '/api/peminjaman',
+            $bodyValid([['id_barang' => $barangA, 'jumlah' => 1]], $idPinjamUji),
+            $tokenKaprog), 403);
+    status('Kepala Program BOLEH membaca daftar peminjaman',
+        req('GET', '/api/peminjaman', null, $tokenKaprog), 200);
+
+    // ── Validasi masukan ─────────────────────────────────────────────
+    status('items kosong ditolak',
+        req('POST', '/api/peminjaman', $bodyValid([], $idPinjamUji), $tokenLaboran), 422);
+    status('id_barang kembar ditolak, bukan dijumlahkan',
+        req('POST', '/api/peminjaman', $bodyValid([
+            ['id_barang' => $barangA, 'jumlah' => 1],
+            ['id_barang' => $barangA, 'jumlah' => 2],
+        ], $idPinjamUji), $tokenLaboran), 422);
+    status('jumlah nol ditolak',
+        req('POST', '/api/peminjaman', $bodyValid([
+            ['id_barang' => $barangA, 'jumlah' => 0],
+        ], $idPinjamUji), $tokenLaboran), 422);
+    status('jatuh tempo lebih awal dari tanggal pinjam ditolak',
+        req('POST', '/api/peminjaman', [
+            'id_peminjam'     => $idPinjamUji,
+            'tanggal_pinjam'  => $hariIni,
+            'tanggal_kembali' => date('Y-m-d', strtotime('-1 day')),
+            'items'           => [['id_barang' => $barangA, 'jumlah' => 1]],
+        ], $tokenLaboran), 422);
+    status('jumlah melebihi stok ditolak',
+        req('POST', '/api/peminjaman', $bodyValid([
+            ['id_barang' => $barangA, 'jumlah' => $stokA0 + 1],
+        ], $idPinjamUji), $tokenLaboran), 422);
+    status('peminjam tidak ada ditolak',
+        req('POST', '/api/peminjaman', $bodyValid([
+            ['id_barang' => $barangA, 'jumlah' => 1],
+        ], 999999), $tokenLaboran), 422);
+
+    ok('penolakan validasi tidak mengubah stok',
+       stokBarang($barangA, $tokenLaboran) === $stokA0,
+       'stok jadi ' . var_export(stokBarang($barangA, $tokenLaboran), true) . ", seharusnya $stokA0");
+
+    // ── Transaksi sah, dua item ──────────────────────────────────────
+    $r = req('POST', '/api/peminjaman', $bodyValid([
+        ['id_barang' => $barangA, 'jumlah' => 2],
+        ['id_barang' => $barangB, 'jumlah' => 1],
+    ], $idPinjamUji), $tokenLaboran);
+    status('buat peminjaman dua item', $r, 201);
+
+    $pinjam1 = $r['json']['data'] ?? [];
+    $idPinjaman1 = $pinjam1['id_peminjaman'] ?? null;
+
+    ok('kode dibuat otomatis berformat PMJ-YYYY-NNN',
+       preg_match('/^PMJ-\d{4}-\d{3,}$/', (string) ($pinjam1['kode_peminjaman'] ?? '')) === 1,
+       'kode: ' . var_export($pinjam1['kode_peminjaman'] ?? null, true));
+    ok('kode memakai tahun tanggal pinjam',
+       str_starts_with((string) ($pinjam1['kode_peminjaman'] ?? ''), 'PMJ-' . date('Y') . '-'));
+    ok('status awal menunggu_verifikasi',
+       ($pinjam1['status'] ?? '') === 'menunggu_verifikasi');
+    // ?? tidak bisa dipakai di sini: null dan "tidak ada" jadi sama.
+    ok('alasan_dibatalkan masih kosong',
+       array_key_exists('alasan_dibatalkan', $pinjam1)
+       && $pinjam1['alasan_dibatalkan'] === null);
+    ok('rincian berisi dua item', count($pinjam1['items'] ?? []) === 2);
+    ok('jumlah_item dan total_unit dihitung benar',
+       ($pinjam1['jumlah_item'] ?? 0) === 2 && ($pinjam1['total_unit'] ?? 0) === 3,
+       'jumlah_item=' . var_export($pinjam1['jumlah_item'] ?? null, true)
+       . ' total_unit=' . var_export($pinjam1['total_unit'] ?? null, true));
+    ok('nama peminjam dan laboran pencatat ikut terkirim',
+       ($pinjam1['nama_peminjam'] ?? '') === 'Peminjam Transaksi Uji'
+       && ($pinjam1['dicatat_oleh'] ?? '') === 'laboran');
+
+    ok('stok barang A langsung berkurang 2',
+       stokBarang($barangA, $tokenLaboran) === $stokA0 - 2,
+       'stok jadi ' . var_export(stokBarang($barangA, $tokenLaboran), true));
+    ok('stok barang B langsung berkurang 1',
+       stokBarang($barangB, $tokenLaboran) === $stokB0 - 1,
+       'stok jadi ' . var_export(stokBarang($barangB, $tokenLaboran), true));
+
+    // ── Baca dan filter ──────────────────────────────────────────────
+    $r = req('GET', '/api/peminjaman?status=menunggu_verifikasi', null, $tokenKaprog);
+    status('filter status menunggu_verifikasi', $r, 200);
+    $kodeMenunggu = array_column($r['json']['data'] ?? [], 'kode_peminjaman');
+    ok('transaksi baru muncul di daftar menunggu verifikasi',
+       in_array($pinjam1['kode_peminjaman'] ?? '', $kodeMenunggu, true));
+
+    $r = req('GET', '/api/peminjaman?status=ngawur', null, $tokenLaboran);
+    status('filter status tidak dikenal ditolak', $r, 400);
+
+    $r = req('GET', '/api/peminjaman?cari=' . rawurlencode((string) ($pinjam1['kode_peminjaman'] ?? '')),
+             null, $tokenLaboran);
+    ok('pencarian menjangkau kode peminjaman', count($r['json']['data'] ?? []) === 1);
+
+    status('detail peminjaman yang tidak ada balas 404',
+        req('GET', '/api/peminjaman/999999', null, $tokenLaboran), 404);
+
+    // Pengaman yang tertunda dari Sprint 2 — sekarang bisa diuji dengan
+    // peminjam yang dibuat sendiri, bukan baris seed.
+    status('peminjam yang punya riwayat TIDAK bisa dihapus',
+        req('DELETE', "/api/peminjam/$idPinjamUji", null, $tokenLaboran), 409);
+
+    // ── FR-07 Verifikasi ─────────────────────────────────────────────
+    echo "\nFR-07 Verifikasi\n";
+
+    status('Laboran DITOLAK memverifikasi pengajuannya sendiri',
+        req('PATCH', "/api/peminjaman/$idPinjaman1/verifikasi",
+            ['aksi' => 'approve'], $tokenLaboran), 403);
+    status('aksi tidak dikenal ditolak',
+        req('PATCH', "/api/peminjaman/$idPinjaman1/verifikasi",
+            ['aksi' => 'tunda'], $tokenKaprog), 422);
+    status('reject tanpa alasan ditolak',
+        req('PATCH', "/api/peminjaman/$idPinjaman1/verifikasi",
+            ['aksi' => 'reject'], $tokenKaprog), 422);
+
+    ok('penolakan verifikasi tidak mengubah stok',
+       stokBarang($barangA, $tokenLaboran) === $stokA0 - 2);
+
+    $r = req('PATCH', "/api/peminjaman/$idPinjaman1/verifikasi",
+             ['aksi' => 'approve'], $tokenKaprog);
+    status('Kepala Program menyetujui', $r, 200);
+    ok('status jadi dipinjam', ($r['json']['data']['status'] ?? '') === 'dipinjam');
+    ok('approve TIDAK mengubah stok lagi',
+       stokBarang($barangA, $tokenLaboran) === $stokA0 - 2,
+       'stok jadi ' . var_export(stokBarang($barangA, $tokenLaboran), true));
+
+    status('verifikasi kedua kali ditolak',
+        req('PATCH', "/api/peminjaman/$idPinjaman1/verifikasi",
+            ['aksi' => 'reject', 'alasan' => 'coba lagi'], $tokenKaprog), 409);
+
+    // ── Reject memulihkan stok ───────────────────────────────────────
+    $stokA1 = stokBarang($barangA, $tokenLaboran);
+
+    $r = req('POST', '/api/peminjaman', $bodyValid([
+        ['id_barang' => $barangA, 'jumlah' => 1],
+    ], $idPinjamUji), $tokenLaboran);
+    status('buat peminjaman kedua untuk diuji penolakan', $r, 201);
+    $idPinjaman2 = $r['json']['data']['id_peminjaman'] ?? null;
+
+    ok('nomor urut kode bertambah',
+       ($r['json']['data']['kode_peminjaman'] ?? '') !== ($pinjam1['kode_peminjaman'] ?? ''));
+    ok('stok berkurang 1 saat diajukan',
+       stokBarang($barangA, $tokenLaboran) === $stokA1 - 1);
+
+    $alasan = 'Barang sedang dipakai praktik kelas XII.';
+    $r = req('PATCH', "/api/peminjaman/$idPinjaman2/verifikasi",
+             ['aksi' => 'reject', 'alasan' => $alasan], $tokenKaprog);
+    status('Kepala Program menolak dengan alasan', $r, 200);
+    ok('status jadi dibatalkan', ($r['json']['data']['status'] ?? '') === 'dibatalkan');
+    ok('alasan penolakan tersimpan', ($r['json']['data']['alasan_dibatalkan'] ?? '') === $alasan);
+    ok('stok dipulihkan persis ke angka sebelum pengajuan',
+       stokBarang($barangA, $tokenLaboran) === $stokA1,
+       'stok jadi ' . var_export(stokBarang($barangA, $tokenLaboran), true) . ", seharusnya $stokA1");
+
+    // Inti pengaman kredit dobel: kalau penolakan kedua lolos, stok akan
+    // bertambah untuk kedua kalinya dari unit yang sama.
+    status('penolakan kedua kali ditolak',
+        req('PATCH', "/api/peminjaman/$idPinjaman2/verifikasi",
+            ['aksi' => 'reject', 'alasan' => 'sekali lagi'], $tokenKaprog), 409);
+    ok('stok TIDAK bertambah dua kali dari transaksi yang sama',
+       stokBarang($barangA, $tokenLaboran) === $stokA1,
+       'stok jadi ' . var_export(stokBarang($barangA, $tokenLaboran), true) . ", seharusnya $stokA1");
+}
+
 // ── Catatan data uji ─────────────────────────────────────────────────
-echo "\n  Catatan: kategori dan barang uji sengaja ditinggalkan — barang yang\n"
-   . "  punya riwayat mutasi memang tidak boleh dihapus. Untuk keadaan bersih:\n"
+echo "\n  Catatan: kategori, barang, peminjam, dan peminjaman uji sengaja\n"
+   . "  ditinggalkan — barang berriwayat mutasi dan peminjam berriwayat\n"
+   . "  transaksi memang tidak boleh dihapus, dan itu justru yang diuji.\n"
+   . "  Untuk keadaan bersih:\n"
    . "    mysql -u root < database/schema.sql && mysql -u root < database/seed.sql\n";
 
 // ── Pengaman yang mencegah aplikasi terkunci ─────────────────────────

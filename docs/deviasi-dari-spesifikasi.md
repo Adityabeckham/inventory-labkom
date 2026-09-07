@@ -109,3 +109,20 @@ Batas atas 72 byte bukan pilihan, melainkan sifat bcrypt: byte ke-73 dan seterus
 Keduanya keputusan implementasi yang tidak bertentangan dengan dokumen, dicatat di sini supaya tidak terlihat sebagai fitur liar.
 
 Prefix dibuang supaya `Alias /inventory` di XAMPP tetap jalan — tanpa itu, seluruh endpoint membalas 404 padahal konfigurasinya benar. Daftar putih CORS dipilih daripada `*` karena wildcard membuka API ke JavaScript dari situs mana pun; daftarnya kosong secara default, sebab klien Flutter native tidak butuh CORS sama sekali.
+
+---
+
+## D-07 · Nama field verifikasi ditetapkan `aksi`, dan Laboran tidak boleh memverifikasi
+
+| | |
+|---|---|
+| **Rujukan** | `Database_Final_dan_Arsitektur.md` §4.1 |
+| **Dokumen bilang** | `PATCH /api/peminjaman/{id}/verifikasi` — "body: `approve` atau `reject` + `alasan` jika reject" |
+| **Kode melakukan** | Body `{"aksi": "approve"\|"reject", "alasan": "..."}`; endpoint dibatasi ke Kepala Program |
+| **Berkas** | `backend/controllers/PeminjamanController.php`, `backend/routes/api.php` |
+
+Dokumen menyebut nilainya tapi tidak menyebut nama fieldnya. Dipilih `aksi` supaya sejalan dengan bahasa yang dipakai seluruh kode ini, dan divalidasi sebagai enum agar salah tulis membalas 422, bukan diam-diam tidak melakukan apa pun.
+
+Pembatasan ke Kepala Program adalah penegasan Tabel 3.1 Use Case, bukan penambahan: memisahkan yang mengajukan dari yang menyetujui adalah inti FR-07. Kalau Laboran bisa menyetujui pengajuannya sendiri, verifikasinya kehilangan fungsi. `GET /api/peminjaman` sengaja dibuka untuk kedua level, karena membaca daftar pengajuan adalah bagian dari use case Verifikasi.
+
+**Catatan konkurensi.** Nomor urut kode diambil dengan `SELECT MAX(...) ... FOR UPDATE` pada rentang prefiks tahun, yang di REPEATABLE READ mengambil gap lock sehingga penyisipan bersamaan menunggu, bukan berlomba. `UNIQUE KEY uq_peminjaman_kode` tetap jadi jaring terakhir. Ini **belum diuji secara paralel**: server bawaan `php -S` melayani satu request pada satu waktu, jadi tabrakan tidak bisa direproduksi di lingkungan development.

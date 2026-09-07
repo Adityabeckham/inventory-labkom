@@ -17,6 +17,7 @@ use App\Controllers\BarangController;
 use App\Controllers\HealthController;
 use App\Controllers\KategoriController;
 use App\Controllers\PeminjamController;
+use App\Controllers\PeminjamanController;
 use App\Controllers\StokMutasiController;
 use App\Controllers\UserController;
 use App\Core\Router;
@@ -31,8 +32,10 @@ $kategori = new KategoriController();
 $barang   = new BarangController();
 $peminjam = new PeminjamController();
 $mutasi   = new StokMutasiController();
+$pinjam   = new PeminjamanController();
 
 $laboran   = [Auth::role(Auth::LABORAN)];
+$kaprog    = [Auth::role(Auth::KEPALA_PROGRAM)];
 $terdaftar = [Auth::required()];
 
 // ── Sprint 0 ─────────────────────────────────────────────────────────
@@ -73,7 +76,22 @@ $router->delete('/api/peminjam/{id}', [$peminjam, 'destroy'], $laboran);
 $router->get ('/api/stok-mutasi', [$mutasi, 'index'], $laboran);
 $router->post('/api/stok-mutasi', [$mutasi, 'store'], $laboran);
 
-// ── Sprint 3 — FR-05 Peminjaman, FR-07 Verifikasi
+// ── Sprint 3 — FR-05 Peminjaman Multi-Item ───────────────────────────
+//
+// GET dibuka untuk kedua level: Kepala Program perlu membaca daftar dan
+// detail pengajuan untuk bisa memverifikasinya (bagian dari use case
+// Verifikasi, Tabel 3.1). Yang MEMBUAT transaksi tetap hanya Laboran.
+$router->get ('/api/peminjaman',      [$pinjam, 'index'], $terdaftar);
+$router->get ('/api/peminjaman/{id}', [$pinjam, 'show'],  $terdaftar);
+$router->post('/api/peminjaman',      [$pinjam, 'store'], $laboran);
+
+// ── Sprint 3 — FR-07 Verifikasi (khusus Kepala Program) ──────────────
+//
+// Laboran sengaja TIDAK diberi akses: memisahkan yang mengajukan dari yang
+// menyetujui adalah inti kontrol fitur ini. Kalau Laboran bisa menyetujui
+// pengajuannya sendiri, verifikasinya kehilangan makna.
+$router->patch('/api/peminjaman/{id}/verifikasi', [$pinjam, 'verifikasi'], $kaprog);
+
 // ── Sprint 4 — FR-06 Pengembalian, FR-11 Pengaturan Denda
 // ── Sprint 5 — FR-08/FR-09 Laporan (5 jenis × 3 format)
 
