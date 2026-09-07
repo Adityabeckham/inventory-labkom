@@ -65,7 +65,7 @@ Sumber kebenaran ada di `docs_project/`, semuanya berstatus FINAL:
 | 0 | Setup fondasi | Selesai — backend, database, dokumentasi, project Flutter, dan tema `DESIGN.md` |
 | 1 | Autentikasi & Kelola User | Selesai — Login, shell navigasi, Kelola User, secure storage, route guard |
 | 2 | Barang, Kategori, Peminjam, Mutasi Stok | Selesai — Aset Lab, Kategori, Data Peminjam, Mutasi Stok |
-| 3 | Peminjaman multi-item & Verifikasi | Belum |
+| 3 | Peminjaman multi-item & Verifikasi | Selesai — Transaksi, form keranjang multi-item, layar Verifikasi Kepala Program |
 | 4 | Pengembalian & Pengaturan Denda | Belum |
 | 5 | Laporan | Belum |
 | 6 | Dashboard, polish, testing, build APK | Belum |

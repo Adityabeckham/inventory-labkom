@@ -16,7 +16,9 @@ import 'package:inventory_labkom/features/auth/presentation/login_screen.dart';
 import 'package:inventory_labkom/features/dashboard/presentation/dashboard_screen.dart';
 import 'package:inventory_labkom/features/kategori/presentation/kategori_screen.dart';
 import 'package:inventory_labkom/features/peminjam/presentation/peminjam_screen.dart';
+import 'package:inventory_labkom/features/peminjaman/presentation/transaksi_screen.dart';
 import 'package:inventory_labkom/features/users/presentation/users_screen.dart';
+import 'package:inventory_labkom/features/verifikasi/presentation/verifikasi_screen.dart';
 
 /// Pengujian render tiap layar — sebelum ini tidak satu pun layar selain Login
 /// pernah benar-benar dibangun, karena `flutter analyze` tidak menyusun widget
@@ -168,6 +170,74 @@ void main() {
       'no_hp': null,
     },
   ];
+
+  final itemsJson = [
+    {
+      'id_detail': 1,
+      'id_barang': 1,
+      'kode_barang': 'BRG-001',
+      'nama_barang': 'PC Rakitan Core i5',
+      'merk': 'Rakitan',
+      'jumlah_pinjam': 2,
+    },
+    {
+      'id_detail': 2,
+      'id_barang': 2,
+      'kode_barang': 'BRG-002',
+      'nama_barang': namaPanjang,
+      'merk': 'Samsung',
+      'jumlah_pinjam': 1,
+    },
+  ];
+
+  Map<String, Object?> peminjamanJson({
+    int id = 1,
+    String kode = 'PMJ-2026-001',
+    String status = 'menunggu_verifikasi',
+    String? alasan,
+    bool withItems = false,
+  }) => {
+        'id_peminjaman': id,
+        'kode_peminjaman': kode,
+        'id_peminjam': 1,
+        'nama_peminjam': 'Raka Maulana Abdurrahman Wijayakusuma',
+        'nis_nip': '0051234567',
+        'kelas_jabatan': 'XI Rekayasa Perangkat Lunak 2',
+        'dicatat_oleh': 'laboran',
+        'tanggal_pinjam': '2026-09-01',
+        'tanggal_kembali': '2026-09-08',
+        'status': status,
+        'alasan_dibatalkan': alasan,
+        'jumlah_item': 2,
+        'total_unit': 3,
+        if (withItems) 'items': itemsJson,
+      };
+
+  final transaksiRespons = <String, Object?>{
+    '/api/peminjaman': [
+      peminjamanJson(),
+      peminjamanJson(id: 2, kode: 'PMJ-2026-002', status: 'dipinjam'),
+      peminjamanJson(
+        id: 3,
+        kode: 'PMJ-2026-003',
+        status: 'dibatalkan',
+        alasan: 'Barang sedang dipakai praktik kelas XII sore ini.',
+      ),
+    ],
+    '/api/peminjaman/1': peminjamanJson(withItems: true),
+    '/api/peminjaman/3': peminjamanJson(
+      id: 3,
+      kode: 'PMJ-2026-003',
+      status: 'dibatalkan',
+      alasan: 'Barang sedang dipakai praktik kelas XII sore ini.',
+      withItems: true,
+    ),
+    '/api/peminjaman/1/verifikasi':
+        peminjamanJson(status: 'dipinjam', withItems: true),
+    '/api/barang': barangJson,
+    '/api/kategori': kategoriJson,
+    '/api/peminjam': peminjamJson,
+  };
 
   // ── Perkakas ───────────────────────────────────────────────────────
 
@@ -513,6 +583,222 @@ void main() {
     });
   });
 
+  // ── Transaksi (FR-05) ──────────────────────────────────────────────
+
+  group('Transaksi', () {
+    testWidgets('daftar peminjaman dengan kode, badge status, dan identitas',
+        (tester) async {
+      await pasang(tester, const TransaksiScreen(), respons: transaksiRespons);
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('PMJ-2026-001'), findsOne);
+      expect(find.text('MENUNGGU VERIFIKASI'), findsOne);
+      expect(find.text('DIPINJAM'), findsOne);
+      expect(find.text('DIBATALKAN'), findsOne);
+      expect(find.text('0051234567 · XI Rekayasa Perangkat Lunak 2'),
+          findsExactly(3));
+      expect(find.text('Peminjaman Baru'), findsOne);
+    });
+
+    testWidgets('chip filter status menyaring lewat server', (tester) async {
+      await pasang(tester, const TransaksiScreen(), respons: transaksiRespons);
+
+      await tester.tap(find.text('Dipinjam'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('PMJ-2026-002'), findsOne);
+      expect(find.text('PMJ-2026-001'), findsNothing);
+    });
+
+    testWidgets('tab Pengembalian menjelaskan dikerjakan Sprint 4',
+        (tester) async {
+      await pasang(tester, const TransaksiScreen(), respons: transaksiRespons);
+
+      await tester.tap(find.text('Pengembalian'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.textContaining('Sprint 4'), findsOne);
+      // FAB peminjaman tidak boleh ikut muncul di tab ini.
+      expect(find.text('Peminjaman Baru'), findsNothing);
+    });
+
+    testWidgets('menekan kartu membuka rincian barang', (tester) async {
+      await pasang(tester, const TransaksiScreen(), respons: transaksiRespons);
+
+      await tester.tap(find.text('PMJ-2026-001'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Barang dipinjam'), findsOne);
+      expect(find.text('2 jenis · 3 unit'), findsWidgets);
+      expect(find.text('2 UNIT'), findsOne);
+      // Laboran tidak boleh melihat tombol keputusan.
+      expect(find.text('Setujui'), findsNothing);
+      expect(find.text('Tolak'), findsNothing);
+    });
+
+    testWidgets('rincian transaksi yang ditolak menampilkan alasannya',
+        (tester) async {
+      await pasang(tester, const TransaksiScreen(), respons: transaksiRespons);
+
+      await tester.tap(find.text('PMJ-2026-003'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Alasan ditolak'), findsOne);
+      expect(find.text('Barang sedang dipakai praktik kelas XII sore ini.'),
+          findsOne);
+    });
+
+    testWidgets('keadaan kosong dan gagal terender', (tester) async {
+      await pasang(tester, const TransaksiScreen(),
+          respons: {'/api/peminjaman': const []});
+      expect(tester.takeException(), isNull);
+      expect(find.textContaining('Belum ada transaksi peminjaman'), findsOne);
+
+      await pasang(tester, const TransaksiScreen(), mode: _ModeApi.gagal);
+      expect(tester.takeException(), isNull);
+      expect(find.text(_ApiPalsu.pesanGagal), findsOne);
+    });
+  });
+
+  // ── Form Peminjaman Baru multi-item ────────────────────────────────
+
+  group('Peminjaman Baru', () {
+    testWidgets('form terbuka di layar pendek dengan keranjang kosong',
+        (tester) async {
+      await pasang(tester, const TransaksiScreen(),
+          ukuran: _layarPendek, respons: transaksiRespons);
+
+      await tester.tap(find.text('Peminjaman Baru'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Peminjam'), findsWidgets);
+      expect(find.text('Tanggal pinjam'), findsOne);
+      expect(find.text('Jatuh tempo'), findsOne);
+      expect(find.textContaining('Belum ada barang'), findsOne);
+      expect(find.text('Tambah Barang'), findsOne);
+    });
+
+    testWidgets('mengajukan tanpa barang menyorot keranjang, bukan diam',
+        (tester) async {
+      await pasang(tester, const TransaksiScreen(), respons: transaksiRespons);
+
+      await tester.tap(find.text('Peminjaman Baru'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Ajukan Peminjaman'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Tambahkan minimal satu barang sebelum mengajukan.'),
+          findsOne);
+      // Peminjam belum dipilih, jadi validator Form juga bicara.
+      expect(find.text('Peminjam wajib dipilih'), findsOne);
+      // Sheet tetap terbuka — tidak boleh tertutup diam-diam.
+      expect(find.text('Ajukan Peminjaman'), findsOne);
+    });
+
+    testWidgets('menambah barang ke keranjang menampilkan jumlah dan stok',
+        (tester) async {
+      await pasang(tester, const TransaksiScreen(), respons: transaksiRespons);
+
+      await tester.tap(find.text('Peminjaman Baru'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Tambah Barang'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Jumlah'), findsWidgets);
+
+      // Barang berstok 0 tidak boleh ditawarkan untuk dipinjam.
+      await tester.tap(find.byType(DropdownButtonFormField<int>).last);
+      await tester.pumpAndSettle();
+      expect(find.textContaining('PC Rakitan'), findsWidgets);
+      expect(find.textContaining(namaPanjang), findsNothing);
+    });
+  });
+
+  // ── Verifikasi (FR-07) ─────────────────────────────────────────────
+
+  group('Verifikasi', () {
+    // Layar ini selalu meminta status=menunggu_verifikasi, dan API palsu
+    // menyaringnya seperti backend — jadi daftar lengkap boleh dipakai
+    // apa adanya; yang tersisa nanti hanya satu pengajuan.
+    final verifikasiRespons = transaksiRespons;
+
+    testWidgets('menampilkan pengajuan yang menunggu keputusan',
+        (tester) async {
+      await pasang(tester, const VerifikasiScreen(),
+          user: kaprog, respons: verifikasiRespons);
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('1 pengajuan menunggu keputusan Anda.'), findsOne);
+      expect(find.text('PMJ-2026-001'), findsOne);
+      expect(find.text('Periksa & putuskan'), findsOne);
+    });
+
+    testWidgets('rincian pengajuan memunculkan tombol Setujui dan Tolak',
+        (tester) async {
+      await pasang(tester, const VerifikasiScreen(),
+          user: kaprog, respons: verifikasiRespons);
+
+      await tester.tap(find.text('Periksa & putuskan'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Setujui'), findsOne);
+      expect(find.text('Tolak'), findsOne);
+      expect(find.text('2 UNIT'), findsOne);
+    });
+
+    testWidgets('Setujui meminta konfirmasi lebih dulu', (tester) async {
+      await pasang(tester, const VerifikasiScreen(),
+          user: kaprog, respons: verifikasiRespons);
+
+      await tester.tap(find.text('Periksa & putuskan'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Setujui'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Setujui pengajuan?'), findsOne);
+    });
+
+    testWidgets('Tolak mewajibkan alasan diisi', (tester) async {
+      await pasang(tester, const VerifikasiScreen(),
+          user: kaprog, respons: verifikasiRespons);
+
+      await tester.tap(find.text('Periksa & putuskan'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Tolak'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Tolak pengajuan'), findsOne);
+
+      // Menekan Tolak dengan alasan kosong harus ditahan validator,
+      // karena backend juga menolaknya dengan 422.
+      await tester.tap(find.widgetWithText(FilledButton, 'Tolak'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Alasan wajib diisi'), findsOne);
+      expect(find.text('Tolak pengajuan'), findsOne);
+    });
+
+    testWidgets('tidak ada pengajuan menampilkan keadaan kosong',
+        (tester) async {
+      await pasang(tester, const VerifikasiScreen(),
+          user: kaprog, respons: {'/api/peminjaman': const []});
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Tidak ada pengajuan yang menunggu verifikasi.'),
+          findsOne);
+    });
+  });
+
   // ── Form bottom sheet ──────────────────────────────────────────────
   //
   // Ketiga sheet ini sebelumnya hanya dibuktikan lewat keberadaan tombolnya,
@@ -635,6 +921,18 @@ void main() {
       await pasang(tester, const LoginScreen(), skalaTeks: 1.3);
       expect(tester.takeException(), isNull);
     });
+
+    testWidgets('Transaksi', (tester) async {
+      await pasang(tester, const TransaksiScreen(),
+          respons: transaksiRespons, skalaTeks: 1.3);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('Verifikasi', (tester) async {
+      await pasang(tester, const VerifikasiScreen(),
+          user: kaprog, respons: transaksiRespons, skalaTeks: 1.3);
+      expect(tester.takeException(), isNull);
+    });
   });
 }
 
@@ -680,8 +978,15 @@ class _ApiPalsu extends ApiClient {
   bool _cocok(Map<String, Object?> baris, Map<String, dynamic>? query) {
     if (query == null || query.isEmpty) return true;
 
-    final idKategori = query['id_kategori'];
-    if (idKategori != null && baris['id_kategori'] != idKategori) return false;
+    // Setiap parameter selain `cari` diperlakukan sebagai kecocokan persis
+    // pada field bernama sama — meniru id_kategori, id_barang, dan status
+    // di backend tanpa perlu cabang khusus per endpoint.
+    for (final entry in query.entries) {
+      if (entry.key == 'cari') continue;
+      if (baris.containsKey(entry.key) && baris[entry.key] != entry.value) {
+        return false;
+      }
+    }
 
     final cari = query['cari'] as String?;
     if (cari == null || cari.isEmpty) return true;
@@ -702,9 +1007,19 @@ class _ApiPalsu extends ApiClient {
   Future<dynamic> put(String path, {Object? body}) async =>
       throw UnimplementedError('put $path tidak dipakai pengujian render.');
 
+  /// Verifikasi memakai PATCH; dilayani supaya alur Setujui/Tolak bisa
+  /// ditelusuri sampai SnackBar-nya, bukan berhenti di UnimplementedError.
   @override
-  Future<dynamic> patch(String path, {Object? body}) async =>
-      throw UnimplementedError('patch $path tidak dipakai pengujian render.');
+  Future<dynamic> patch(String path, {Object? body}) async {
+    if (_mode == _ModeApi.gagal) {
+      throw ApiException(pesanGagal, statusCode: 409);
+    }
+    final data = _respons[path];
+    if (data == null) {
+      throw ApiException('Path $path tidak disiapkan di pengujian.');
+    }
+    return data;
+  }
 
   @override
   Future<dynamic> delete(String path) async =>

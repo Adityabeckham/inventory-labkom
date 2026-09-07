@@ -9,9 +9,11 @@ import '../../features/auth/presentation/login_screen.dart';
 import '../../features/dashboard/presentation/dashboard_screen.dart';
 import '../../features/kategori/presentation/kategori_screen.dart';
 import '../../features/peminjam/presentation/peminjam_screen.dart';
+import '../../features/peminjaman/presentation/transaksi_screen.dart';
 import '../../features/placeholder/sprint_placeholder_screen.dart';
 import '../../features/shell/presentation/app_shell.dart';
 import '../../features/users/presentation/users_screen.dart';
+import '../../features/verifikasi/presentation/verifikasi_screen.dart';
 
 /// Layar tunggu selama token tersimpan diperiksa.
 ///
@@ -75,24 +77,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/aset', builder: (_, _) => const AsetScreen()),
           GoRoute(path: '/kategori', builder: (_, _) => const KategoriScreen()),
           GoRoute(path: '/peminjam', builder: (_, _) => const PeminjamScreen()),
-          GoRoute(
-            path: '/transaksi',
-            builder: (_, _) => const SprintPlaceholderScreen(
-              title: 'Transaksi',
-              sprint: 3,
-              description:
-                  'Peminjaman multi-item dan Pengembalian per-item (FR-05, FR-06).',
-            ),
-          ),
-          GoRoute(
-            path: '/verifikasi',
-            builder: (_, _) => const SprintPlaceholderScreen(
-              title: 'Verifikasi',
-              sprint: 3,
-              description:
-                  'Menyetujui atau membatalkan pengajuan peminjaman (FR-07).',
-            ),
-          ),
+          GoRoute(path: '/transaksi', builder: (_, _) => const TransaksiScreen()),
+          GoRoute(path: '/verifikasi', builder: (_, _) => const VerifikasiScreen()),
           GoRoute(
             path: '/laporan',
             builder: (_, _) => const SprintPlaceholderScreen(
