@@ -11,15 +11,15 @@
 USE `inventory_labkom`;
 
 SET FOREIGN_KEY_CHECKS = 0;
-TRUNCATE TABLE `pengembalian`;
-TRUNCATE TABLE `peminjaman_detail`;
-TRUNCATE TABLE `peminjaman`;
-TRUNCATE TABLE `stok_mutasi`;
-TRUNCATE TABLE `barang`;
-TRUNCATE TABLE `kategori`;
-TRUNCATE TABLE `peminjam`;
-TRUNCATE TABLE `pengaturan_denda`;
-TRUNCATE TABLE `users`;
+DELETE FROM `pengembalian`;
+DELETE FROM `peminjaman_detail`;
+DELETE FROM `peminjaman`;
+DELETE FROM `stok_mutasi`;
+DELETE FROM `barang`;
+DELETE FROM `kategori`;
+DELETE FROM `peminjam`;
+DELETE FROM `pengaturan_denda`;
+DELETE FROM `users`;
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- ---------------------------------------------------------------------
