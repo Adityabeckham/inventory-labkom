@@ -165,10 +165,34 @@ flutter run
 
 ```bash
 cd mobile
-flutter build apk --release
+flutter build apk --release --dart-define=API_BASE_URL=http://192.168.1.10:8080
+```
+
+Ganti `192.168.1.10` dengan **IP komputer yang menjalankan backend**, bukan
+`localhost`. Alamat ini **ditanam ke dalam APK saat build** dan tidak bisa
+diubah dari dalam aplikasi — kalau IP server berubah, APK-nya harus dibangun
+ulang.
+
+Tanpa `--dart-define`, alamat bawaannya `http://10.0.2.2:8080` (alias host dari
+emulator Android). APK seperti itu jalan di emulator tapi **tidak akan bisa
+terhubung dari HP mana pun**.
+
+Cara mengetahui IP komputer:
+
+```bash
+ipconfig getifaddr en0          # macOS
+ip addr show | grep "inet "     # Linux
+ipconfig                        # Windows — cari IPv4 Address
 ```
 
 Hasilnya di `mobile/build/app/outputs/flutter-apk/app-release.apk` (sekitar 56 MB).
+
+> **Backend diakses lewat HTTP polos, dan itu disengaja.** Server sekolah tidak
+> punya sertifikat TLS, jadi aplikasi membawa `network_security_config.xml` yang
+> mengizinkan cleartext. Konsekuensinya: lalu lintasnya bisa dibaca siapa pun
+> yang menyadap jaringan lab, termasuk token login. Untuk satu jaringan lab
+> tertutup ini masih wajar, tapi **jangan mengekspos backend-nya ke internet**
+> dalam keadaan ini.
 
 `compileSdk` di `android/app/build.gradle.kts` **sengaja dipatok 37**, bukan
 mengikuti bawaan Flutter (36), karena `flutter_secure_storage` menuntutnya.
