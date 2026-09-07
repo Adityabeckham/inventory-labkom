@@ -66,7 +66,7 @@ Sumber kebenaran ada di `docs_project/`, semuanya berstatus FINAL:
 | 1 | Autentikasi & Kelola User | Selesai — Login, shell navigasi, Kelola User, secure storage, route guard |
 | 2 | Barang, Kategori, Peminjam, Mutasi Stok | Selesai — Aset Lab, Kategori, Data Peminjam, Mutasi Stok |
 | 3 | Peminjaman multi-item & Verifikasi | Selesai — Transaksi, form keranjang multi-item, layar Verifikasi Kepala Program |
-| 4 | Pengembalian & Pengaturan Denda | Belum |
+| 4 | Pengembalian & Pengaturan Denda | Selesai — tab Pengembalian, form per item dengan denda otomatis, Pengaturan Denda |
 | 5 | Laporan | Belum |
 | 6 | Dashboard, polish, testing, build APK | Belum |
 

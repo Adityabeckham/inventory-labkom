@@ -9,13 +9,14 @@ import '../../../shared/widgets/async_view.dart';
 import '../../../shared/widgets/form_feedback.dart';
 import '../../../shared/widgets/search_field.dart';
 import '../../../shared/widgets/status_pill.dart';
+import '../../pengembalian/presentation/pengembalian_view.dart';
 import '../application/peminjaman_controller.dart';
 import '../domain/peminjaman.dart';
 import 'peminjaman_detail_sheet.dart';
 import 'peminjaman_form_sheet.dart';
 
 /// Tab Transaksi — segmented control "Peminjaman | Pengembalian".
-/// FR-05 di sini; FR-06 Pengembalian dikerjakan Sprint 4 (UIUX §3.7 & §3.9).
+/// FR-05 dan FR-06, sesuai UIUX_Wireframe_dan_Flow.md §3.7 dan §3.9.
 class TransaksiScreen extends ConsumerStatefulWidget {
   const TransaksiScreen({super.key});
 
@@ -53,7 +54,7 @@ class _TransaksiScreenState extends ConsumerState<TransaksiScreen> {
           Expanded(
             child: _tab == 0
                 ? const _PeminjamanView()
-                : const _PengembalianBelumTersedia(),
+                : const PengembalianView(),
           ),
         ],
       ),
@@ -230,33 +231,6 @@ class _PeminjamanCard extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PengembalianBelumTersedia extends StatelessWidget {
-  const _PengembalianBelumTersedia();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.assignment_return_outlined,
-                size: 48, color: AppColors.textMuted),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              'Pengembalian per-item beserta perhitungan dendanya (FR-06) '
-              'dikerjakan pada Sprint 4.',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-          ],
         ),
       ),
     );

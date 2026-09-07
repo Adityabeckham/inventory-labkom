@@ -126,3 +126,22 @@ Dokumen menyebut nilainya tapi tidak menyebut nama fieldnya. Dipilih `aksi` supa
 Pembatasan ke Kepala Program adalah penegasan Tabel 3.1 Use Case, bukan penambahan: memisahkan yang mengajukan dari yang menyetujui adalah inti FR-07. Kalau Laboran bisa menyetujui pengajuannya sendiri, verifikasinya kehilangan fungsi. `GET /api/peminjaman` sengaja dibuka untuk kedua level, karena membaca daftar pengajuan adalah bagian dari use case Verifikasi.
 
 **Catatan konkurensi.** Nomor urut kode diambil dengan `SELECT MAX(...) ... FOR UPDATE` pada rentang prefiks tahun, yang di REPEATABLE READ mengambil gap lock sehingga penyisipan bersamaan menunggu, bukan berlomba. `UNIQUE KEY uq_peminjaman_kode` tetap jadi jaring terakhir. Ini **belum diuji secara paralel**: server bawaan `php -S` melayani satu request pada satu waktu, jadi tabrakan tidak bisa direproduksi di lingkungan development.
+
+---
+
+## D-08 · Tiga keputusan pada Pengembalian dan Pengaturan Denda
+
+| | |
+|---|---|
+| **Rujukan** | `Database_Final_dan_Arsitektur.md` §3.7, §3.7.1, §3.8 |
+| **Berkas** | `backend/controllers/PengembalianController.php`, `PengaturanDendaController.php` |
+
+**Barang rusak tetap dipulihkan ke stok.** Dokumen tidak menyebut apa yang terjadi pada unit berkondisi `rusak`. Menahannya di luar stok terdengar masuk akal, tapi akibatnya `jumlah - stok` tinggal 1 selamanya dan layar Aset Lab membacanya sebagai "1 dipinjam atau diajukan" untuk barang yang justru tergeletak rusak di rak — persis kekeliruan tampilan yang dihindari saat getter `tidakDiRak` dinamai ulang. Penghapusan kepemilikan punya jalurnya sendiri: Laboran mencatat mutasi keluar (FR-13), satu-satunya operasi yang memang menurunkan `jumlah` dan `stok` sekaligus.
+
+**Denda tidak dikalikan jumlah unit.** §3.7 menulis rumusnya harfiah: `jumlah_hari_telat × pengaturan_denda.tarif_per_hari`. Frasa "per barang" di §3.8 bukan rumus kedua, melainkan penegasan cakupannya — satu baris `pengembalian` per `id_detail`. Satu baris detail berisi 3 unit yang telat 3 hari kena `3 × tarif`, bukan `3 × 3 × tarif`. Ditulis eksplisit karena bentuknya mengundang orang untuk "memperbaikinya" kemudian.
+
+**Pengaturan denda memakai satu baris, `id_pengaturan` terkecil.** Dokumen tidak menyebut apa yang terjadi kalau tabelnya punya lebih dari satu baris. GET membaca baris terkecil; PUT memperbarui baris itu, atau menyisipkan kalau tabelnya kosong. Tanpa penyisipan itu, satu database yang di-import tanpa `seed.sql` akan membuat seluruh alur pengembalian gagal hanya karena baris konfigurasi hilang.
+
+**Catatan tambahan, bukan deviasi.** Tarif dibaca saat pengembalian dicatat lalu ikut disimpan di baris `pengembalian`. Mengubah tarif tidak pernah mengubah denda yang sudah tercatat — angka di laporan tetap seperti saat kejadian. Konsekuensinya, pratinjau denda di layar (memakai tarif berjalan) bisa berbeda dari denda yang tersimpan bulan lalu.
+
+Satu baris `peminjaman_detail` juga hanya bisa dikembalikan UTUH: tabel `pengembalian` tidak punya kolom jumlah dan `id_detail`-nya UNIQUE (lihat D-03). "2 dari 3 unit kembali" memang tidak punya tempat penyimpanan — ini batasan skema, dan karenanya form pengembalian menampilkan jumlahnya sebagai teks tetap, bukan field yang bisa diubah.
