@@ -73,7 +73,7 @@ class DashboardScreen extends ConsumerWidget {
                 _GridTile(
                   icon: Icons.payments_outlined,
                   label: 'Pengaturan Denda',
-                  onTap: () => _belumTersedia(context, 'Pengaturan Denda', 4),
+                  onTap: () => context.go('/pengaturan-denda'),
                 ),
               ],
             ),
@@ -85,12 +85,6 @@ class DashboardScreen extends ConsumerWidget {
           const _SummaryPlaceholder(),
         ],
       ),
-    );
-  }
-
-  void _belumTersedia(BuildContext context, String fitur, int sprint) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$fitur dikerjakan pada Sprint $sprint.')),
     );
   }
 

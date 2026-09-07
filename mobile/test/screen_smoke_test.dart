@@ -17,6 +17,7 @@ import 'package:inventory_labkom/features/dashboard/presentation/dashboard_scree
 import 'package:inventory_labkom/features/kategori/presentation/kategori_screen.dart';
 import 'package:inventory_labkom/features/peminjam/presentation/peminjam_screen.dart';
 import 'package:inventory_labkom/features/peminjaman/presentation/transaksi_screen.dart';
+import 'package:inventory_labkom/features/pengembalian/presentation/pengaturan_denda_screen.dart';
 import 'package:inventory_labkom/features/users/presentation/users_screen.dart';
 import 'package:inventory_labkom/features/verifikasi/presentation/verifikasi_screen.dart';
 
@@ -237,6 +238,100 @@ void main() {
     '/api/barang': barangJson,
     '/api/kategori': kategoriJson,
     '/api/peminjam': peminjamJson,
+  };
+
+  // Satu transaksi dengan dua item: satu sudah kembali (telat, kena denda),
+  // satu masih di tangan peminjam.
+  final itemsSebagianJson = [
+    {
+      'id_detail': 1,
+      'id_barang': 1,
+      'kode_barang': 'BRG-001',
+      'nama_barang': 'PC Rakitan Core i5',
+      'merk': 'Rakitan',
+      'jumlah_pinjam': 2,
+      'pengembalian': {
+        'id_pengembalian': 1,
+        'tanggal_pengembalian': '2026-09-05',
+        'kondisi': 'rusak',
+        'jumlah_hari_telat': 3,
+        'denda': 15000,
+      },
+    },
+    {
+      'id_detail': 2,
+      'id_barang': 2,
+      'kode_barang': 'BRG-002',
+      'nama_barang': namaPanjang,
+      'merk': 'Samsung',
+      'jumlah_pinjam': 1,
+      'pengembalian': null,
+    },
+  ];
+
+  Map<String, Object?> transaksiKembaliJson({
+    int id = 1,
+    String kode = 'PMJ-2026-001',
+    String tampilan = 'terlambat',
+    int sisa = 1,
+    int kembali = 1,
+    double denda = 15000,
+  }) => {
+        'id_peminjaman': id,
+        'kode_peminjaman': kode,
+        'nama_peminjam': 'Raka Maulana Abdurrahman Wijayakusuma',
+        'nis_nip': '0051234567',
+        'kelas_jabatan': 'XI Rekayasa Perangkat Lunak 2',
+        'dicatat_oleh': 'laboran',
+        'tanggal_pinjam': '2026-08-28',
+        'tanggal_kembali': '2026-09-02',
+        'status': sisa == 0 ? 'dikembalikan' : 'sebagian_kembali',
+        'jumlah_item': 2,
+        'total_unit': 3,
+        'item_sisa': sisa,
+        'item_kembali': kembali,
+        'total_denda': denda,
+        'tampilan_status': tampilan,
+      };
+
+  final pengembalianRespons = <String, Object?>{
+    '/api/pengembalian': [
+      transaksiKembaliJson(),
+      transaksiKembaliJson(
+        id: 2,
+        kode: 'PMJ-2026-002',
+        tampilan: 'sudah_kembali',
+        sisa: 0,
+        kembali: 2,
+        denda: 0,
+      ),
+    ],
+    '/api/peminjaman/1': {
+      ...peminjamanJson(id: 1, status: 'sebagian_kembali'),
+      'tanggal_kembali': '2026-09-02',
+      'total_denda': 15000,
+      'items': itemsSebagianJson,
+    },
+    '/api/pengaturan-denda': {
+      'id_pengaturan': 1,
+      'tarif_per_hari': 5000,
+      'updated_at': '2026-09-01 08:00:00',
+      'terkonfigurasi': true,
+    },
+    'POST /api/pengembalian': {
+      'id_pengembalian': 2,
+      'id_detail': 2,
+      'tanggal_pengembalian': '2026-09-07',
+      'kondisi': 'baik',
+      'jumlah_hari_telat': 5,
+      'denda': 25000,
+    },
+    'PUT /api/pengaturan-denda': {
+      'id_pengaturan': 1,
+      'tarif_per_hari': 7500,
+      'updated_at': '2026-09-07 10:00:00',
+      'terkonfigurasi': true,
+    },
   };
 
   // ── Perkakas ───────────────────────────────────────────────────────
@@ -611,16 +706,19 @@ void main() {
       expect(find.text('PMJ-2026-001'), findsNothing);
     });
 
-    testWidgets('tab Pengembalian menjelaskan dikerjakan Sprint 4',
-        (tester) async {
-      await pasang(tester, const TransaksiScreen(), respons: transaksiRespons);
+    testWidgets('beralih ke tab Pengembalian memuat daftarnya', (tester) async {
+      await pasang(tester, const TransaksiScreen(), respons: {
+        ...transaksiRespons,
+        ...pengembalianRespons,
+      });
 
       await tester.tap(find.text('Pengembalian'));
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
-      expect(find.textContaining('Sprint 4'), findsOne);
-      // FAB peminjaman tidak boleh ikut muncul di tab ini.
+      expect(find.text('Belum Kembali'), findsOne);
+      expect(find.text('TERLAMBAT'), findsOne);
+      // FAB Peminjaman Baru tidak boleh ikut muncul di tab ini.
       expect(find.text('Peminjaman Baru'), findsNothing);
     });
 
@@ -902,6 +1000,217 @@ void main() {
     });
   });
 
+  // ── Pengembalian (FR-06) ───────────────────────────────────────────
+
+  group('Pengembalian', () {
+    Future<void> bukaTab(WidgetTester tester, {double skala = 1, Size? ukuran}) async {
+      await pasang(
+        tester,
+        const TransaksiScreen(),
+        respons: {...transaksiRespons, ...pengembalianRespons},
+        skalaTeks: skala,
+        ukuran: ukuran ?? _layarUmum,
+      );
+      await tester.tap(find.text('Pengembalian'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('daftar menampilkan badge turunan dan denda', (tester) async {
+      await bukaTab(tester);
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('PMJ-2026-001'), findsOne);
+      expect(find.text('TERLAMBAT'), findsOne);
+      expect(find.text('SUDAH KEMBALI'), findsOne);
+      expect(find.text('DENDA RP 15.000'), findsOne);
+      expect(find.text('1 dari 2 jenis kembali · tempo 2026-09-02'), findsOne);
+      expect(find.text('2 jenis · semua sudah kembali'), findsOne);
+    });
+
+    testWidgets('chip tab menyaring lewat server', (tester) async {
+      await bukaTab(tester);
+
+      // Lima chip tidak muat di 360dp, dan yang di luar cache extent
+      // viewport belum dibangun sama sekali — jadi barisnya digeser dulu,
+      // bukan sekadar di-scroll ke posisi.
+      expect(find.text('Sudah Kembali'), findsNothing);
+      await tester.drag(find.text('Semua'), const Offset(-280, 0));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Sudah Kembali'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      // API palsu menyaring dengan mencocokkan tampilan_status.
+      expect(find.text('PMJ-2026-002'), findsOne);
+      expect(find.text('PMJ-2026-001'), findsNothing);
+    });
+
+    testWidgets('rincian memisahkan item yang sudah dan belum kembali',
+        (tester) async {
+      await bukaTab(tester);
+
+      await tester.tap(find.text('PMJ-2026-001'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('1 dari 2 belum kembali'), findsOne);
+      expect(find.text('Total denda transaksi ini'), findsOne);
+      // Item yang sudah kembali menampilkan tanggal, kondisi, dan dendanya.
+      expect(find.text('KEMBALI 2026-09-05'), findsOne);
+      expect(find.text('RUSAK'), findsOne);
+      expect(find.text('TELAT 3 HARI · RP 15.000'), findsOne);
+      // Item yang belum kembali menawarkan tombolnya.
+      expect(find.text('Kembalikan'), findsOne);
+    });
+
+    testWidgets('form pengembalian menampilkan pratinjau denda read-only',
+        (tester) async {
+      await bukaTab(tester);
+      await tester.tap(find.text('PMJ-2026-001'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Kembalikan'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Kembalikan Barang'), findsOne);
+      // Jumlah unit adalah teks tetap, bukan field — tabelnya tidak punya
+      // kolom jumlah (D-03).
+      expect(find.text('Dikembalikan 1 unit sekaligus'), findsOne);
+      expect(find.text('Tanggal pengembalian'), findsOne);
+      expect(find.text('Baik'), findsOne);
+      expect(find.text('Rusak'), findsOne);
+      // Jatuh tempo 2026-09-02 sudah lewat, jadi pratinjaunya menghitung denda.
+      expect(find.textContaining('Terlambat'), findsWidgets);
+      expect(find.textContaining('per hari'), findsOne);
+    });
+
+    testWidgets('memilih kondisi rusak menjelaskan stok tetap dipulihkan',
+        (tester) async {
+      await bukaTab(tester);
+      await tester.tap(find.text('PMJ-2026-001'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Kembalikan'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Rusak'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.textContaining('tetap masuk kembali ke stok'), findsOne);
+    });
+
+    testWidgets('konfirmasi sampai tuntas: POST lalu SnackBar berisi denda',
+        (tester) async {
+      await bukaTab(tester);
+      await tester.tap(find.text('PMJ-2026-001'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Kembalikan'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Konfirmasi Pengembalian'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      // Angka yang dilaporkan berasal dari balasan server, bukan pratinjau.
+      expect(find.textContaining('telat 5 hari'), findsOne);
+      expect(find.textContaining('Rp 25.000'), findsOne);
+    });
+
+    testWidgets('keadaan kosong dan gagal terender', (tester) async {
+      await pasang(tester, const TransaksiScreen(), respons: {
+        ...transaksiRespons,
+        '/api/pengembalian': const [],
+      });
+      await tester.tap(find.text('Pengembalian'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.textContaining('Belum ada barang yang perlu dikembalikan'),
+          findsOne);
+    });
+
+    testWidgets('rincian di layar pendek pada skala 1,5', (tester) async {
+      await bukaTab(tester, skala: 1.5, ukuran: _layarPendek);
+
+      await tester.tap(find.text('PMJ-2026-001'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Kembalikan'), findsOne);
+    });
+  });
+
+  // ── Pengaturan Denda (FR-11) ───────────────────────────────────────
+
+  group('Pengaturan Denda', () {
+    testWidgets('menampilkan tarif berjalan dan contoh perhitungannya',
+        (tester) async {
+      await pasang(tester, const PengaturanDendaScreen(),
+          respons: pengembalianRespons);
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Tarif denda keterlambatan'), findsOne);
+      expect(find.text('5000'), findsOne);
+      expect(find.textContaining('3 × Rp 5.000 = Rp 15.000'), findsOne);
+    });
+
+    testWidgets('tarif negatif tidak bisa diketik, kosong ditolak validator',
+        (tester) async {
+      await pasang(tester, const PengaturanDendaScreen(),
+          respons: pengembalianRespons);
+
+      // FilteringTextInputFormatter.digitsOnly menyaring tanda minus.
+      await tester.enterText(find.byType(TextFormField), '-500');
+      await tester.pumpAndSettle();
+      expect(find.text('500'), findsOne);
+
+      await tester.enterText(find.byType(TextFormField), '');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Simpan Tarif'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Tarif wajib diisi berupa angka'), findsOne);
+    });
+
+    testWidgets('tarif di atas batas ditolak validator', (tester) async {
+      await pasang(tester, const PengaturanDendaScreen(),
+          respons: pengembalianRespons);
+
+      await tester.enterText(find.byType(TextFormField), '2000000');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Simpan Tarif'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Tarif maksimal Rp 1.000.000 per hari'), findsOne);
+    });
+
+    testWidgets('tarif 0 dijelaskan artinya, bukan ditolak', (tester) async {
+      await pasang(tester, const PengaturanDendaScreen(),
+          respons: pengembalianRespons);
+
+      await tester.enterText(find.byType(TextFormField), '0');
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.textContaining('tidak menghasilkan denda'), findsOne);
+    });
+
+    testWidgets('menyimpan tarif melaporkan hasilnya', (tester) async {
+      await pasang(tester, const PengaturanDendaScreen(),
+          respons: pengembalianRespons);
+
+      await tester.enterText(find.byType(TextFormField), '7500');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Simpan Tarif'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.textContaining('Rp 7.500 per hari'), findsOne);
+    });
+  });
+
   // ── Skala teks sistem ──────────────────────────────────────────────
   //
   // Pengaturan "Ukuran font" Android naik satu takik ke 1,15 dan bisa sampai
@@ -949,6 +1258,12 @@ void main() {
     testWidgets('Transaksi pada 1,3', (tester) async {
       await pasang(tester, const TransaksiScreen(),
           respons: transaksiRespons, skalaTeks: 1.3);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('Pengaturan Denda pada 1,3', (tester) async {
+      await pasang(tester, const PengaturanDendaScreen(),
+          respons: pengembalianRespons, skalaTeks: 1.3);
       expect(tester.takeException(), isNull);
     });
 
@@ -1054,9 +1369,17 @@ class _ApiPalsu extends ApiClient {
     // Setiap parameter selain `cari` diperlakukan sebagai kecocokan persis
     // pada field bernama sama — meniru id_kategori, id_barang, dan status
     // di backend tanpa perlu cabang khusus per endpoint.
+    //
+    // `tab` adalah satu-satunya kekecualian: di backend ia menyaring status
+    // TURUNAN yang dihitung dari data, dan di respons namanya
+    // `tampilan_status`. Pemetaan ditulis di sini supaya penyaringan tabnya
+    // tetap teruji tanpa meniru seluruh perhitungan turunannya.
+    const alias = {'tab': 'tampilan_status'};
+
     for (final entry in query.entries) {
       if (entry.key == 'cari') continue;
-      if (baris.containsKey(entry.key) && baris[entry.key] != entry.value) {
+      final field = alias[entry.key] ?? entry.key;
+      if (baris.containsKey(field) && baris[field] != entry.value) {
         return false;
       }
     }
@@ -1070,15 +1393,32 @@ class _ApiPalsu extends ApiClient {
     );
   }
 
-  // Layar hanya membaca dalam pengujian ini; tulis dipastikan lewat
-  // api_integration_test.dart yang memukul backend sungguhan.
+  /// POST dilayani untuk endpoint yang disiapkan, supaya alur tulis bisa
+  /// ditelusuri sampai SnackBar-nya. Yang membuktikan datanya benar-benar
+  /// tersimpan tetap api_integration_test.dart terhadap backend sungguhan.
   @override
-  Future<dynamic> post(String path, {Object? body}) async =>
-      throw UnimplementedError('post $path tidak dipakai pengujian render.');
+  Future<dynamic> post(String path, {Object? body}) async {
+    if (_mode == _ModeApi.gagal) {
+      throw ApiException(pesanGagal, statusCode: 409);
+    }
+    final data = _respons['POST $path'];
+    if (data == null) {
+      throw ApiException('POST $path tidak disiapkan di pengujian.');
+    }
+    return data;
+  }
 
   @override
-  Future<dynamic> put(String path, {Object? body}) async =>
-      throw UnimplementedError('put $path tidak dipakai pengujian render.');
+  Future<dynamic> put(String path, {Object? body}) async {
+    if (_mode == _ModeApi.gagal) {
+      throw ApiException(pesanGagal, statusCode: 409);
+    }
+    final data = _respons['PUT $path'];
+    if (data == null) {
+      throw ApiException('PUT $path tidak disiapkan di pengujian.');
+    }
+    return data;
+  }
 
   /// Verifikasi memakai PATCH; dilayani supaya alur Setujui/Tolak bisa
   /// ditelusuri sampai SnackBar-nya, bukan berhenti di UnimplementedError.

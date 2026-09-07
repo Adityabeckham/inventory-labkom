@@ -10,6 +10,7 @@ import '../../features/dashboard/presentation/dashboard_screen.dart';
 import '../../features/kategori/presentation/kategori_screen.dart';
 import '../../features/peminjam/presentation/peminjam_screen.dart';
 import '../../features/peminjaman/presentation/transaksi_screen.dart';
+import '../../features/pengembalian/presentation/pengaturan_denda_screen.dart';
 import '../../features/placeholder/sprint_placeholder_screen.dart';
 import '../../features/shell/presentation/app_shell.dart';
 import '../../features/users/presentation/users_screen.dart';
@@ -77,6 +78,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/aset', builder: (_, _) => const AsetScreen()),
           GoRoute(path: '/kategori', builder: (_, _) => const KategoriScreen()),
           GoRoute(path: '/peminjam', builder: (_, _) => const PeminjamScreen()),
+          GoRoute(
+            path: '/pengaturan-denda',
+            builder: (_, _) => const PengaturanDendaScreen(),
+          ),
           GoRoute(path: '/transaksi', builder: (_, _) => const TransaksiScreen()),
           GoRoute(path: '/verifikasi', builder: (_, _) => const VerifikasiScreen()),
           GoRoute(
@@ -102,7 +107,14 @@ bool _isAllowed(String path, UserLevel level) {
   const umum = {'/dashboard'};
   if (umum.contains(path)) return true;
 
-  final khususLaboran = {'/users', '/aset', '/kategori', '/peminjam', '/transaksi'};
+  final khususLaboran = {
+    '/users',
+    '/aset',
+    '/kategori',
+    '/peminjam',
+    '/transaksi',
+    '/pengaturan-denda',
+  };
   final khususKepalaProgram = {'/verifikasi'};
 
   return switch (level) {

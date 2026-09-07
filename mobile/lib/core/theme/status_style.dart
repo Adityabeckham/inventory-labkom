@@ -28,6 +28,33 @@ enum StatusPeminjaman {
   }
 }
 
+/// Status TURUNAN pada layar Pengembalian — dihitung backend dari data
+/// peminjaman + detail + pengembalian, bukan kolom di database.
+/// Lihat Database_Final_dan_Arsitektur.md §3.7.1.
+///
+/// Keempatnya bukan pembagian yang saling lepas: satu transaksi bisa memenuhi
+/// "Sebagian Kembali" sekaligus "Terlambat". Nilai di sini adalah badge
+/// tunggal yang sudah dipilih backend dengan urutan Terlambat menang.
+enum StatusPengembalian {
+  belumKembali('belum_kembali', 'Belum Kembali'),
+  sebagianKembali('sebagian_kembali', 'Sebagian Kembali'),
+  sudahKembali('sudah_kembali', 'Sudah Kembali'),
+  terlambat('terlambat', 'Terlambat');
+
+  const StatusPengembalian(this.value, this.label);
+
+  final String value;
+  final String label;
+
+  static StatusPengembalian? tryParse(String? raw) {
+    if (raw == null) return null;
+    for (final s in values) {
+      if (s.value == raw) return s;
+    }
+    return null;
+  }
+}
+
 /// Warna badge status. Pemetaan mengikuti UIUX_Wireframe_dan_Flow.md §4.
 @immutable
 class StatusStyle {
@@ -73,6 +100,13 @@ class StatusStyle {
         StatusPeminjaman.sebagianKembali => _partial,
         StatusPeminjaman.dikembalikan => _success,
         StatusPeminjaman.dibatalkan => _danger,
+      };
+
+  static StatusStyle ofPengembalian(StatusPengembalian status) => switch (status) {
+        StatusPengembalian.belumKembali => _active,
+        StatusPengembalian.sebagianKembali => _partial,
+        StatusPengembalian.sudahKembali => _success,
+        StatusPengembalian.terlambat => _danger,
       };
 
   /// Barang tersedia / stok aman.
