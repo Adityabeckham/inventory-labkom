@@ -62,7 +62,7 @@ Sumber kebenaran ada di `docs_project/`, semuanya berstatus FINAL:
 | Sprint | Fokus | Status |
 |---|---|---|
 | 0 | Setup fondasi | Selesai — backend, database, dokumentasi, project Flutter, dan tema `DESIGN.md` |
-| 1 | Autentikasi & Kelola User | Backend selesai (FR-01, FR-12); frontend menunggu SDK |
+| 1 | Autentikasi & Kelola User | Selesai — Login, shell navigasi, Kelola User, secure storage, route guard |
 | 2 | Barang, Kategori, Peminjam, Mutasi Stok | Belum |
 | 3 | Peminjaman multi-item & Verifikasi | Belum |
 | 4 | Pengembalian & Pengaturan Denda | Belum |
@@ -81,10 +81,16 @@ php backend/tests/run.php
 
 Menguji implementasi JWT tulis tangan (tampering payload, serangan `alg:none`, token kedaluwarsa, token tanpa `exp`, penerbit asing, `nbf` masa depan), pencocokan pola route, dan normalisasi path untuk tiap mode deploy.
 
-**Flutter — tema & token status:**
+**Flutter — unit (tema, model, matriks hak akses):**
 
 ```bash
 cd mobile && flutter test
+```
+
+**Flutter — integrasi terhadap backend sungguhan.** Membuktikan lapisan jaringan (dio, header token, penguraian respons, pemetaan model) benar-benar nyambung — hal yang tidak bisa dibuktikan unit test dengan data palsu. Dilewati otomatis kalau backend tidak terjangkau:
+
+```bash
+cd mobile && flutter test test/api_integration_test.dart
 ```
 
 **Black Box — menguji API lewat HTTP**, sesuai metode pengujian di skripsi (BAB II). Butuh server jalan dan database sudah di-import:
