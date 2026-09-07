@@ -61,7 +61,7 @@ Sumber kebenaran ada di `docs_project/`, semuanya berstatus FINAL:
 
 | Sprint | Fokus | Status |
 |---|---|---|
-| 0 | Setup fondasi | Backend, database, & dokumentasi selesai dan terverifikasi; project Flutter menunggu SDK terpasang |
+| 0 | Setup fondasi | Selesai — backend, database, dokumentasi, project Flutter, dan tema `DESIGN.md` |
 | 1 | Autentikasi & Kelola User | Backend selesai (FR-01, FR-12); frontend menunggu SDK |
 | 2 | Barang, Kategori, Peminjam, Mutasi Stok | Belum |
 | 3 | Peminjaman multi-item & Verifikasi | Belum |
@@ -81,6 +81,12 @@ php backend/tests/run.php
 
 Menguji implementasi JWT tulis tangan (tampering payload, serangan `alg:none`, token kedaluwarsa, token tanpa `exp`, penerbit asing, `nbf` masa depan), pencocokan pola route, dan normalisasi path untuk tiap mode deploy.
 
+**Flutter — tema & token status:**
+
+```bash
+cd mobile && flutter test
+```
+
 **Black Box — menguji API lewat HTTP**, sesuai metode pengujian di skripsi (BAB II). Butuh server jalan dan database sudah di-import:
 
 ```bash
@@ -93,6 +99,16 @@ Beri argumen base URL kalau backend tidak di `127.0.0.1:8080`:
 
 ```bash
 php backend/tests/api.php http://localhost/inventory
+```
+
+## Catatan tentang platform web di `mobile/`
+
+Target aplikasi adalah **Android** (PRD §5), dan deliverable akhirnya APK. Platform `web` diaktifkan sebagai alat bantu verifikasi visual selama pengembangan — Android SDK belum terpasang, jadi web adalah satu-satunya cara menjalankan dan memeriksa tampilan UI.
+
+Bisa dihapus sebelum penyerahan akhir:
+
+```bash
+rm -rf mobile/web
 ```
 
 ## Catatan tentang `Dokumentasi-Klien/`
