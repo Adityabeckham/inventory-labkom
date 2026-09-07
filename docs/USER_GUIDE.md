@@ -37,7 +37,7 @@ kehilangan gunanya.
 1. Buka aplikasi **Inventory Labkom**.
 2. Isi **Username** dan **Password** dari administrator sekolah.
 3. Centang **Ingat saya** kalau HP-nya dipakai sendiri, bukan bergantian.
-4. Tekan **Login**.
+4. Tekan **Masuk**.
 
 > **Ingat saya** membuat Anda tidak perlu login ulang setiap membuka aplikasi.
 > Jangan dicentang di HP yang dipakai bergantian banyak orang.
@@ -90,25 +90,30 @@ Di bawah sapaan ada empat pintasan yang tidak punya tab sendiri:
 
 Tab **Aset Lab** memuat daftar barang beserta stoknya.
 
-- **Mencari barang** — ketik di kotak pencarian (nama atau kode).
+- **Mencari barang** — ketik di kotak pencarian: nama, kode, merk, atau serial number.
 - **Menyaring per kategori** — sentuh chip kategori di bawah kotak pencarian.
 - **Melihat rincian** — sentuh kartu barangnya.
 
 ### Menambah barang baru
 
 1. Tekan tombol **Tambah Barang**.
-2. Isi nama, kategori, jumlah, dan keterangan lain yang diminta.
+2. Isi **Kode Barang**, **Nama Barang**, **Kategori**, dan **Jumlah unit**.
+   **Merk** dan **Serial Number** boleh dikosongkan.
 3. Tekan **Simpan**.
+
+Untuk mengubah barang yang sudah ada, buka barangnya lalu **Ubah Barang** →
+**Simpan Perubahan**.
 
 ### Mengubah jumlah stok (mutasi)
 
-Gunakan **Ubah Jumlah** kalau ada barang **masuk** (pembelian baru, hibah) atau
+Gunakan **Catat Mutasi** kalau ada barang **masuk** (pembelian baru, hibah) atau
 **keluar** (rusak berat, dihapus dari inventaris) — bukan untuk peminjaman.
 Peminjaman sudah mengurangi stok dengan sendirinya.
 
-1. Buka barangnya, tekan **Ubah Jumlah**.
-2. Pilih arah mutasi (masuk atau keluar), isi jumlah dan keterangannya.
-3. Tekan **Simpan**.
+1. Di tab **Aset Lab**, tekan **Catat Mutasi**.
+2. Pilih barangnya, pilih arah mutasi (masuk atau keluar), isi **Jumlah** dan
+   **Keterangan**.
+3. Tekan **Catat Mutasi**.
 
 Setiap mutasi tercatat dengan keterangan dan tanggalnya, dan bisa dilihat lagi
 di riwayat barang tersebut.
@@ -123,13 +128,15 @@ di riwayat barang tersebut.
 
 ### Langkah 1 — Buat pengajuan
 
-1. Buka tab **Transaksi**, tekan **Peminjaman Baru**.
+1. Buka tab **Transaksi**, pastikan berada di bagian **Peminjaman**, lalu tekan
+   **Peminjaman Baru**.
 2. Pilih **Peminjam** dari daftar. Kalau belum terdaftar, tambahkan dulu lewat
    Dashboard → **Data Peminjam**.
 3. Isi **Tanggal pinjam** dan **Jatuh tempo**.
-4. Tambahkan barang satu per satu: pilih **Barang**, isi **Jumlah**, lalu
-   tambahkan ke keranjang. Ulangi untuk barang berikutnya.
-   Salah tambah? Tekan **Keluarkan dari keranjang**.
+4. Tambahkan barang satu per satu lewat **Tambah Barang**: pilih **Barang**,
+   isi **Jumlah**, lalu simpan ke keranjang. Ulangi untuk barang berikutnya.
+   Mau mengubah jumlahnya, sentuh barangnya lagi (**Ubah Jumlah**); mau
+   membatalkan, tekan **Keluarkan dari keranjang**.
 5. Tekan **Ajukan Peminjaman**.
 
 > **Stok langsung berkurang saat diajukan**, sebelum disetujui. Ini mencegah
@@ -152,8 +159,9 @@ transaksi, dan stoknya sudah kembali sendiri.
 
 ### Melihat dan mencari transaksi
 
-Tab **Transaksi** punya dua bagian: **Peminjaman** dan **Pengembalian**.
-Kotak pencarian menerima kode transaksi, nama peminjam, atau NIS.
+Tab **Transaksi** punya dua bagian yang dipilih lewat tombol geser di atas:
+**Peminjaman** dan **Pengembalian**. Kotak pencarian menerima kode transaksi,
+nama peminjam, atau NIS.
 
 Arti setiap status:
 
@@ -219,7 +227,9 @@ sendiri (**Sebagian Kembali** atau **Dikembalikan**).
 
 Dashboard → **Pengaturan Denda**.
 
-Isi **Tarif Denda per Hari (Rp)**, lalu **Simpan**. Rumusnya:
+Isi **Tarif denda keterlambatan** (rupiah per hari), lalu tekan
+**Simpan Tarif**. Layarnya menampilkan contoh perhitungan supaya angkanya
+langsung terlihat efeknya. Rumusnya:
 
 ```
 denda = jumlah hari terlambat × tarif per hari
@@ -228,7 +238,8 @@ denda = jumlah hari terlambat × tarif per hari
 Dendanya **tidak dikali jumlah unit**. Satu barang telat 3 hari dengan tarif
 Rp 5.000 dikenai Rp 15.000, berapa pun jumlah unit di baris itu.
 
-Tarif Rp 0 berarti keterlambatan tidak dikenai denda sama sekali.
+Tarif Rp 0 berarti keterlambatan tidak dikenai denda sama sekali. Batas
+atasnya Rp 1.000.000 per hari.
 
 > Perubahan tarif hanya berlaku untuk pengembalian yang dicatat **setelahnya**.
 
