@@ -88,6 +88,18 @@ Menguji implementasi JWT tulis tangan (tampering payload, serangan `alg:none`, t
 cd mobile && flutter test
 ```
 
+**Flutter — render tiap layar.** Setiap layar dan bottom sheet benar-benar
+dibangun di atas API palsu: pada lebar 360dp (HP Android kelas bawah), dengan
+satu baris data bernama panjang, di layar pendek 640dp, dan pada skala teks
+sistem 1,3. Inter dimuat lewat `FontLoader` supaya yang terukur metrik font
+sungguhan, bukan font uji berglif kotak. Inilah yang menangkap `RenderFlex
+overflowed` — kegagalan yang tidak terlihat oleh `flutter analyze` maupun tes
+integrasi:
+
+```bash
+cd mobile && flutter test test/screen_smoke_test.dart
+```
+
 **Flutter — integrasi terhadap backend sungguhan.** Membuktikan lapisan jaringan (dio, header token, penguraian respons, pemetaan model) benar-benar nyambung — hal yang tidak bisa dibuktikan unit test dengan data palsu. Dilewati otomatis kalau backend tidak terjangkau:
 
 ```bash

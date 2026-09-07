@@ -31,6 +31,14 @@ import 'package:inventory_labkom/features/users/data/user_repository.dart';
 ///
 /// Seluruh test dilewati otomatis kalau backend tidak terjangkau, supaya
 /// `flutter test` biasa tidak gagal di mesin tanpa backend.
+///
+/// PERINGATAN — test ini MENGUBAH ISI DATABASE.
+/// Setiap kali dijalankan, satu barang `IT<timestamp>` dibuat beserta riwayat
+/// mutasinya. Barang yang sudah punya mutasi memang sengaja tidak bisa
+/// dihapus, jadi sisanya menumpuk di Daftar Barang. Sebelum demo atau sidang,
+/// impor ulang database:
+///   mysql -u labkom -p -h 127.0.0.1 inventory_labkom < database/schema.sql
+///   mysql -u labkom -p -h 127.0.0.1 inventory_labkom < database/seed.sql
 const baseUrl = 'http://127.0.0.1:8080';
 
 Future<bool> backendUp() async {

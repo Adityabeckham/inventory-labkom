@@ -157,6 +157,7 @@ class _UserFormSheetState extends State<UserFormSheet> {
             const SizedBox(height: AppSpacing.md),
 
             DropdownButtonFormField<UserLevel>(
+              isExpanded: true,
               initialValue: _level,
               decoration: const InputDecoration(
                 labelText: 'Peran',

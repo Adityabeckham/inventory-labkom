@@ -40,13 +40,20 @@ class DashboardScreen extends ConsumerWidget {
           if (user.isLaboran) ...[
             Text('Akses cepat', style: text.titleMedium),
             const SizedBox(height: AppSpacing.sm),
-            GridView.count(
-              crossAxisCount: 2,
+            GridView(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              mainAxisSpacing: AppSpacing.cardGap,
-              crossAxisSpacing: AppSpacing.cardGap,
-              childAspectRatio: 1.6,
+              // Tinggi kartu dipatok, bukan lewat childAspectRatio. Rasio
+              // menghitung tinggi dari lebar layar dan sama sekali tidak
+              // tahu-menahu soal tinggi teks di dalamnya: begitu pengguna
+              // menaikkan ukuran font sistem satu takik (skala 1,15) grid
+              // sudah meluber. Angka tetap memberi ruang label dua baris.
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: AppSpacing.cardGap,
+                crossAxisSpacing: AppSpacing.cardGap,
+                mainAxisExtent: 100,
+              ),
               children: [
                 _GridTile(
                   icon: Icons.category_outlined,
@@ -136,10 +143,17 @@ class _GridTile extends StatelessWidget {
             children: [
               Icon(icon, size: 28, color: AppColors.navy),
               const SizedBox(height: AppSpacing.xs),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.labelLarge,
+              // Flexible + ellipsis jadi jaring pengaman kalau pengguna
+              // membesarkan ukuran teks sistem: labelnya terpotong, bukan
+              // kartunya yang pecah.
+              Flexible(
+                child: Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelLarge,
+                ),
               ),
             ],
           ),

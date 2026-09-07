@@ -134,6 +134,7 @@ class _BarangFormSheetState extends State<BarangFormSheet> {
               const SizedBox(height: AppSpacing.lg),
 
               DropdownButtonFormField<int>(
+                isExpanded: true,
                 initialValue: _idKategori,
                 decoration: const InputDecoration(
                   labelText: 'Kategori',
@@ -141,7 +142,10 @@ class _BarangFormSheetState extends State<BarangFormSheet> {
                 ),
                 items: [
                   for (final k in widget.kategori)
-                    DropdownMenuItem(value: k.id, child: Text(k.nama)),
+                    DropdownMenuItem(
+                      value: k.id,
+                      child: Text(k.nama, overflow: TextOverflow.ellipsis),
+                    ),
                 ],
                 onChanged: (v) => setState(() => _idKategori = v),
                 validator: (v) => v == null ? 'Kategori wajib dipilih' : null,

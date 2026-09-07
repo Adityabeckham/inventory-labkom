@@ -38,7 +38,6 @@ dependencies:
   go_router: ^18.0.1
   dio: ^5.11.1
   flutter_secure_storage: ^11.0.0
-  google_fonts: ^8.2.1
 
 dev_dependencies:
   flutter_test:
@@ -61,6 +60,15 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  # Inter di-bundel supaya font tidak perlu diunduh saat aplikasi pertama
+  # dibuka — lab tidak selalu punya koneksi. Berkasnya variable font, jadi
+  # bobot huruf diatur lewat FontVariation di AppTypography, bukan lewat
+  # beberapa entri weight di sini.
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Variable.ttf
 
   # To add assets to your application, add an assets section, like this:
   # assets:
