@@ -16,6 +16,7 @@ use App\Controllers\AuthController;
 use App\Controllers\BarangController;
 use App\Controllers\HealthController;
 use App\Controllers\KategoriController;
+use App\Controllers\LaporanController;
 use App\Controllers\PeminjamController;
 use App\Controllers\PeminjamanController;
 use App\Controllers\PengaturanDendaController;
@@ -37,6 +38,7 @@ $mutasi   = new StokMutasiController();
 $pinjam   = new PeminjamanController();
 $kembali  = new PengembalianController();
 $denda    = new PengaturanDendaController();
+$laporan  = new LaporanController();
 
 $laboran   = [Auth::role(Auth::LABORAN)];
 $kaprog    = [Auth::role(Auth::KEPALA_PROGRAM)];
@@ -108,6 +110,18 @@ $router->post('/api/pengembalian', [$kembali, 'store'], $laboran);
 $router->get('/api/pengaturan-denda', [$denda, 'show'],   $terdaftar);
 $router->put('/api/pengaturan-denda', [$denda, 'update'], $laboran);
 
-// ── Sprint 5 — FR-08/FR-09 Laporan (5 jenis × 3 format)
+// ── Sprint 5 — FR-08 Cetak & FR-09 Lihat Laporan ─────────────────────
+//
+// Kedua level dibuka: Laboran mencetak (FR-08), Kepala Program membaca
+// (FR-09). Datanya sama dan keduanya hanya membaca — pembedaan "Mode Lihat
+// Saja" ada di UI, bukan di hak akses.
+//
+// Format dipilih lewat query `?format=pdf|docx|xlsx`, periode lewat
+// `?dari=YYYY-MM-DD&sampai=YYYY-MM-DD` (keduanya opsional).
+$router->get('/api/laporan/barang',       [$laporan, 'barang'],       $terdaftar);
+$router->get('/api/laporan/peminjaman',   [$laporan, 'peminjaman'],   $terdaftar);
+$router->get('/api/laporan/pengembalian', [$laporan, 'pengembalian'], $terdaftar);
+$router->get('/api/laporan/stok',         [$laporan, 'stok'],         $terdaftar);
+$router->get('/api/laporan/denda',        [$laporan, 'denda'],        $terdaftar);
 
 return $router;

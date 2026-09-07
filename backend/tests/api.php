@@ -61,6 +61,71 @@ function req(string $method, string $path, ?array $body = null, ?string $token =
     return ['status' => $status, 'json' => is_array($json) ? $json : null, 'raw' => $raw];
 }
 
+/**
+ * Seperti req(), tapi ikut mengembalikan header respons dan tidak mencoba
+ * mengurai JSON — laporan membalas byte berkas, bukan amplop JSON.
+ *
+ * @return array{status:int,headers:array<string,string>,body:string}
+ */
+function reqBerkas(string $path, string $token): array
+{
+    global $BASE;
+
+    $ch = curl_init($BASE . $path);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HEADER         => true,
+        CURLOPT_HTTPHEADER     => ["Authorization: Bearer $token"],
+        CURLOPT_TIMEOUT        => 60,
+    ]);
+
+    $raw      = (string) curl_exec($ch);
+    $status   = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $panjang  = (int) curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+
+    $headers = [];
+    foreach (explode("\r\n", substr($raw, 0, $panjang)) as $baris) {
+        if (str_contains($baris, ':')) {
+            [$k, $v] = explode(':', $baris, 2);
+            $headers[strtolower(trim($k))] = trim($v);
+        }
+    }
+
+    return ['status' => $status, 'headers' => $headers, 'body' => substr($raw, $panjang)];
+}
+
+/** Memeriksa satu bagian ada di dalam berkas ZIP (docx/xlsx), tanpa alat luar. */
+function zipPunya(string $isi, string $bagian): bool
+{
+    $tmp = tempnam(sys_get_temp_dir(), 'ujizip-');
+    file_put_contents($tmp, $isi);
+
+    $zip = new ZipArchive();
+    $terbuka = $zip->open($tmp) === true;
+    $ada = $terbuka && $zip->locateName($bagian) !== false;
+    if ($terbuka) { $zip->close(); }
+    @unlink($tmp);
+
+    return $ada;
+}
+
+/** Mengambil isi satu bagian ZIP sebagai teks. */
+function zipIsi(string $isi, string $bagian): string
+{
+    $tmp = tempnam(sys_get_temp_dir(), 'ujizip-');
+    file_put_contents($tmp, $isi);
+
+    $zip = new ZipArchive();
+    $teks = '';
+    if ($zip->open($tmp) === true) {
+        $teks = (string) $zip->getFromName($bagian);
+        $zip->close();
+    }
+    @unlink($tmp);
+
+    return $teks;
+}
+
 function ok(string $name, bool $cond, string $note = ''): void
 {
     global $pass, $fail;
@@ -791,6 +856,111 @@ if (count($layak2) >= 2) {
             'id_detail' => 1, 'kondisi' => 'baik',
         ], $tokenKaprog), 403);
 }
+
+// ── FR-08 / FR-09 Laporan ────────────────────────────────────────────
+echo "\nFR-08 Laporan — 5 jenis x 3 format\n";
+
+$JENIS = ['barang', 'peminjaman', 'pengembalian', 'stok', 'denda'];
+$FORMAT = [
+    'pdf'  => ['%PDF-', 'application/pdf', null],
+    'docx' => ["PK\x03\x04",
+               'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+               'word/document.xml'],
+    'xlsx' => ["PK\x03\x04",
+               'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+               'xl/workbook.xml'],
+];
+
+// Ambang bawah ukuran: berkas dengan magic bytes benar tapi isinya kosong
+// tetap lolos pemeriksaan header, jadi ukurannya ikut diperiksa.
+$AMBANG = 3000;
+
+foreach ($JENIS as $jenis) {
+    foreach ($FORMAT as $format => [$magic, $mime, $bagianZip]) {
+        $r = reqBerkas("/api/laporan/$jenis?format=$format", $tokenLaboran);
+        $isi = $r['body'];
+        $label = str_pad("$jenis/$format", 22);
+
+        ok("$label HTTP 200", $r['status'] === 200,
+           "dapat {$r['status']}: " . substr($isi, 0, 160));
+        ok("$label magic bytes benar", str_starts_with($isi, $magic),
+           'awal berkas: ' . bin2hex(substr($isi, 0, 8)));
+        ok("$label Content-Type $format",
+           str_starts_with($r['headers']['content-type'] ?? '', $mime),
+           'dapat: ' . ($r['headers']['content-type'] ?? '(tidak ada)'));
+        ok("$label lampiran bernama .$format",
+           (bool) preg_match(
+               '/^attachment; filename="laporan-' . $jenis . '-\d{4}-\d{2}-\d{2}\.'
+               . $format . '"$/',
+               $r['headers']['content-disposition'] ?? ''
+           ),
+           'dapat: ' . ($r['headers']['content-disposition'] ?? '(tidak ada)'));
+        ok("$label ukuran wajar", strlen($isi) > $AMBANG,
+           strlen($isi) . ' byte, di bawah ambang ' . $AMBANG);
+
+        if ($bagianZip !== null) {
+            ok("$label ZIP berisi $bagianZip", zipPunya($isi, $bagianZip));
+        }
+    }
+}
+
+// ── Isi berkas, bukan cuma bungkusnya ────────────────────────────────
+echo "\nFR-08 Isi laporan\n";
+
+$xlsx = reqBerkas('/api/laporan/stok?format=xlsx', $tokenLaboran)['body'];
+$sheet = zipIsi($xlsx, 'xl/sharedStrings.xml');
+ok('judul laporan ada di dalam xlsx',
+   str_contains($sheet, 'Laporan Stok Barang'));
+ok('identitas sekolah ada di dalam xlsx',
+   str_contains($sheet, 'SMK Al-Madani Jampangkulon'));
+ok('judul kolom turunan ada di dalam xlsx',
+   str_contains($sheet, 'Dipinjam/Diajukan'));
+
+$docx = reqBerkas('/api/laporan/barang?format=docx', $tokenLaboran)['body'];
+$dokumen = zipIsi($docx, 'word/document.xml');
+ok('judul laporan ada di dalam docx',
+   str_contains($dokumen, 'Laporan Data Barang'));
+$barangPertama = req('GET', '/api/barang', null, $tokenLaboran)['json']['data'][0]['nama_barang'] ?? '';
+ok('nama barang sungguhan ada di dalam docx',
+   $barangPertama !== '' && str_contains($dokumen, htmlspecialchars($barangPertama, ENT_XML1)),
+   "mencari: $barangPertama");
+
+// ── Periode, format, dan otorisasi ───────────────────────────────────
+echo "\nFR-08 Filter dan validasi\n";
+
+// Periode kosong harus tetap menghasilkan berkas sah, bukan 500.
+$r = reqBerkas('/api/laporan/peminjaman?format=xlsx&dari=1990-01-01&sampai=1990-12-31',
+               $tokenLaboran);
+ok('periode tanpa data tetap menghasilkan berkas sah',
+   $r['status'] === 200 && str_starts_with($r['body'], "PK\x03\x04"),
+   "HTTP {$r['status']}");
+ok('berkas periode kosong tetap punya bagian workbook',
+   zipPunya($r['body'], 'xl/workbook.xml'));
+
+$r = reqBerkas('/api/laporan/denda?format=pdf&dari=1990-01-01&sampai=1990-12-31',
+               $tokenLaboran);
+ok('PDF periode kosong tetap sah',
+   $r['status'] === 200 && str_starts_with($r['body'], '%PDF-'));
+
+status('format tidak dikenal ditolak',
+    req('GET', '/api/laporan/barang?format=csv', null, $tokenLaboran), 400);
+status('tanggal tidak sah ditolak',
+    req('GET', '/api/laporan/barang?dari=2026-13-45', null, $tokenLaboran), 400);
+status('dari lebih akhir dari sampai ditolak',
+    req('GET', '/api/laporan/barang?dari=2026-12-01&sampai=2026-01-01', null, $tokenLaboran), 400);
+status('tanpa token ditolak',
+    req('GET', '/api/laporan/barang?format=pdf'), 401);
+
+// FR-09: Kepala Program membaca laporan read-only.
+$r = reqBerkas('/api/laporan/denda?format=pdf', $tokenKaprog);
+ok('Kepala Program BOLEH mengunduh laporan (FR-09)',
+   $r['status'] === 200 && str_starts_with($r['body'], '%PDF-'),
+   "HTTP {$r['status']}");
+
+// Format bawaan kalau parameternya tidak dikirim sama sekali.
+$r = reqBerkas('/api/laporan/stok', $tokenLaboran);
+ok('tanpa parameter format, bawaannya PDF',
+   $r['status'] === 200 && str_starts_with($r['body'], '%PDF-'));
 
 // ── Catatan data uji ─────────────────────────────────────────────────
 echo "\n  Catatan: kategori, barang, peminjam, dan peminjaman uji sengaja\n"
