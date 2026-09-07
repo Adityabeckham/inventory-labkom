@@ -71,7 +71,7 @@ Sumber kebenaran ada di `docs_project/`, semuanya berstatus FINAL:
 | 3 | Peminjaman multi-item & Verifikasi | Selesai — Transaksi, form keranjang multi-item, layar Verifikasi Kepala Program |
 | 4 | Pengembalian & Pengaturan Denda | Selesai — tab Pengembalian, form per item dengan denda otomatis, Pengaturan Denda |
 | 5 | Laporan | Selesai — 5 jenis laporan x 3 format (PDF/Word/Excel), filter periode |
-| 6 | Dashboard, polish, testing, build APK | Selesai — Dashboard data asli, pemetaan FR ke pengujian, panduan pengguna, APK rilis terbangun (ditandatangani kunci debug, lihat [INSTALLATION.md §6](docs/INSTALLATION.md)) |
+| 6 | Dashboard, polish, testing, build APK | Kode selesai — Dashboard data asli, pemetaan FR ke pengujian, panduan pengguna, APK rilis terbangun (kunci debug, lihat [INSTALLATION.md §6](docs/INSTALLATION.md)). **Definition of Done belum penuh**: "APK bisa di-install & dipakai" belum terbukti di perangkat — lihat [pemetaan-fr-ke-pengujian.md §3](docs/pemetaan-fr-ke-pengujian.md) |
 
 ## Verifikasi
 
