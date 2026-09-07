@@ -1,0 +1,17 @@
+{
+  "name": "smk-almadani/inventory-labkom-api",
+  "description": "REST API Inventory Laboratorium Komputer SMK Al-Madani",
+  "type": "project",
+  "license": "proprietary",
+  "require": {
+    "php": ">=8.1"
+  },
+  "comment-sprint-5": "Library laporan ditambahkan saat Sprint 5: mpdf/mpdf (PDF), phpoffice/phpword (Word), phpoffice/phpspreadsheet (Excel).",
+  "autoload": {
+    "psr-4": {
+      "App\\Core\\": "core/",
+      "App\\Middleware\\": "middleware/",
+      "App\\Controllers\\": "controllers/"
+    }
+  }
+}
