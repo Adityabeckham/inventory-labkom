@@ -737,6 +737,33 @@ void main() {
       expect(find.text('Tolak'), findsNothing);
     });
 
+    testWidgets('rincian transaksi yang sudah kembali menampilkan denda juga',
+        (tester) async {
+      // Sheet ini dibuka dari tab Peminjaman, bukan Pengembalian. Kalau
+      // rincian pengembaliannya tidak ikut ditampilkan, dua layar akan
+      // bercerita berbeda tentang transaksi yang sama.
+      await pasang(tester, const TransaksiScreen(), respons: {
+        ...transaksiRespons,
+        '/api/peminjaman/1': {
+          ...peminjamanJson(id: 1, status: 'sebagian_kembali'),
+          'total_denda': 15000,
+          'items': itemsSebagianJson,
+        },
+      });
+
+      await tester.tap(find.text('PMJ-2026-001'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Total denda keterlambatan'), findsOne);
+      expect(find.text('Rp 15.000'), findsOne);
+      expect(find.text('KEMBALI 2026-09-05'), findsOne);
+      expect(find.text('RUSAK'), findsOne);
+      expect(find.text('TELAT 3 HARI · RP 15.000'), findsOne);
+      expect(find.text('Masih di tangan peminjam.'), findsOne);
+      expect(find.text('1 dari 2 belum kembali'), findsOne);
+    });
+
     testWidgets('rincian transaksi yang ditolak menampilkan alasannya',
         (tester) async {
       await pasang(tester, const TransaksiScreen(), respons: transaksiRespons);

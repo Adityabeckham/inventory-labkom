@@ -9,6 +9,7 @@ import '../../../shared/widgets/async_view.dart';
 import '../../../shared/widgets/form_feedback.dart';
 import '../../../shared/widgets/status_pill.dart';
 import '../application/peminjaman_controller.dart';
+import '../../pengembalian/domain/pengembalian.dart';
 import '../domain/peminjaman.dart';
 
 /// Rincian satu transaksi peminjaman.
@@ -140,13 +141,47 @@ class _Isi extends ConsumerWidget {
                 ],
 
                 const SizedBox(height: AppSpacing.md),
+
+                // Sheet ini dibuka dari tab Peminjaman, tapi transaksinya
+                // bisa sudah dikembalikan sebagian atau seluruhnya. Tanpa
+                // menampilkannya, layar Peminjaman dan Pengembalian memberi
+                // gambaran yang bertentangan untuk transaksi yang sama.
+                if (p.totalDenda > 0) ...[
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    decoration: BoxDecoration(
+                      color: AppColors.dangerBg,
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                      border: Border.all(color: AppColors.dangerBorder),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.receipt_long_outlined,
+                            color: AppColors.dangerFg),
+                        const SizedBox(width: AppSpacing.xs),
+                        Expanded(
+                          child: Text('Total denda keterlambatan',
+                              style: text.bodyMedium
+                                  ?.copyWith(color: AppColors.dangerFg)),
+                        ),
+                        Text(rupiah(p.totalDenda),
+                            style: text.titleMedium
+                                ?.copyWith(color: AppColors.dangerFg)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                ],
+
                 Row(
                   children: [
                     Expanded(
                       child: Text('Barang dipinjam', style: text.titleMedium),
                     ),
                     Text(
-                      '${p.jumlahItem} jenis · ${p.totalUnit} unit',
+                      p.items.length == p.belumKembali.length
+                          ? '${p.jumlahItem} jenis · ${p.totalUnit} unit'
+                          : '${p.belumKembali.length} dari ${p.items.length} belum kembali',
                       style: text.bodySmall,
                     ),
                   ],
@@ -158,33 +193,74 @@ class _Isi extends ConsumerWidget {
                     margin: const EdgeInsets.only(bottom: AppSpacing.xs),
                     child: Padding(
                       padding: const EdgeInsets.all(AppSpacing.sm),
-                      child: Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item.namaBarang,
+                                      style: text.titleMedium,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      item.merk == null || item.merk!.isEmpty
+                                          ? item.kodeBarang
+                                          : '${item.kodeBarang} · ${item.merk}',
+                                      style: AppTypography.code(
+                                        color: AppColors.textMuted,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.xs),
+                              StatusPill(
+                                label: '${item.jumlahPinjam} unit',
+                                style: StatusStyle.kategori,
+                              ),
+                            ],
+                          ),
+
+                          // Rincian pengembalian ikut ditampilkan di sini.
+                          // Sheet ini dibuka dari tab Peminjaman, tapi
+                          // transaksinya bisa sudah kembali sebagian —
+                          // menyembunyikannya membuat dua layar bercerita
+                          // berbeda tentang transaksi yang sama.
+                          if (item.pengembalian case final pg?) ...[
+                            const SizedBox(height: AppSpacing.xs),
+                            Wrap(
+                              spacing: AppSpacing.xs,
+                              runSpacing: AppSpacing.xxs,
                               children: [
-                                Text(
-                                  item.namaBarang,
-                                  style: text.titleMedium,
-                                  overflow: TextOverflow.ellipsis,
+                                StatusPill(
+                                  label: 'Kembali ${pg.tanggal}',
+                                  style: StatusStyle.tersedia,
                                 ),
-                                Text(
-                                  item.merk == null || item.merk!.isEmpty
-                                      ? item.kodeBarang
-                                      : '${item.kodeBarang} · ${item.merk}',
-                                  style: AppTypography.code(
-                                    color: AppColors.textMuted,
+                                StatusPill(
+                                  label: pg.kondisi.label,
+                                  style: pg.kondisi == KondisiBarang.baik
+                                      ? StatusStyle.tersedia
+                                      : StatusStyle.kritis,
+                                ),
+                                if (pg.telat)
+                                  StatusPill(
+                                    label: 'Telat ${pg.hariTelat} hari · '
+                                        '${rupiah(pg.denda)}',
+                                    style: StatusStyle.kritis,
                                   ),
-                                ),
                               ],
                             ),
-                          ),
-                          const SizedBox(width: AppSpacing.xs),
-                          StatusPill(
-                            label: '${item.jumlahPinjam} unit',
-                            style: StatusStyle.kategori,
-                          ),
+                          ] else if (p.status == StatusPeminjaman.dipinjam ||
+                              p.status == StatusPeminjaman.sebagianKembali) ...[
+                            const SizedBox(height: AppSpacing.xxs),
+                            Text('Masih di tangan peminjam.',
+                                style: text.bodySmall),
+                          ],
                         ],
                       ),
                     ),

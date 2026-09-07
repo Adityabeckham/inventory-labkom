@@ -108,6 +108,12 @@ class Peminjaman {
       items.where((i) => !i.sudahKembali).toList(growable: false);
 
   /// Boleh menerima pengembalian: sudah disetujui dan masih ada sisa.
+  ///
+  /// HANYA sahih pada objek hasil respons DETAIL. Respons daftar tidak
+  /// mengirim `items`, jadi [belumKembali] kosong dan getter ini selalu
+  /// false di sana — bukan karena transaksinya selesai, melainkan karena
+  /// rinciannya belum dimuat. Jangan dipakai untuk menyaring daftar; untuk
+  /// itu pakai `TransaksiPengembalian.itemSisa` dari endpoint pengembalian.
   bool get bisaDikembalikan =>
       (status == StatusPeminjaman.dipinjam ||
           status == StatusPeminjaman.sebagianKembali) &&

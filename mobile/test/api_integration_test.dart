@@ -893,12 +893,14 @@ void main() {
       expect(sesudah.bisaDikembalikan, isFalse);
     });
 
-    test('barang rusak tetap dipulihkan ke stok (D-08)', () async {
+    test('barang rusak tetap dipulihkan ke stok, dan kepemilikan utuh (D-08)',
+        () async {
       if (!up) return;
 
       final client = await laboran();
       final items = (await duaBarang(client)).take(1).toList();
-      final stokSebelumPinjam = await stokKini(client, items.first.id);
+      final sebelum = (await BarangRepository(client).fetch())
+          .firstWhere((b) => b.id == items.first.id);
       final p = await buatDisetujui(client, items,
           geserPinjam: 0, geserTempo: 5);
 
@@ -907,9 +909,22 @@ void main() {
         kondisi: KondisiBarang.rusak,
       );
 
-      // Kalau unit rusak ditahan di luar stok, jumlah - stok tinggal 1
-      // selamanya dan layar Aset Lab membacanya sebagai masih dipinjam.
-      expect(await stokKini(client, items.first.id), stokSebelumPinjam);
+      final sesudah = (await BarangRepository(client).fetch())
+          .firstWhere((b) => b.id == items.first.id);
+
+      // tidakDiRak yang membedakan, bukan stok: memeriksa stok saja akan
+      // lolos juga kalau nanti kondisi rusak ditahan di luar stok sambil
+      // jumlah diturunkan untuk mengimbangi. Angka ini yang pecah kalau ada
+      // yang "memperbaiki" perilaku itu kemudian.
+      //
+      // Dibandingkan RELATIF terhadap keadaan sebelum, bukan terhadap nol:
+      // tes lain dalam rangkaian yang sama meninggalkan unit barang ini
+      // masih dipinjam, jadi nol bukan patokan yang sahih.
+      expect(sesudah.tidakDiRak, sebelum.tidakDiRak,
+          reason: 'unit rusak tidak boleh terbaca sebagai masih dipinjam');
+      expect(sesudah.stok, sebelum.stok);
+      // Pengurangan kepemilikan punya jalurnya sendiri: mutasi keluar.
+      expect(sesudah.jumlah, sebelum.jumlah);
     });
 
     test('mengembalikan item yang sama dua kali ditolak dengan 409', () async {
