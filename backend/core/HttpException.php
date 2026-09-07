@@ -37,4 +37,18 @@ final class HttpException extends RuntimeException
     {
         return new self($message, 422);
     }
+
+    /**
+     * Layanan belum siap karena ada yang belum dipasang atau dikonfigurasi.
+     *
+     * Dipakai untuk kegagalan yang pesannya HARUS sampai ke klien walaupun
+     * `app.debug` mati: kalau `composer install` terlupa saat deploy,
+     * "Terjadi kesalahan pada server" tidak menolong siapa pun, sedangkan
+     * nama paket yang belum ada langsung menunjukkan perbaikannya. Pesannya
+     * tidak membuka apa pun soal internal sistem.
+     */
+    public static function unavailable(string $message): self
+    {
+        return new self($message, 503);
+    }
 }

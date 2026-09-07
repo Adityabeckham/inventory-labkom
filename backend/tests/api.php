@@ -7,8 +7,13 @@ declare(strict_types=1);
  *
  * Prasyarat: server backend jalan dan database sudah di-import.
  *
+ *   composer install -d backend        # untuk endpoint /api/laporan/*
  *   php -S 127.0.0.1:8080 -t backend/public &
  *   php backend/tests/api.php [base-url]
+ *
+ * Skrip ini sendiri tidak butuh Composer, tapi SERVER yang diujinya butuh:
+ * blok FR-08 memanggil endpoint laporan yang memakai mPDF, PHPWord, dan
+ * PhpSpreadsheet.
  *
  * PERINGATAN: skrip ini menulis ke database. Sebagian data uji sengaja
  * ditinggalkan — barang yang sudah punya riwayat mutasi memang tidak boleh

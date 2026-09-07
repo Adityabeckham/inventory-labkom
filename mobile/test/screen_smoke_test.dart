@@ -15,6 +15,8 @@ import 'package:inventory_labkom/features/auth/domain/app_user.dart';
 import 'package:inventory_labkom/features/auth/presentation/login_screen.dart';
 import 'package:inventory_labkom/features/dashboard/presentation/dashboard_screen.dart';
 import 'package:inventory_labkom/features/kategori/presentation/kategori_screen.dart';
+import 'package:inventory_labkom/features/laporan/application/laporan_controller.dart';
+import 'package:inventory_labkom/features/laporan/presentation/laporan_screen.dart';
 import 'package:inventory_labkom/features/peminjam/presentation/peminjam_screen.dart';
 import 'package:inventory_labkom/features/peminjaman/presentation/transaksi_screen.dart';
 import 'package:inventory_labkom/features/pengembalian/presentation/pengaturan_denda_screen.dart';
@@ -33,6 +35,9 @@ import 'package:inventory_labkom/features/verifikasi/presentation/verifikasi_scr
 /// aplikasi ini adalah Android kelas bawah yang umumnya 360dp. Setiap layar
 /// juga diuji dengan satu baris data bernama panjang, karena data seed yang
 /// pendek justru menyembunyikan overflow.
+
+// ── Ukuran layar uji ─────────────────────────────────────────────────
+
 /// HP Android kelas bawah masa kini — Redmi dan Galaxy A seri umumnya
 /// selebar 360dp dengan tinggi di kisaran ini.
 const _layarUmum = Size(360, 740);
@@ -1238,6 +1243,214 @@ void main() {
     });
   });
 
+  // ── Laporan (FR-08 / FR-09) ────────────────────────────────────────
+
+  group('Laporan', () {
+    /// Penyimpan berkas palsu: implementasi sungguhannya menyentuh
+    /// path_provider dan open_filex yang tidak ada di `flutter test`.
+    /// Yang dicatat di sini cukup untuk memastikan byte, nama, dan mime
+    /// benar-benar diteruskan.
+    late List<({int panjang, String nama, String mime})> tersimpan;
+
+    Future<void> pasangLaporan(
+      WidgetTester tester, {
+      AppUser user = laboran,
+      _ModeApi mode = _ModeApi.data,
+      double skalaTeks = 1,
+      Size? ukuran,
+    }) async {
+      tersimpan = [];
+      await tester.binding.setSurfaceSize(ukuran ?? _layarUmum);
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            tokenStorageProvider.overrideWithValue(InMemoryTokenStorage()),
+            apiClientProvider.overrideWithValue(_ApiPalsu(const {}, mode)),
+            currentUserProvider.overrideWithValue(user),
+            penyimpanBerkasProvider.overrideWithValue(
+              (bytes, nama, mime) async {
+                tersimpan.add((panjang: bytes.length, nama: nama, mime: mime));
+                return '$nama diunduh browser.';
+              },
+            ),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.light(),
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context)
+                  .copyWith(textScaler: TextScaler.linear(skalaTeks)),
+              child: child!,
+            ),
+            home: const LaporanScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    /// Layar Laporan adalah ListView, jadi kartu di bawah lipatan belum
+    /// dibangun sama sekali — bukan sekadar tak terlihat. Karena itu tiap
+    /// kartu digulir dulu sebelum diperiksa, dan itu sekaligus membuktikan
+    /// kelimanya benar-benar terjangkau di layar 360dp.
+    Future<void> gulirKe(WidgetTester tester, String judul) async {
+      await tester.scrollUntilVisible(
+        find.text(judul),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+    }
+
+    Finder tombolDiKartu(String judul, String format) => find.descendant(
+          of: find.ancestor(
+            of: find.text(judul),
+            matching: find.byType(Card),
+          ),
+          matching: find.text(format),
+        );
+
+    testWidgets('lima kartu laporan, masing-masing bertombol tiga format',
+        (tester) async {
+      await pasangLaporan(tester);
+      expect(tester.takeException(), isNull);
+
+      for (final judul in ['Data Barang', 'Peminjaman', 'Pengembalian',
+                           'Stok Barang', 'Denda']) {
+        await gulirKe(tester, judul);
+        expect(find.text(judul), findsOne, reason: 'kartu $judul tak terjangkau');
+        for (final format in ['PDF', 'Word', 'Excel']) {
+          expect(tombolDiKartu(judul, format), findsOne,
+              reason: 'tombol $format di kartu $judul hilang');
+        }
+      }
+
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('Laboran tidak diberi label Mode Lihat Saja', (tester) async {
+      await pasangLaporan(tester);
+
+      expect(find.text('MODE LIHAT SAJA'), findsNothing);
+      expect(find.textContaining('Buat dan cetak laporan'), findsOne);
+    });
+
+    testWidgets('Kepala Program ditandai Mode Lihat Saja (FR-09)',
+        (tester) async {
+      await pasangLaporan(tester, user: kaprog);
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('MODE LIHAT SAJA'), findsOne);
+      expect(find.textContaining('Perubahan data dilakukan Laboran'), findsOne);
+      // Tetap boleh mengunduh — hanya penandaannya yang berbeda.
+      expect(tombolDiKartu('Data Barang', 'PDF'), findsOne);
+    });
+
+    testWidgets('laporan Stok dijelaskan tidak terpengaruh periode',
+        (tester) async {
+      await pasangLaporan(tester);
+
+      await gulirKe(tester, 'Peminjaman');
+      expect(find.text('Disaring menurut tanggal pinjam.'), findsOne);
+
+      await gulirKe(tester, 'Stok Barang');
+      expect(find.text('Tidak terpengaruh filter periode.'), findsOne);
+    });
+
+    testWidgets('periode kosong ditampilkan sebagai seluruh periode',
+        (tester) async {
+      await pasangLaporan(tester);
+
+      expect(find.text('Seluruh periode'), findsOne);
+      expect(find.text('Dari'), findsOne);
+      expect(find.text('Sampai'), findsOne);
+      // Tombol bersihkan hanya muncul kalau ada yang perlu dibersihkan.
+      expect(find.text('Bersihkan'), findsNothing);
+    });
+
+    testWidgets('menekan format mengunduh dan meneruskan nama serta mime',
+        (tester) async {
+      await pasangLaporan(tester);
+
+      await tester.tap(find.text('Excel').first);
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(tersimpan, hasLength(1));
+      expect(tersimpan.first.nama, endsWith('.xlsx'));
+      expect(tersimpan.first.nama, startsWith('laporan-barang-'));
+      expect(tersimpan.first.mime, contains('spreadsheetml'));
+      expect(tersimpan.first.panjang, greaterThan(0));
+      expect(find.textContaining('diunduh browser'), findsOne);
+    });
+
+    testWidgets('laporan Stok tidak mengirim filter periode ke server',
+        (tester) async {
+      // Backend menolak parameter tanggal pada laporan Stok, jadi UI harus
+      // menyaringnya sendiri, bukan meneruskannya lalu memunculkan error.
+      final api = _ApiPalsu(const {}, _ModeApi.data);
+      await tester.binding.setSurfaceSize(_layarUmum);
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            tokenStorageProvider.overrideWithValue(InMemoryTokenStorage()),
+            apiClientProvider.overrideWithValue(api),
+            currentUserProvider.overrideWithValue(laboran),
+            periodeLaporanProvider.overrideWith(() => _PeriodeTetap(
+                  PeriodeLaporan(
+                    dari: DateTime(2026, 1, 1),
+                    sampai: DateTime(2026, 12, 31),
+                  ),
+                )),
+            penyimpanBerkasProvider
+                .overrideWithValue((bytes, nama, mime) async => nama),
+          ],
+          child: MaterialApp(theme: AppTheme.light(), home: const LaporanScreen()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Kartu Peminjaman: periode HARUS terkirim.
+      await gulirKe(tester, 'Peminjaman');
+      await tester.tap(tombolDiKartu('Peminjaman', 'PDF'));
+      await tester.pumpAndSettle();
+      expect(api.pathUnduhTerakhir, '/api/laporan/peminjaman');
+      expect(api.queryUnduhTerakhir?['dari'], '2026-01-01');
+      expect(api.queryUnduhTerakhir?['sampai'], '2026-12-31');
+
+      // Kartu Stok: periode TIDAK boleh terkirim.
+      await gulirKe(tester, 'Stok Barang');
+      await tester.tap(tombolDiKartu('Stok Barang', 'PDF'));
+      await tester.pumpAndSettle();
+      expect(api.pathUnduhTerakhir, '/api/laporan/stok');
+      expect(api.queryUnduhTerakhir?.containsKey('dari'), isFalse);
+      expect(api.queryUnduhTerakhir?.containsKey('sampai'), isFalse);
+    });
+
+    testWidgets('unduhan gagal melaporkan pesan server, bukan diam',
+        (tester) async {
+      await pasangLaporan(tester, mode: _ModeApi.gagal);
+
+      await tester.tap(find.text('PDF').first);
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text(_ApiPalsu.pesanGagal), findsOne);
+      expect(tersimpan, isEmpty);
+    });
+
+    testWidgets('di layar pendek pada skala 1,5 seluruh kartu tetap utuh',
+        (tester) async {
+      await pasangLaporan(tester, ukuran: _layarPendek, skalaTeks: 1.5);
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Laporan Inventaris'), findsOne);
+    });
+  });
+
   // ── Skala teks sistem ──────────────────────────────────────────────
   //
   // Pengaturan "Ukuran font" Android naik satu takik ke 1,15 dan bisa sampai
@@ -1285,6 +1498,11 @@ void main() {
     testWidgets('Transaksi pada 1,3', (tester) async {
       await pasang(tester, const TransaksiScreen(),
           respons: transaksiRespons, skalaTeks: 1.3);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('Laporan pada 1,3', (tester) async {
+      await pasang(tester, const LaporanScreen(), skalaTeks: 1.3);
       expect(tester.takeException(), isNull);
     });
 
@@ -1420,6 +1638,24 @@ class _ApiPalsu extends ApiClient {
     );
   }
 
+  /// Dicatat supaya pengujian bisa memastikan filter periode benar-benar
+  /// terkirim ke server, bukan cuma tampil di layar.
+  String? pathUnduhTerakhir;
+  Map<String, dynamic>? queryUnduhTerakhir;
+
+  /// Balasan unduhan: byte palsu berawalan %PDF- supaya alurnya realistis.
+  /// Yang membuktikan berkasnya sungguhan sah adalah api_integration_test.dart
+  /// terhadap backend nyata; di sini yang diuji jalur UI-nya.
+  @override
+  Future<Uint8List> unduh(String path, {Map<String, dynamic>? query}) async {
+    if (_mode == _ModeApi.gagal) {
+      throw ApiException(pesanGagal, statusCode: 500);
+    }
+    pathUnduhTerakhir = path;
+    queryUnduhTerakhir = query;
+    return Uint8List.fromList('%PDF-palsu'.codeUnits);
+  }
+
   /// POST dilayani untuk endpoint yang disiapkan, supaya alur tulis bisa
   /// ditelusuri sampai SnackBar-nya. Yang membuktikan datanya benar-benar
   /// tersimpan tetap api_integration_test.dart terhadap backend sungguhan.
@@ -1464,4 +1700,14 @@ class _ApiPalsu extends ApiClient {
   @override
   Future<dynamic> delete(String path) async =>
       throw UnimplementedError('delete $path tidak dipakai pengujian render.');
+}
+
+/// Periode yang nilainya dipatok, untuk menguji apa yang dikirim ke server.
+class _PeriodeTetap extends PeriodeNotifier {
+  _PeriodeTetap(this._nilai);
+
+  final PeriodeLaporan _nilai;
+
+  @override
+  PeriodeLaporan build() => _nilai;
 }

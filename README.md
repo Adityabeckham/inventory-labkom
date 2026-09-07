@@ -72,7 +72,10 @@ Sumber kebenaran ada di `docs_project/`, semuanya berstatus FINAL:
 
 ## Verifikasi
 
-Dua lapis pengujian, keduanya tanpa dependensi Composer.
+Beberapa lapis pengujian. Harness-nya sendiri tidak butuh Composer, tapi
+sejak Sprint 5 **server yang diujinya butuh** — endpoint `/api/laporan/*`
+memakai mPDF, PHPWord, dan PhpSpreadsheet. Jalankan `composer install` di
+`backend/` sebelum menguji laporan; endpoint lain tetap jalan tanpa itu.
 
 **Unit — tidak butuh server maupun database:**
 

@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 
 import '../config/app_config.dart';
@@ -64,6 +67,62 @@ class ApiClient {
       _send(() => _dio.patch(path, data: body));
 
   Future<dynamic> delete(String path) => _send(() => _dio.delete(path));
+
+  /// Mengunduh berkas biner — laporan PDF, Word, atau Excel (FR-08).
+  ///
+  /// Sengaja TIDAK lewat [_send]: [_unwrap] menolak apa pun yang bukan
+  /// amplop JSON, sedangkan balasan laporan berupa byte berkas. Yang tetap
+  /// berlaku adalah interceptor token, jadi endpoint berlisensi tetap bisa
+  /// dijangkau — itu juga alasan berkasnya tidak boleh dibuka lewat browser
+  /// luar, yang tidak akan mengirim header Authorization.
+  ///
+  /// Kegagalan dikenali dari status HTTP, bukan dari bentuk isinya: server
+  /// tetap membalas JSON saat error, dan pesannya diteruskan apa adanya.
+  Future<Uint8List> unduh(String path, {Map<String, dynamic>? query}) async {
+    final Response<List<int>> response;
+
+    try {
+      response = await _dio.get<List<int>>(
+        path,
+        queryParameters: query,
+        options: Options(responseType: ResponseType.bytes),
+      );
+    } on DioException catch (e) {
+      throw ApiException(_networkMessage(e));
+    }
+
+    final status = response.statusCode ?? 0;
+    final bytes = response.data ?? const <int>[];
+
+    if (status >= 200 && status < 300) {
+      if (bytes.isEmpty) {
+        throw ApiException('Server mengirim berkas kosong.', statusCode: status);
+      }
+      return Uint8List.fromList(bytes);
+    }
+
+    if (status == 401) {
+      onUnauthorized?.call();
+    }
+
+    throw ApiException(_pesanGagalUnduh(bytes, status), statusCode: status);
+  }
+
+  /// Menggali pesan error dari badan respons yang terlanjur dibaca sebagai
+  /// byte. Kalau bukan JSON — misalnya halaman error HTML dari web server —
+  /// pesannya diganti yang generik daripada menampilkan potongan HTML.
+  String _pesanGagalUnduh(List<int> bytes, int status) {
+    try {
+      final decoded = jsonDecode(utf8.decode(bytes));
+      if (decoded is Map && decoded['message'] is String) {
+        return decoded['message'] as String;
+      }
+    } on FormatException {
+      // Bukan JSON — jatuh ke pesan generik di bawah.
+    }
+
+    return 'Gagal mengunduh laporan (HTTP $status).';
+  }
 
   Future<dynamic> _send(Future<Response<dynamic>> Function() call) async {
     final Response<dynamic> response;

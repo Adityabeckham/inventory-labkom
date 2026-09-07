@@ -308,7 +308,10 @@ final class LaporanController
             \PhpOffice\PhpSpreadsheet\Spreadsheet::class  => 'phpoffice/phpspreadsheet',
         ] as $kelas => $paket) {
             if (!class_exists($kelas)) {
-                throw new \RuntimeException(
+                // 503, bukan RuntimeException: pesan ini harus sampai ke
+                // klien walaupun app.debug mati, karena justru di produksi
+                // `composer install` yang terlupa paling mungkin terjadi.
+                throw HttpException::unavailable(
                     "Library laporan belum terpasang ($paket). "
                     . 'Jalankan `composer install` di direktori backend.'
                 );

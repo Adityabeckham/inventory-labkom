@@ -19,6 +19,8 @@ import 'package:inventory_labkom/features/peminjaman/data/peminjaman_repository.
 import 'package:inventory_labkom/features/peminjaman/domain/peminjaman.dart';
 import 'package:inventory_labkom/features/pengembalian/data/pengembalian_repository.dart';
 import 'package:inventory_labkom/features/pengembalian/domain/pengembalian.dart';
+import 'package:inventory_labkom/features/laporan/data/laporan_repository.dart';
+import 'package:inventory_labkom/features/laporan/domain/laporan.dart';
 import 'package:inventory_labkom/features/users/data/user_repository.dart';
 
 /// Integration test: lapisan jaringan Flutter diuji terhadap backend SUNGGUHAN.
@@ -1034,6 +1036,135 @@ void main() {
             .catat(idDetail: 1, kondisi: KondisiBarang.baik),
         throwsA(isA<ApiException>()
             .having((e) => e.statusCode, 'statusCode', 403)),
+      );
+    });
+  });
+
+  group('Sprint 5 — laporan 5 jenis x 3 format lewat lapisan jaringan', () {
+    Future<ApiClient> masuk(String username, String password) async {
+      final storage = InMemoryTokenStorage();
+      final client = buildClient(storage);
+      await AuthRepository(client, storage)
+          .login(username: username, password: password, rememberMe: true);
+      return client;
+    }
+
+    /// Magic bytes tiap format. PDF punya penanda sendiri; docx dan xlsx
+    /// keduanya wadah ZIP, jadi awalnya sama.
+    const magic = {
+      FormatLaporan.pdf: [0x25, 0x50, 0x44, 0x46, 0x2D], // %PDF-
+      FormatLaporan.docx: [0x50, 0x4B, 0x03, 0x04], // PK..
+      FormatLaporan.xlsx: [0x50, 0x4B, 0x03, 0x04],
+    };
+
+    test('lima belas kombinasi terunduh dan magic bytes-nya benar', () async {
+      if (!up) return;
+
+      final repo = LaporanRepository(await masuk('laboran', 'laboran123'));
+
+      for (final jenis in JenisLaporan.values) {
+        for (final format in FormatLaporan.values) {
+          final bytes = await repo.unduh(jenis: jenis, format: format);
+          final awal = bytes.take(magic[format]!.length).toList();
+
+          expect(awal, magic[format],
+              reason: '${jenis.slug}/${format.value} bukan berkas $format yang sah');
+          // Berkas dengan magic bytes benar tapi isinya kosong tetap lolos
+          // pemeriksaan awal, jadi ukurannya ikut diperiksa.
+          expect(bytes.length, greaterThan(3000),
+              reason: '${jenis.slug}/${format.value} terlalu kecil');
+        }
+      }
+    });
+
+    test('nama berkas mengikuti jenis, tanggal, dan formatnya', () async {
+      if (!up) return;
+
+      final repo = LaporanRepository(await masuk('laboran', 'laboran123'));
+      final nama = repo.namaBerkas(
+        JenisLaporan.denda,
+        FormatLaporan.xlsx,
+        DateTime(2026, 9, 7),
+      );
+
+      expect(nama, 'laporan-denda-2026-09-07.xlsx');
+    });
+
+    test('Kepala Program boleh mengunduh laporan (FR-09)', () async {
+      if (!up) return;
+
+      final repo = LaporanRepository(await masuk('kaprog', 'kaprog123'));
+      final bytes = await repo.unduh(
+        jenis: JenisLaporan.denda,
+        format: FormatLaporan.pdf,
+      );
+
+      expect(bytes.take(5).toList(), magic[FormatLaporan.pdf]);
+    });
+
+    test('periode tanpa data tetap menghasilkan berkas sah', () async {
+      if (!up) return;
+
+      final repo = LaporanRepository(await masuk('laboran', 'laboran123'));
+      final bytes = await repo.unduh(
+        jenis: JenisLaporan.peminjaman,
+        format: FormatLaporan.xlsx,
+        dari: '1990-01-01',
+        sampai: '1990-12-31',
+      );
+
+      expect(bytes.take(4).toList(), magic[FormatLaporan.xlsx]);
+      expect(bytes.length, greaterThan(3000));
+    });
+
+    test('periode menyaring: rentang lebar tidak lebih kecil dari sempit',
+        () async {
+      if (!up) return;
+
+      final repo = LaporanRepository(await masuk('laboran', 'laboran123'));
+
+      final kosong = await repo.unduh(
+        jenis: JenisLaporan.peminjaman,
+        format: FormatLaporan.xlsx,
+        dari: '1990-01-01',
+        sampai: '1990-12-31',
+      );
+      final penuh = await repo.unduh(
+        jenis: JenisLaporan.peminjaman,
+        format: FormatLaporan.xlsx,
+      );
+
+      // Bukti filternya benar-benar dipakai server: berkas seluruh periode
+      // memuat baris data, yang periode 1990 tidak punya.
+      expect(penuh.length, greaterThan(kosong.length));
+    });
+
+    test('tanpa token, unduhan ditolak 401 dan bukan berkas rusak', () async {
+      if (!up) return;
+
+      // Tanpa login: interceptor tidak menempelkan Authorization.
+      final repo = LaporanRepository(buildClient(InMemoryTokenStorage()));
+
+      await expectLater(
+        repo.unduh(jenis: JenisLaporan.barang, format: FormatLaporan.pdf),
+        throwsA(isA<ApiException>()
+            .having((e) => e.statusCode, 'statusCode', 401)),
+      );
+    });
+
+    test('kegagalan server diterjemahkan jadi pesan, bukan byte JSON',
+        () async {
+      if (!up) return;
+
+      final client = await masuk('laboran', 'laboran123');
+
+      // Format tidak dikenal dibalas 400 berisi JSON; unduh() harus
+      // mengurainya jadi pesan, bukan mengembalikannya sebagai berkas.
+      await expectLater(
+        client.unduh('/api/laporan/barang', query: {'format': 'csv'}),
+        throwsA(isA<ApiException>()
+            .having((e) => e.statusCode, 'statusCode', 400)
+            .having((e) => e.message, 'message', contains('Format harus'))),
       );
     });
   });
