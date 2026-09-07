@@ -28,7 +28,7 @@
 | Tab | Isi |
 |---|---|
 | **Dashboard** | Ringkasan pengawasan |
-| **Verifikasi** | Daftar pengajuan `menunggu_verifikasi` → approve/reject |
+| **Verifikasi** | Daftar pengajuan `menunggu_verifikasi` → Setuju/Tolak |
 | **Laporan** | Read-only, 5 jenis sama seperti Laboran |
 
 > Menu Verifikasi **tidak** muncul di Bottom Nav Laboran — kalau Laboran perlu lihat status pengajuan, aksesnya lewat grid Dashboard (read-only, tanpa tombol approve/reject; otorisasi tetap ditegakkan di backend).
@@ -55,7 +55,7 @@
 ### Kepala Program
 1. Login
 2. Dashboard (ringkasan pengawasan)
-3. Verifikasi — daftar pengajuan → detail → approve/reject
+3. Verifikasi — daftar pengajuan → detail → Setuju/Tolak
 4. Laporan (read-only)
 
 ---
@@ -79,8 +79,8 @@
 "Ingat saya" dicentang → refresh token disimpan lebih lama
    │
    ▼
-Redirect sesuai role → Dashboard Laboran (Bottom Nav 4 tab) /
-                        Dashboard Kepala Program (Bottom Nav 3 tab)
+Redirect sesuai role → Dashboard Laboran (Bottom Nav 5 tab) /
+                        Dashboard Kepala Program (Bottom Nav 4 tab)
 
 [Lupa Password?] → instruksi: "Hubungi Laboran/Admin untuk reset password
 akun Anda" (reset manual lewat menu Kelola User)
@@ -267,30 +267,14 @@ DESIGN.md mendefinisikan 3 gaya badge dasar (Nominal/Hijau, Pending/Gold, Critic
 
 ## 5. Wireframe Ringkas (ASCII — layar kunci, gaya DESIGN.md)
 
-### 5.1 Dashboard Laboran (dengan Bottom Nav + FAB)
-```
-┌─────────────────────────────┐
-│ ╭─── Dashboard ───────────╮ │  ← Deep Navy #384C9D, sudut bawah 24px
-│ │ Halo Laboran              │ │
-│ │ Selamat Datang Kembali    │ │
-│ ╰──────────────────────────╯ │
-│  🔍 Cari Produk               │
-│  ┌───────────┐┌───────────┐  │
-│  │ Kategori  ││ Kelola User│  │
-│  └───────────┘└───────────┘  │
-│  ┌───────────┐┌───────────┐  │
-│  │Data Peminjam││Pengaturan│  │
-│  └───────────┘└───────────┘  │
-│  Total Barang: 128            │
-│  Sedang Dipinjam: 14          │
-│  Perlu Verifikasi: 3          │
-│                          ⊕FAB │  ← Crimson #D8232A, "+ Peminjaman"
-├─────────────────────────────┤
-│ [Dashboard][Aset Lab][Transaksi][Laporan] │ ← Bottom Nav, aktif = navy
-└─────────────────────────────┘
-```
+### 5.1 Login
+<img width="390" height="1447" alt="LOGIN-Laboran" src="https://github.com/user-attachments/assets/dc1aebb7-e322-4d24-aaf9-c08b7b587d18" />
 
-### 5.2 Transaksi — Peminjaman (segmented control)
+### 5.2 Dashboard Laboran (dengan Bottom Nav + FAB)
+<img width="390" height="1447" alt="2 2 Dashboard Laboran" src="https://github.com/user-attachments/assets/9ea70120-e18b-4a97-89f9-7ae39e084210" />
+
+
+### 5.3 Transaksi — Peminjaman (segmented control)
 ```
 ┌─────────────────────────────┐
 │ ←   Transaksi                  │
@@ -312,7 +296,7 @@ DESIGN.md mendefinisikan 3 gaya badge dasar (Nominal/Hijau, Pending/Gold, Critic
 └─────────────────────────────┘
 ```
 
-### 5.3 Data Peminjam — Tabel
+### 5.4 Data Peminjam — Tabel
 ```
 ┌─────────────────────────────────────┐
 │ ←   Kelola Peminjam                    │
@@ -324,7 +308,7 @@ DESIGN.md mendefinisikan 3 gaya badge dasar (Nominal/Hijau, Pending/Gold, Critic
 └─────────────────────────────────────┘
 ```
 
-### 5.4 Verifikasi (Kepala Program)
+### 5.5 Verifikasi (Kepala Program)
 ```
 ┌─────────────────────────────┐
 │ ← Detail Pengajuan            │
