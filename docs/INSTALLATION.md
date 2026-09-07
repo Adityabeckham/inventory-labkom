@@ -239,13 +239,33 @@ ada, build tetap jalan dengan kunci debug.
 `key.properties`, `*.jks`, dan `*.keystore` sudah masuk `.gitignore`, jadi
 tidak akan ikut ter-commit.
 
-### Memeriksa APK ditandatangani apa
-
 ```bash
 # Sesuaikan 36.0.0 dengan versi build-tools yang terpasang:
 #   ls $ANDROID_HOME/build-tools
 $ANDROID_HOME/build-tools/36.0.0/apksigner verify --print-certs mobile/build/app/outputs/flutter-apk/app-release.apk
 ```
+
+### Memeriksa APK-nya benar-benar bisa berjaringan
+
+**Lakukan ini setiap kali membangun APK rilis.** Flutter hanya mendeklarasikan
+`android.permission.INTERNET` di manifest `src/debug/`, jadi kalau baris itu
+hilang dari `src/main/AndroidManifest.xml`, `flutter run` tetap berhasil
+sementara APK rilisnya tidak bisa membuat satu pun permintaan jaringan — dan
+tidak ada satu pun pengujian di proyek ini yang bisa melihatnya:
+
+```bash
+$ANDROID_HOME/build-tools/36.0.0/aapt dump badging   mobile/build/app/outputs/flutter-apk/app-release.apk | grep uses-permission
+```
+
+Harus memuat baris:
+
+```
+uses-permission: name='android.permission.INTERNET'
+```
+
+Kalau tidak ada, APK-nya tidak berguna berapa pun hijaunya build.
+
+### Memeriksa APK ditandatangani apa
 
 APK yang ditandatangani kunci debug memberi keluaran seperti ini:
 
@@ -269,4 +289,6 @@ Semua endpoint membalas JSON, termasuk saat gagal. Pesan yang dikirim ke klien s
 | `Access denied` padahal user & password benar | Kalau MySQL-nya bukan XAMPP (mis. MariaDB dari Homebrew), akun `root` sering memakai autentikasi `unix_socket` yang hanya bekerja lewat soket lokal — sedangkan `db.host` di config memakai `127.0.0.1`, yang memaksa koneksi TCP. Buat user berpassword: `CREATE USER 'labkom'@'127.0.0.1' IDENTIFIED BY '...'; GRANT ALL ON inventory_labkom.* TO 'labkom'@'127.0.0.1';` |
 | Semua endpoint balas 404 | `mod_rewrite` Apache belum aktif, atau direktorinya belum `AllowOverride All` sehingga `public/.htaccess` diabaikan. Deploy di sub-path sendiri sudah didukung dan bukan penyebab 404. |
 | Login selalu 401 padahal password benar | Apache memotong header `Authorization`. Pastikan blok `RewriteCond %{HTTP:Authorization}` di `public/.htaccess` ikut terbaca (`AllowOverride All`). |
-| HP fisik tidak bisa konek | Firewall komputer memblokir port 8080, atau HP dan komputer beda jaringan. |
+| HP fisik tidak bisa konek | Tiga penyebab, periksa berurutan: (1) APK dibangun tanpa `--dart-define=API_BASE_URL`, jadi alamatnya masih `10.0.2.2:8080` yang hanya berarti di emulator; (2) firewall komputer memblokir port 8080; (3) HP dan komputer beda jaringan. |
+| Aplikasi terpasang tapi setiap layar bilang "Tidak bisa terhubung ke server" padahal backend hidup | Periksa APK-nya punya izin INTERNET (lihat §6). Kalau hilang, tidak ada satu pun permintaan yang bisa keluar — dan `flutter run` tidak akan pernah memperlihatkannya karena manifest debug Flutter punya izin itu sendiri. |
+| Koneksi gagal hanya di HP Android 9 ke atas | Lalu lintas HTTP polos diblokir sistem. Pastikan `android:networkSecurityConfig` masih terpasang di `src/main/AndroidManifest.xml` dan berkas `res/xml/network_security_config.xml` ada (lihat [D-09](deviasi-dari-spesifikasi.md)). |
