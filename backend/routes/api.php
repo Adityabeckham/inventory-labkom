@@ -13,16 +13,24 @@ declare(strict_types=1);
  */
 
 use App\Controllers\AuthController;
+use App\Controllers\BarangController;
 use App\Controllers\HealthController;
+use App\Controllers\KategoriController;
+use App\Controllers\PeminjamController;
+use App\Controllers\StokMutasiController;
 use App\Controllers\UserController;
 use App\Core\Router;
 use App\Middleware\Auth;
 
 $router = new Router();
 
-$health = new HealthController();
-$auth   = new AuthController();
-$user   = new UserController();
+$health   = new HealthController();
+$auth     = new AuthController();
+$user     = new UserController();
+$kategori = new KategoriController();
+$barang   = new BarangController();
+$peminjam = new PeminjamController();
+$mutasi   = new StokMutasiController();
 
 $laboran   = [Auth::role(Auth::LABORAN)];
 $terdaftar = [Auth::required()];
@@ -41,7 +49,30 @@ $router->get   ('/api/users/{id}', [$user, 'show'],    $laboran);
 $router->put   ('/api/users/{id}', [$user, 'update'],  $laboran);
 $router->delete('/api/users/{id}', [$user, 'destroy'], $laboran);
 
-// ── Sprint 2 — FR-02 Barang, FR-03 Kategori, FR-04 Peminjam, FR-13 Mutasi Stok
+// ── Sprint 2 — FR-03 Kelola Kategori ─────────────────────────────────
+$router->get   ('/api/kategori',      [$kategori, 'index'],   $laboran);
+$router->post  ('/api/kategori',      [$kategori, 'store'],   $laboran);
+$router->put   ('/api/kategori/{id}', [$kategori, 'update'],  $laboran);
+$router->delete('/api/kategori/{id}', [$kategori, 'destroy'], $laboran);
+
+// ── Sprint 2 — FR-02 Kelola Barang ───────────────────────────────────
+$router->get   ('/api/barang',      [$barang, 'index'],   $laboran);
+$router->post  ('/api/barang',      [$barang, 'store'],   $laboran);
+$router->get   ('/api/barang/{id}', [$barang, 'show'],    $laboran);
+$router->put   ('/api/barang/{id}', [$barang, 'update'],  $laboran);
+$router->delete('/api/barang/{id}', [$barang, 'destroy'], $laboran);
+
+// ── Sprint 2 — FR-04 Kelola Peminjam ─────────────────────────────────
+$router->get   ('/api/peminjam',      [$peminjam, 'index'],   $laboran);
+$router->post  ('/api/peminjam',      [$peminjam, 'store'],   $laboran);
+$router->get   ('/api/peminjam/{id}', [$peminjam, 'show'],    $laboran);
+$router->put   ('/api/peminjam/{id}', [$peminjam, 'update'],  $laboran);
+$router->delete('/api/peminjam/{id}', [$peminjam, 'destroy'], $laboran);
+
+// ── Sprint 2 — FR-13 Kelola Stok Barang (mutasi) ─────────────────────
+$router->get ('/api/stok-mutasi', [$mutasi, 'index'], $laboran);
+$router->post('/api/stok-mutasi', [$mutasi, 'store'], $laboran);
+
 // ── Sprint 3 — FR-05 Peminjaman, FR-07 Verifikasi
 // ── Sprint 4 — FR-06 Pengembalian, FR-11 Pengaturan Denda
 // ── Sprint 5 — FR-08/FR-09 Laporan (5 jenis × 3 format)

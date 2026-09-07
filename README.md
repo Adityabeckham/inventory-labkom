@@ -56,6 +56,7 @@ Sumber kebenaran ada di `docs_project/`, semuanya berstatus FINAL:
 | [Sprint Planning](docs_project/Sprint_Planning_Task_Breakdown.md) | Task breakdown Sprint 0–6 dengan estimasi |
 | [DESIGN.md](design/DESIGN.md) | Design system: warna, tipografi, shape, komponen |
 | [Analisis Dokumen Skripsi](docs/analisis-dokumen.md) | Ekstraksi BAB 1–3 + peta 12 ketidaksesuaian dan resolusinya |
+| [Deviasi dari Spesifikasi](docs/deviasi-dari-spesifikasi.md) | Tempat kode sengaja berbeda dari dokumen, beserta alasannya |
 
 ## Status Pengerjaan
 
@@ -63,7 +64,7 @@ Sumber kebenaran ada di `docs_project/`, semuanya berstatus FINAL:
 |---|---|---|
 | 0 | Setup fondasi | Selesai — backend, database, dokumentasi, project Flutter, dan tema `DESIGN.md` |
 | 1 | Autentikasi & Kelola User | Selesai — Login, shell navigasi, Kelola User, secure storage, route guard |
-| 2 | Barang, Kategori, Peminjam, Mutasi Stok | Belum |
+| 2 | Barang, Kategori, Peminjam, Mutasi Stok | Backend selesai (FR-02, FR-03, FR-04, FR-13); frontend berikutnya |
 | 3 | Peminjaman multi-item & Verifikasi | Belum |
 | 4 | Pengembalian & Pengaturan Denda | Belum |
 | 5 | Laporan | Belum |
