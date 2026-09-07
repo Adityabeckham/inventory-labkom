@@ -125,8 +125,6 @@ Kalau `database` berisi `"disconnected"`, kredensial di `config.php` belum cocok
 
 ## 5. Setup Aplikasi Flutter
 
-> Bagian ini menunggu Sprint 0 tuntas — project Flutter di `mobile/` belum dibuat.
-
 Setelah Flutter SDK terpasang:
 
 ```bash
@@ -147,7 +145,65 @@ flutter run
 
 ---
 
-## 6. Masalah Umum
+## 6. Membangun APK Rilis
+
+```bash
+cd mobile
+flutter build apk --release
+```
+
+Hasilnya di `mobile/build/app/outputs/flutter-apk/app-release.apk`.
+
+### Penandatanganan APK
+
+**Tanpa persiapan apa pun, APK rilis ditandatangani kunci debug.** APK-nya
+tetap bisa dipasang dan dipakai penuh, tapi pembaruannya tidak terotentikasi —
+Android tidak bisa membuktikan bahwa versi baru berasal dari pembuat yang sama.
+Untuk pemakaian satu sekolah yang APK-nya dibagikan langsung, ini cukup.
+
+Kalau nanti aplikasinya mau diperbarui secara rapi (apalagi kalau suatu saat
+masuk Play Store), buat kunci rilis sendiri. **Kunci ini sengaja tidak
+disertakan di repo dan tidak dibuatkan oleh pengembang**, karena gunanya justru
+membuktikan bahwa pembaruan datang dari pemilik aplikasi. Kalau kuncinya
+dibuat di mesin lain lalu hilang, aplikasinya tidak akan pernah bisa diperbarui
+— pengguna harus mencabut pasang lebih dulu, dan datanya di perangkat hilang.
+
+**1. Buat keystore** (dijalankan pihak sekolah, satu kali seumur aplikasi):
+
+```bash
+keytool -genkey -v -keystore ~/inventory-labkom-release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+```
+
+Simpan berkas `.jks` dan passwordnya di tempat yang aman dan **tidak** di dalam
+repo. Kehilangan berkas ini tidak bisa dipulihkan siapa pun.
+
+**2. Buat `mobile/android/key.properties`:**
+
+```properties
+storeFile=/Users/nama-anda/inventory-labkom-release.jks
+storePassword=<password keystore>
+keyAlias=upload
+keyPassword=<password kunci>
+```
+
+**3. Bangun ulang.** Tidak ada langkah lain — begitu `key.properties` ada dan
+keempat isiannya terisi, build rilis otomatis memakainya. Kalau berkasnya tidak
+ada, build tetap jalan dengan kunci debug.
+
+`key.properties`, `*.jks`, dan `*.keystore` sudah masuk `.gitignore`, jadi
+tidak akan ikut ter-commit.
+
+### Memeriksa APK ditandatangani apa
+
+```bash
+$ANDROID_HOME/build-tools/36.0.0/apksigner verify --print-certs mobile/build/app/outputs/flutter-apk/app-release.apk
+```
+
+Kunci debug bawaan Android selalu bernama `CN=Android Debug, OU=Android, O=Android, L=Mountain View, ST=California, C=US`.
+
+---
+
+## 7. Masalah Umum
 
 Semua endpoint membalas JSON, termasuk saat gagal. Pesan yang dikirim ke klien sengaja tidak detail — **penyebab sebenarnya selalu ada di log error PHP** (XAMPP: `xampp/apache/logs/error_log`; server bawaan PHP: keluaran terminal). Cari baris berawalan `[inventory-labkom]`.
 

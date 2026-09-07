@@ -42,7 +42,8 @@ Flutter **tidak** terhubung langsung ke MySQL. Seluruh akses data lewat REST API
 
 1. **Setup** — ikuti [docs/INSTALLATION.md](docs/INSTALLATION.md)
 2. **Konfigurasi** — ikuti [docs/CONFIGURATION.md](docs/CONFIGURATION.md)
-3. **Rencana kerja** — [docs_project/Sprint_Planning_Task_Breakdown.md](docs_project/Sprint_Planning_Task_Breakdown.md)
+3. **Memakai aplikasinya** — [docs/USER_GUIDE.md](docs/USER_GUIDE.md)
+4. **Rencana kerja** — [docs_project/Sprint_Planning_Task_Breakdown.md](docs_project/Sprint_Planning_Task_Breakdown.md)
 
 ## Dokumen Acuan
 
@@ -57,6 +58,8 @@ Sumber kebenaran ada di `docs_project/`, semuanya berstatus FINAL:
 | [DESIGN.md](design/DESIGN.md) | Design system: warna, tipografi, shape, komponen |
 | [Analisis Dokumen Skripsi](docs/analisis-dokumen.md) | Ekstraksi BAB 1–3 + peta 12 ketidaksesuaian dan resolusinya |
 | [Deviasi dari Spesifikasi](docs/deviasi-dari-spesifikasi.md) | Tempat kode sengaja berbeda dari dokumen, beserta alasannya |
+| [Pemetaan FR ke Pengujian](docs/pemetaan-fr-ke-pengujian.md) | Tiap FR-01–FR-13 dipetakan ke pengujian yang membuktikannya, termasuk yang **belum** tercakup |
+| [Panduan Pengguna](docs/USER_GUIDE.md) | Cara memakai aplikasi, per peran |
 
 ## Status Pengerjaan
 
@@ -67,8 +70,8 @@ Sumber kebenaran ada di `docs_project/`, semuanya berstatus FINAL:
 | 2 | Barang, Kategori, Peminjam, Mutasi Stok | Selesai — Aset Lab, Kategori, Data Peminjam, Mutasi Stok |
 | 3 | Peminjaman multi-item & Verifikasi | Selesai — Transaksi, form keranjang multi-item, layar Verifikasi Kepala Program |
 | 4 | Pengembalian & Pengaturan Denda | Selesai — tab Pengembalian, form per item dengan denda otomatis, Pengaturan Denda |
-| 5 | Laporan | Belum |
-| 6 | Dashboard, polish, testing, build APK | Belum |
+| 5 | Laporan | Selesai — 5 jenis laporan x 3 format (PDF/Word/Excel), filter periode |
+| 6 | Dashboard, polish, testing, build APK | Selesai — Dashboard data asli, pemetaan FR ke pengujian, panduan pengguna, APK rilis |
 
 ## Verifikasi
 
@@ -125,9 +128,13 @@ php backend/tests/api.php http://localhost/inventory
 
 ## Catatan tentang platform web di `mobile/`
 
-Target aplikasi adalah **Android** (PRD §5), dan deliverable akhirnya APK. Platform `web` diaktifkan sebagai alat bantu verifikasi visual selama pengembangan — Android SDK belum terpasang, jadi web adalah satu-satunya cara menjalankan dan memeriksa tampilan UI.
+Target aplikasi adalah **Android** (PRD §5), dan deliverable akhirnya APK.
+Platform `web` dulu diaktifkan sebagai alat bantu verifikasi visual saat Android
+SDK belum terpasang. Sekarang SDK-nya sudah ada dan APK rilis sudah dibangun,
+jadi `mobile/web` tinggal kemudahan saja — bukan lagi satu-satunya cara melihat
+tampilan.
 
-Bisa dihapus sebelum penyerahan akhir:
+Boleh dihapus sebelum penyerahan akhir:
 
 ```bash
 rm -rf mobile/web

@@ -1,8 +1,29 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+// Kunci penandatanganan rilis dibaca dari android/key.properties — berkas yang
+// TIDAK ikut masuk repo (lihat .gitignore). Kalau berkasnya tidak ada, build
+// rilis jatuh ke kunci debug dan tetap jalan.
+//
+// Kuncinya sengaja tidak dibuatkan di sini. Kunci rilis gunanya membuktikan
+// bahwa pembaruan berasal dari pembuat yang sama, jadi ia hanya bermakna kalau
+// yang menyimpannya adalah pemilik aplikasi. Kalau kunci ini dibuat di mesin
+// pengembang lalu hilang, aplikasinya tidak akan pernah bisa diperbarui —
+// pengguna harus mencabut pasang dulu. Cara membuatnya ada di
+// docs/INSTALLATION.md, dijalankan pihak sekolah sendiri.
+val fileKunci = rootProject.file("key.properties")
+val kunci = Properties().apply {
+    if (fileKunci.exists()) FileInputStream(fileKunci).use { load(it) }
+}
+val adaKunciRilis = fileKunci.exists() &&
+    listOf("storeFile", "storePassword", "keyAlias", "keyPassword")
+        .all { !kunci.getProperty(it).isNullOrBlank() }
 
 android {
     namespace = "id.sch.smkalmadani.inventory_labkom"
@@ -15,25 +36,34 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "id.sch.smkalmadani.inventory_labkom"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
+        // minSdk mengikuti Flutter (24). flutter_secure_storage butuh API 23+,
+        // jadi angka bawaan Flutter sudah memenuhi dan tidak perlu dipatok.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        // Uses the version code from pubspec.yaml. When using split APKs, 1000 * ABI_VERSION
-        // is added automatically by Flutter. (https://developer.android.com/studio/build/configure-apk-splits#configure-APK-versions)
-        // You can force using the value of versionCode by specifying the `-P force-version-code-ignoring-abi=true`
-        // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (adaKunciRilis) {
+            create("release") {
+                storeFile = file(kunci.getProperty("storeFile"))
+                storePassword = kunci.getProperty("storePassword")
+                keyAlias = kunci.getProperty("keyAlias")
+                keyPassword = kunci.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // Tanpa key.properties, APK rilis ditandatangani kunci debug:
+            // tetap bisa dipasang, tapi pembaruannya tidak terotentikasi.
+            // Konsekuensinya ditulis terang di catatan rilis, bukan disembunyikan.
+            signingConfig = signingConfigs.getByName(
+                if (adaKunciRilis) "release" else "debug"
+            )
         }
     }
 }
