@@ -79,11 +79,35 @@ Dicatat terbuka supaya tidak terbaca sebagai "semua sudah teruji".
    dipakai penuh sesuai PRD" — bagian "bisa di-install & dipakai" itu belum
    terbukti, dan build yang hijau bukan penggantinya.
 
-   Yang menutupnya: pasang APK-nya di HP Android (atau emulator), lalu tempuh
-   satu putaran penuh — login sebagai Laboran, ajukan peminjaman, login sebagai
-   Kepala Program, setujui, kembalikan barangnya, unduh satu laporan. Emulator
-   belum bisa dijalankan di mesin ini karena disk bootnya tinggal ~3 GB,
-   sedangkan system image + AVD butuh lebih dari itu.
+   Yang menutupnya: pasang APK-nya di HP Android, lalu tempuh satu putaran
+   penuh — login sebagai Laboran, ajukan peminjaman, login sebagai Kepala
+   Program, setujui, kembalikan barangnya, unduh satu laporan. Kalau alamat
+   backend-nya bukan `10.0.2.2`, bangun ulang dulu dengan `--dart-define`
+   (INSTALLATION.md §6).
+
+   Emulator sudah dicoba dan **tidak berhasil di mesin pengembangan ini**:
+   system image `android-36 google_apis arm64-v8a` terpasang dan AVD terbuat,
+   tapi guest-nya tidak pernah sampai `sys.boot_completed=1` — berhenti di
+   "performing a full startup" sampai batas 8 menit, baik dengan GPU software
+   maupun setelah GPU diaktifkan dan data dibersihkan. Ini kendala lingkungan,
+   bukan kendala aplikasinya. Di mesin dengan Android Studio yang normal,
+   langkahnya cuma `adb install -r app-release.apk`.
+
+   **Yang sudah bisa dipastikan tanpa perangkat**, langsung dari artefaknya
+   dengan `aapt dump badging` dan `apksigner`:
+
+   | Diperiksa | Hasil |
+   |---|---|
+   | `android.permission.INTERNET` | ada |
+   | `android:networkSecurityConfig` | terpasang → resource `0x7f100001` |
+   | `minSdk` / `targetSdk` | 24 / 36 |
+   | Nama aplikasi | `Inventory Labkom` |
+   | `applicationId` | `id.sch.smkalmadani.inventory_labkom` |
+   | `versionName` / `versionCode` | 1.0.0 / 1 |
+   | Tanda tangan | `CN=Android Debug` (kunci debug, disengaja) |
+
+   Yang **tidak** bisa dipastikan dari artefak: aplikasinya benar-benar
+   terbuka tanpa crash, dan alurnya berjalan ujung ke ujung.
 4. **Uji beban.** Tidak ada, dan tidak diminta PRD. Skala pemakaiannya satu lab
    satu sekolah.
 
