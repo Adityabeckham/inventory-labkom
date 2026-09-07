@@ -9,6 +9,8 @@ import '../../../shared/widgets/async_view.dart';
 import '../../../shared/widgets/form_feedback.dart';
 import '../../../shared/widgets/search_field.dart';
 import '../../../shared/widgets/status_pill.dart';
+import '../../auth/application/auth_controller.dart';
+import '../../auth/presentation/profile_sheet.dart';
 import '../../pengembalian/presentation/pengembalian_view.dart';
 import '../application/peminjaman_controller.dart';
 import '../domain/peminjaman.dart';
@@ -29,8 +31,49 @@ class _TransaksiScreenState extends ConsumerState<TransaksiScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = ref.watch(currentUserProvider);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Transaksi')),
+      appBar: AppBar(
+        title: const Text('Transaksi'),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: AppGradients.primaryNavy,
+            borderRadius: BorderRadius.vertical(
+              bottom: Radius.circular(AppRadius.xl),
+            ),
+          ),
+        ),
+        actions: [
+          IconButton(
+            onPressed: () => ProfileSheet.show(context),
+            icon: Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 1.5),
+              ),
+              child: ClipOval(
+                child: Image.asset(
+                  user.isLaboran
+                      ? 'assets/images/avatar_laboran.png'
+                      : 'assets/images/avatar_kepala_program.png',
+                  fit: BoxFit.cover,
+                  errorBuilder: (ctx, err, stack) => const Icon(
+                    Icons.person,
+                    size: 18,
+                    color: AppColors.navy,
+                  ),
+                ),
+              ),
+            ),
+            tooltip: 'Profil & Pengaturan Akun',
+          ),
+          const SizedBox(width: 4),
+        ],
+      ),
       floatingActionButton: _tab == 0
           ? FloatingActionButton.extended(
               onPressed: _peminjamanBaru,
@@ -44,8 +87,16 @@ class _TransaksiScreenState extends ConsumerState<TransaksiScreen> {
             padding: const EdgeInsets.all(AppSpacing.screenMargin),
             child: SegmentedButton<int>(
               segments: const [
-                ButtonSegment(value: 0, label: Text('Peminjaman')),
-                ButtonSegment(value: 1, label: Text('Pengembalian')),
+                ButtonSegment(
+                  value: 0,
+                  label: Text('Peminjaman'),
+                  icon: Icon(Icons.north_east_outlined),
+                ),
+                ButtonSegment(
+                  value: 1,
+                  label: Text('Pengembalian'),
+                  icon: Icon(Icons.south_west_outlined),
+                ),
               ],
               selected: {_tab},
               onSelectionChanged: (s) => setState(() => _tab = s.first),

@@ -77,6 +77,68 @@ final class AuthController
         Response::success(self::publicUser($user), 'Profil pengguna.');
     }
 
+    /** Memperbarui profil akun sendiri (username, nip). */
+    public function updateProfile(Request $request): void
+    {
+        $current  = Auth::user();
+        $idUser   = (int) $current['id_user'];
+        $username = Validator::requiredString($request, 'username', 50);
+        $nip      = $request->input('nip');
+        $nip      = is_string($nip) && trim($nip) !== '' ? trim($nip) : null;
+
+        $exists = Database::selectOne(
+            'SELECT id_user FROM users WHERE username = :u AND id_user != :id',
+            ['u' => $username, 'id' => $idUser]
+        );
+        if ($exists !== null) {
+            throw HttpException::conflict('Username sudah digunakan oleh akun lain.');
+        }
+
+        Database::execute(
+            'UPDATE users SET username = :u, nip = :n WHERE id_user = :id',
+            ['u' => $username, 'n' => $nip, 'id' => $idUser]
+        );
+
+        $user = Database::selectOne(
+            'SELECT id_user, username, level, nip FROM users WHERE id_user = :id',
+            ['id' => $idUser]
+        );
+
+        Response::success(self::publicUser($user), 'Profil berhasil diperbarui.');
+    }
+
+    /** Memperbarui password akun sendiri. */
+    public function changePassword(Request $request): void
+    {
+        $current     = Auth::user();
+        $idUser      = (int) $current['id_user'];
+        $oldPassword = $request->input('old_password');
+        $newPassword = $request->input('new_password');
+
+        if (!is_string($oldPassword) || $oldPassword === '') {
+            throw HttpException::unprocessable('Password lama wajib diisi.');
+        }
+        if (!is_string($newPassword) || strlen($newPassword) < 6) {
+            throw HttpException::unprocessable('Password baru minimal 6 karakter.');
+        }
+
+        $user = Database::selectOne(
+            'SELECT password FROM users WHERE id_user = :id',
+            ['id' => $idUser]
+        );
+        if ($user === null || !password_verify($oldPassword, $user['password'])) {
+            throw HttpException::unauthorized('Password lama tidak sesuai.');
+        }
+
+        $hash = password_hash($newPassword, PASSWORD_BCRYPT);
+        Database::execute(
+            'UPDATE users SET password = :p WHERE id_user = :id',
+            ['p' => $hash, 'id' => $idUser]
+        );
+
+        Response::success(null, 'Password berhasil diperbarui.');
+    }
+
     /**
      * @param array<string,mixed> $row
      * @return array<string,mixed>

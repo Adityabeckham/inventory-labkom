@@ -64,10 +64,9 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
-  # Inter di-bundel supaya font tidak perlu diunduh saat aplikasi pertama
-  # dibuka — lab tidak selalu punya koneksi. Berkasnya variable font, jadi
-  # bobot huruf diatur lewat FontVariation di AppTypography, bukan lewat
-  # beberapa entri weight di sini.
+  assets:
+    - assets/images/
+
   fonts:
     - family: Inter
       fonts:

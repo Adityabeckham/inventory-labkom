@@ -25,7 +25,17 @@ class PeminjamScreen extends ConsumerWidget {
     final cari = ref.watch(peminjamCariProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Data Peminjam')),
+      appBar: AppBar(
+        title: const Text('Data Peminjam'),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: AppGradients.primaryNavy,
+            borderRadius: BorderRadius.vertical(
+              bottom: Radius.circular(AppRadius.xl),
+            ),
+          ),
+        ),
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _form(context, ref),
         icon: const Icon(Icons.person_add_alt),

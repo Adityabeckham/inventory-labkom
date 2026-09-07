@@ -50,8 +50,10 @@ $terdaftar = [Auth::required()];
 $router->get('/api/health', [$health, 'index']);
 
 // ── Sprint 1 — FR-01 Autentikasi ─────────────────────────────────────
-$router->post('/api/auth/login', [$auth, 'login']);
-$router->get ('/api/auth/me',    [$auth, 'me'], $terdaftar);
+$router->post('/api/auth/login',           [$auth, 'login']);
+$router->get ('/api/auth/me',              [$auth, 'me'],             $terdaftar);
+$router->put ('/api/auth/profile',         [$auth, 'updateProfile'],  $terdaftar);
+$router->post('/api/auth/change-password', [$auth, 'changePassword'], $terdaftar);
 
 // ── Sprint 1 — FR-12 Kelola User (khusus Laboran) ────────────────────
 $router->get   ('/api/users',      [$user, 'index'],   $laboran);

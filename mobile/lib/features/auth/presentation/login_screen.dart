@@ -71,137 +71,173 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final text = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: AppColors.navy,
-      body: SafeArea(
-        child: Column(
-          children: [
-            const _LoginHeader(),
-            Expanded(
-              child: Container(
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: AppColors.canvas,
-                  borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(AppRadius.xl),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: AppGradients.primaryNavy,
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              const _LoginHeader(),
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    color: AppColors.canvas,
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(AppRadius.xl),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 16,
+                        offset: Offset(0, -4),
+                      ),
+                    ],
                   ),
-                ),
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(AppSpacing.xl),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text('Login', style: text.displayLarge),
-                        const SizedBox(height: AppSpacing.xxs),
-                        Text(
-                          'Selamat datang. Silakan login untuk melanjutkan '
-                          'mengakses aplikasi inventori.',
-                          style: text.bodyMedium,
-                        ),
-                        const SizedBox(height: AppSpacing.xl),
-
-                        Text('Username', style: text.titleMedium),
-                        const SizedBox(height: AppSpacing.xs),
-                        TextFormField(
-                          controller: _usernameController,
-                          textInputAction: TextInputAction.next,
-                          autocorrect: false,
-                          enableSuggestions: false,
-                          decoration: const InputDecoration(
-                            hintText: 'Username',
-                            prefixIcon: Icon(Icons.person_outline),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(AppSpacing.xl),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text('Login', style: text.displayLarge),
+                          const SizedBox(height: AppSpacing.xxs),
+                          Text(
+                            'Selamat datang. Silakan login untuk melanjutkan '
+                            'mengakses aplikasi inventori.',
+                            style: text.bodyMedium,
                           ),
-                          validator: (v) => (v == null || v.trim().isEmpty)
-                              ? 'Username wajib diisi'
-                              : null,
-                        ),
-                        const SizedBox(height: AppSpacing.md),
+                          const SizedBox(height: AppSpacing.xl),
 
-                        Text('Password', style: text.titleMedium),
-                        const SizedBox(height: AppSpacing.xs),
-                        TextFormField(
-                          controller: _passwordController,
-                          obscureText: _obscure,
-                          textInputAction: TextInputAction.done,
-                          onFieldSubmitted: (_) => _submit(),
-                          decoration: InputDecoration(
-                            hintText: 'Password',
-                            prefixIcon: const Icon(Icons.lock_outline),
-                            suffixIcon: IconButton(
-                              icon: Icon(_obscure
-                                  ? Icons.visibility_outlined
-                                  : Icons.visibility_off_outlined),
-                              tooltip: _obscure
-                                  ? 'Tampilkan password'
-                                  : 'Sembunyikan password',
-                              onPressed: () =>
-                                  setState(() => _obscure = !_obscure),
+                          Text('Username', style: text.titleMedium),
+                          const SizedBox(height: AppSpacing.xs),
+                          TextFormField(
+                            controller: _usernameController,
+                            textInputAction: TextInputAction.next,
+                            autocorrect: false,
+                            enableSuggestions: false,
+                            decoration: const InputDecoration(
+                              hintText: 'Username',
+                              prefixIcon: Icon(Icons.person_outline),
                             ),
+                            validator: (v) => (v == null || v.trim().isEmpty)
+                                ? 'Username wajib diisi'
+                                : null,
                           ),
-                          validator: (v) => (v == null || v.isEmpty)
-                              ? 'Password wajib diisi'
-                              : null,
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
+                          const SizedBox(height: AppSpacing.md),
 
-                        Row(
-                          children: [
-                            Expanded(
-                              child: InkWell(
-                                onTap: () =>
-                                    setState(() => _rememberMe = !_rememberMe),
-                                child: Row(
-                                  children: [
-                                    Checkbox(
-                                      value: _rememberMe,
-                                      onChanged: (v) => setState(
-                                          () => _rememberMe = v ?? false),
-                                    ),
-                                    Flexible(
-                                      child: Text('Ingat saya',
-                                          style: text.bodyLarge),
-                                    ),
-                                  ],
+                          Text('Password', style: text.titleMedium),
+                          const SizedBox(height: AppSpacing.xs),
+                          TextFormField(
+                            controller: _passwordController,
+                            obscureText: _obscure,
+                            textInputAction: TextInputAction.done,
+                            onFieldSubmitted: (_) => _submit(),
+                            decoration: InputDecoration(
+                              hintText: 'Password',
+                              prefixIcon: const Icon(Icons.lock_outline),
+                              suffixIcon: IconButton(
+                                icon: Icon(_obscure
+                                    ? Icons.visibility_outlined
+                                    : Icons.visibility_off_outlined),
+                                tooltip: _obscure
+                                    ? 'Tampilkan password'
+                                    : 'Sembunyikan password',
+                                onPressed: () =>
+                                    setState(() => _obscure = !_obscure),
+                              ),
+                            ),
+                            validator: (v) => (v == null || v.isEmpty)
+                                ? 'Password wajib diisi'
+                                : null,
+                          ),
+                          const SizedBox(height: AppSpacing.xs),
+
+                          Row(
+                            children: [
+                              Expanded(
+                                child: InkWell(
+                                  onTap: () =>
+                                      setState(() => _rememberMe = !_rememberMe),
+                                  child: Row(
+                                    children: [
+                                      Checkbox(
+                                        value: _rememberMe,
+                                        onChanged: (v) => setState(
+                                            () => _rememberMe = v ?? false),
+                                      ),
+                                      Flexible(
+                                        child: Text('Ingat saya',
+                                            style: text.bodyLarge),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: _showLupaPassword,
+                                child: const Text('Lupa Password?'),
+                              ),
+                            ],
+                          ),
+
+                          if (state.errorMessage != null) ...[
+                            const SizedBox(height: AppSpacing.xs),
+                            _ErrorBanner(message: state.errorMessage!),
+                          ],
+
+                          const SizedBox(height: AppSpacing.md),
+                          Container(
+                            height: 48,
+                            decoration: BoxDecoration(
+                              gradient: AppGradients.primaryNavy,
+                              borderRadius: BorderRadius.circular(AppRadius.md),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x331E3484),
+                                  blurRadius: 8,
+                                  offset: Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.transparent,
+                                shadowColor: Colors.transparent,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(AppRadius.md),
+                                ),
+                              ),
+                              onPressed: state.isSubmitting ? null : _submit,
+                              icon: state.isSubmitting
+                                  ? const SizedBox.square(
+                                      dimension: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: AppColors.onNavy,
+                                      ),
+                                    )
+                                  : const Icon(Icons.login, color: Colors.white),
+                              label: Text(
+                                state.isSubmitting ? 'Memproses...' : 'Masuk',
+                                style: text.labelLarge?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
-                            TextButton(
-                              onPressed: _showLupaPassword,
-                              child: const Text('Lupa Password?'),
-                            ),
-                          ],
-                        ),
-
-                        if (state.errorMessage != null) ...[
-                          const SizedBox(height: AppSpacing.xs),
-                          _ErrorBanner(message: state.errorMessage!),
-                        ],
-
-                        const SizedBox(height: AppSpacing.md),
-                        FilledButton.icon(
-                          onPressed: state.isSubmitting ? null : _submit,
-                          icon: state.isSubmitting
-                              ? const SizedBox.square(
-                                  dimension: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: AppColors.onNavy,
-                                  ),
-                                )
-                              : const Icon(Icons.login),
-                          label: Text(
-                            state.isSubmitting ? 'Memproses...' : 'Masuk',
                           ),
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                      ],
+                          const SizedBox(height: AppSpacing.md),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -218,25 +254,55 @@ class _LoginHeader extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.xl,
-        vertical: AppSpacing.xxl,
+        vertical: AppSpacing.xl,
       ),
       child: Column(
         children: [
-          const Icon(Icons.inventory_2, size: 48, color: AppColors.onNavy),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(40),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: ClipOval(
+              child: Image.asset(
+                'assets/images/smk_almadani_jampangkulon.png',
+                width: 72,
+                height: 72,
+                fit: BoxFit.contain,
+                errorBuilder: (ctx, err, stack) => const Icon(
+                  Icons.school,
+                  size: 56,
+                  color: AppColors.navy,
+                ),
+              ),
+            ),
+          ),
           const SizedBox(height: AppSpacing.sm),
           Text(
             'INVENTORY LABKOM',
             textAlign: TextAlign.center,
             style: text.headlineLarge?.copyWith(
               color: AppColors.onNavy,
-              letterSpacing: 1,
+              letterSpacing: 1.2,
+              fontWeight: FontWeight.w800,
             ),
           ),
           const SizedBox(height: AppSpacing.xxs),
           Text(
             'Sistem Inventori Laboratorium Komputer\nSMK Al-Madani',
             textAlign: TextAlign.center,
-            style: text.bodySmall?.copyWith(color: AppColors.navyTint),
+            style: text.bodySmall?.copyWith(
+              color: AppColors.navyTint.withAlpha(230),
+              height: 1.3,
+            ),
           ),
         ],
       ),

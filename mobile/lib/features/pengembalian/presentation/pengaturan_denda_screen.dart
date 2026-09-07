@@ -18,7 +18,17 @@ class PengaturanDendaScreen extends ConsumerWidget {
     final tarif = ref.watch(tarifDendaProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Pengaturan Denda')),
+      appBar: AppBar(
+        title: const Text('Pengaturan Denda'),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: AppGradients.primaryNavy,
+            borderRadius: BorderRadius.vertical(
+              bottom: Radius.circular(AppRadius.xl),
+            ),
+          ),
+        ),
+      ),
       body: AsyncView<TarifDenda>(
         value: tarif,
         onRetry: () => ref.invalidate(tarifDendaProvider),

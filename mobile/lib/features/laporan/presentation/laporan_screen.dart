@@ -8,6 +8,7 @@ import '../../../core/theme/status_style.dart';
 import '../../../shared/widgets/form_feedback.dart';
 import '../../../shared/widgets/status_pill.dart';
 import '../../auth/application/auth_controller.dart';
+import '../../auth/presentation/profile_sheet.dart';
 import '../application/laporan_controller.dart';
 import '../domain/laporan.dart';
 
@@ -25,15 +26,61 @@ class LaporanScreen extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Laporan')),
+      appBar: AppBar(
+        title: const Text('Laporan'),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: AppGradients.primaryNavy,
+            borderRadius: BorderRadius.vertical(
+              bottom: Radius.circular(AppRadius.xl),
+            ),
+          ),
+        ),
+        actions: [
+          IconButton(
+            onPressed: () => ProfileSheet.show(context),
+            icon: Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 1.5),
+              ),
+              child: ClipOval(
+                child: Image.asset(
+                  user.isLaboran
+                      ? 'assets/images/avatar_laboran.png'
+                      : 'assets/images/avatar_kepala_program.png',
+                  fit: BoxFit.cover,
+                  errorBuilder: (ctx, err, stack) => const Icon(
+                    Icons.person,
+                    size: 18,
+                    color: AppColors.navy,
+                  ),
+                ),
+              ),
+            ),
+            tooltip: 'Profil & Pengaturan Akun',
+          ),
+          const SizedBox(width: 4),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.screenMargin),
         children: [
           Container(
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: AppColors.navy,
+              gradient: AppGradients.primaryNavy,
               borderRadius: BorderRadius.circular(AppRadius.lg),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x221E3484),
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -43,7 +90,10 @@ class LaporanScreen extends ConsumerWidget {
                     Expanded(
                       child: Text(
                         'Laporan Inventaris',
-                        style: text.titleLarge?.copyWith(color: AppColors.onNavy),
+                        style: text.titleLarge?.copyWith(
+                          color: AppColors.onNavy,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     if (user.isKepalaProgram)
@@ -60,7 +110,9 @@ class LaporanScreen extends ConsumerWidget {
                           'Perubahan data dilakukan Laboran.'
                       : 'Buat dan cetak laporan sesuai kebutuhan, dalam format '
                           'PDF, Word, atau Excel.',
-                  style: text.bodyMedium?.copyWith(color: AppColors.navyTint),
+                  style: text.bodyMedium?.copyWith(
+                    color: AppColors.navyTint.withAlpha(242),
+                  ),
                 ),
               ],
             ),

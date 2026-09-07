@@ -23,7 +23,17 @@ class UsersScreen extends ConsumerWidget {
     final currentUserId = ref.watch(currentUserProvider).id;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Kelola User')),
+      appBar: AppBar(
+        title: const Text('Kelola User'),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: AppGradients.primaryNavy,
+            borderRadius: BorderRadius.vertical(
+              bottom: Radius.circular(AppRadius.xl),
+            ),
+          ),
+        ),
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openForm(context, ref),
         icon: const Icon(Icons.person_add_alt),
@@ -175,17 +185,33 @@ class _UserCard extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Row(
           children: [
-            CircleAvatar(
-              backgroundColor: user.level == UserLevel.laboran
-                  ? AppColors.navyTint
-                  : AppColors.pendingBg,
-              foregroundColor: user.level == UserLevel.laboran
-                  ? AppColors.navy
-                  : AppColors.pendingFg,
-              child: Icon(
-                user.level == UserLevel.laboran
-                    ? Icons.engineering_outlined
-                    : Icons.supervisor_account_outlined,
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.outline),
+              ),
+              child: ClipOval(
+                child: Image.asset(
+                  user.level == UserLevel.laboran
+                      ? 'assets/images/avatar_laboran.png'
+                      : 'assets/images/avatar_kepala_program.png',
+                  fit: BoxFit.cover,
+                  errorBuilder: (ctx, err, stack) => CircleAvatar(
+                    backgroundColor: user.level == UserLevel.laboran
+                        ? AppColors.navyTint
+                        : AppColors.pendingBg,
+                    child: Icon(
+                      user.level == UserLevel.laboran
+                          ? Icons.engineering_outlined
+                          : Icons.supervisor_account_outlined,
+                      color: user.level == UserLevel.laboran
+                          ? AppColors.navy
+                          : AppColors.pendingFg,
+                    ),
+                  ),
+                ),
               ),
             ),
             const SizedBox(width: AppSpacing.sm),

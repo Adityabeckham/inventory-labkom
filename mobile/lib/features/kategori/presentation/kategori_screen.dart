@@ -19,7 +19,17 @@ class KategoriScreen extends ConsumerWidget {
     final kategori = ref.watch(kategoriListProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Kategori')),
+      appBar: AppBar(
+        title: const Text('Kategori'),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: AppGradients.primaryNavy,
+            borderRadius: BorderRadius.vertical(
+              bottom: Radius.circular(AppRadius.xl),
+            ),
+          ),
+        ),
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _form(context, ref),
         icon: const Icon(Icons.add),

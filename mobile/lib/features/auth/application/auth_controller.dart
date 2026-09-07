@@ -123,6 +123,51 @@ class AuthController extends Notifier<AuthState> {
     }
   }
 
+  Future<bool> updateProfile({
+    required String username,
+    String? nip,
+  }) async {
+    state = state.copyWith(isSubmitting: true, clearError: true);
+    try {
+      final user = await _repository.updateProfile(username: username, nip: nip);
+      state = AuthState(user: user, isRestoring: false);
+      return true;
+    } on ApiException catch (e) {
+      state = state.copyWith(isSubmitting: false, errorMessage: e.message);
+      return false;
+    } catch (e) {
+      state = state.copyWith(
+        isSubmitting: false,
+        errorMessage: 'Gagal memperbarui profil: $e',
+      );
+      return false;
+    }
+  }
+
+  Future<bool> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    state = state.copyWith(isSubmitting: true, clearError: true);
+    try {
+      await _repository.changePassword(
+        oldPassword: oldPassword,
+        newPassword: newPassword,
+      );
+      state = state.copyWith(isSubmitting: false);
+      return true;
+    } on ApiException catch (e) {
+      state = state.copyWith(isSubmitting: false, errorMessage: e.message);
+      return false;
+    } catch (e) {
+      state = state.copyWith(
+        isSubmitting: false,
+        errorMessage: 'Gagal mengubah password: $e',
+      );
+      return false;
+    }
+  }
+
   Future<void> logout() async {
     await _repository.logout();
     state = const AuthState(isRestoring: false);

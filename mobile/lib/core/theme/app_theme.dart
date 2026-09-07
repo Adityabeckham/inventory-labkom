@@ -5,21 +5,18 @@ import 'app_colors.dart';
 import 'app_dimens.dart';
 import 'app_typography.dart';
 
-/// ThemeData aplikasi, disusun dari `design/DESIGN.md`.
-///
-/// DESIGN.md hanya mendefinisikan satu palet (terang), jadi tema gelap belum
-/// dibuat — menebaknya sendiri justru akan menyimpang dari dokumen.
+/// ThemeData aplikasi, disusun dari `design/Design System.md` (Specification: Hyper-Minimal Utility).
 abstract final class AppTheme {
   static ThemeData light() {
     final text = AppTypography.build();
 
     const scheme = ColorScheme.light(
-      primary: AppColors.navy,
-      onPrimary: AppColors.onNavy,
-      primaryContainer: AppColors.navyTint,
-      onPrimaryContainer: AppColors.navyDark,
+      primary: AppColors.primary,
+      onPrimary: Colors.white,
+      primaryContainer: AppColors.brandSurfaceTint,
+      onPrimaryContainer: AppColors.brandHover,
       secondary: AppColors.crimson,
-      onSecondary: AppColors.onCrimson,
+      onSecondary: Colors.white,
       secondaryContainer: AppColors.dangerBg,
       onSecondaryContainer: AppColors.dangerFg,
       tertiary: AppColors.gold,
@@ -37,7 +34,7 @@ abstract final class AppTheme {
       surfaceContainerLow: AppColors.canvas,
       surfaceContainer: AppColors.surfaceContainer,
       outline: AppColors.outlineStrong,
-      outlineVariant: AppColors.outline,
+      outlineVariant: AppColors.borderSubtle,
     );
 
     return ThemeData(
@@ -47,15 +44,15 @@ abstract final class AppTheme {
       scaffoldBackgroundColor: AppColors.canvas,
       splashFactory: InkSparkle.splashFactory,
 
-      // App bar navy dengan lengkung 24px di dua sudut bawah.
+      // App bar dengan Electric Blue Gradient / Dark Header dan lengkung 24px di sudut bawah.
       appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.navy,
-        foregroundColor: AppColors.onNavy,
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: true,
         toolbarHeight: AppSpacing.appBarHeight,
-        titleTextStyle: text.titleLarge?.copyWith(color: AppColors.onNavy),
+        titleTextStyle: text.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.w800),
         systemOverlayStyle: SystemUiOverlayStyle.light,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(
@@ -64,21 +61,22 @@ abstract final class AppTheme {
         ),
       ),
 
-      // Kartu: putih, border tipis, bayangan rendah — tetap terbaca di ruang
-      // server yang layarnya sering diredupkan.
+      // Kartu Bento: putih, border subtle 1px #F0F1F5, super rounded 24px
       cardTheme: CardThemeData(
-        color: AppColors.surface,
+        color: AppColors.cardBase,
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-          side: const BorderSide(color: AppColors.outline),
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+          side: const BorderSide(color: AppColors.borderSubtle, width: 1),
         ),
       ),
 
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           minimumSize: const Size.fromHeight(kMinTouchTarget),
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
           textStyle: text.labelLarge,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.md),
@@ -91,7 +89,7 @@ abstract final class AppTheme {
           minimumSize: const Size.fromHeight(kMinTouchTarget),
           foregroundColor: AppColors.textPrimary,
           textStyle: text.labelLarge,
-          side: const BorderSide(color: AppColors.navy, width: 1.5),
+          side: const BorderSide(color: AppColors.borderSubtle, width: 1.5),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.md),
           ),
@@ -100,37 +98,38 @@ abstract final class AppTheme {
 
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.navy,
+          foregroundColor: AppColors.primary,
           textStyle: text.labelLarge,
         ),
       ),
 
-      // FAB crimson — shortcut "+ Peminjaman Baru".
+      // FAB — Primary action trigger.
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: AppColors.crimson,
-        foregroundColor: AppColors.onCrimson,
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
         elevation: 4,
+        shape: StadiumBorder(),
       ),
 
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.canvas,
+        fillColor: AppColors.surface,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
           vertical: AppSpacing.sm,
         ),
-        hintStyle: text.bodyMedium,
+        hintStyle: text.bodyMedium?.copyWith(color: AppColors.textMuted),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: const BorderSide(color: AppColors.outlineStrong),
+          borderSide: const BorderSide(color: AppColors.borderSubtle),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: const BorderSide(color: AppColors.outlineStrong),
+          borderSide: const BorderSide(color: AppColors.borderSubtle),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: const BorderSide(color: AppColors.navy, width: 2),
+          borderSide: const BorderSide(color: AppColors.primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),
@@ -138,9 +137,9 @@ abstract final class AppTheme {
         ),
       ),
 
-      // Chip filter kategori & status — bentuk pil.
+      // Chip filter kategori & status — pill shape.
       chipTheme: ChipThemeData(
-        backgroundColor: AppColors.neutralBg,
+        backgroundColor: AppColors.pillInactive,
         labelStyle: text.labelMedium,
         side: BorderSide.none,
         shape: const StadiumBorder(),
@@ -152,34 +151,35 @@ abstract final class AppTheme {
 
       navigationBarTheme: NavigationBarThemeData(
         height: AppSpacing.bottomNavHeight,
-        backgroundColor: AppColors.surface,
-        indicatorColor: AppColors.navyTint,
+        backgroundColor: AppColors.cardBase,
+        indicatorColor: AppColors.brandSurfaceTint,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
           return text.labelMedium?.copyWith(
-            color: selected ? AppColors.navy : AppColors.textMuted,
+            color: selected ? AppColors.primary : AppColors.textMuted,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
           );
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
           return IconThemeData(
-            color: selected ? AppColors.navy : AppColors.textMuted,
+            color: selected ? AppColors.primary : AppColors.textMuted,
           );
         }),
       ),
 
       dividerTheme: const DividerThemeData(
-        color: AppColors.outline,
+        color: AppColors.borderSubtle,
         thickness: 1,
         space: 1,
       ),
 
       dialogTheme: DialogThemeData(
-        backgroundColor: AppColors.surface,
+        backgroundColor: AppColors.cardBase,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.lg),
+          borderRadius: BorderRadius.circular(AppRadius.xl),
         ),
       ),
 

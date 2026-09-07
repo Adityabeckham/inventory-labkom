@@ -50,6 +50,28 @@ class AuthRepository {
     }
   }
 
+  Future<AppUser> updateProfile({
+    required String username,
+    String? nip,
+  }) async {
+    final data = await _api.put('/api/auth/profile', body: {
+      'username': username,
+      'nip': nip,
+    }) as Map<String, dynamic>;
+
+    return AppUser.fromJson(data);
+  }
+
+  Future<void> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    await _api.post('/api/auth/change-password', body: {
+      'old_password': oldPassword,
+      'new_password': newPassword,
+    });
+  }
+
   Future<void> logout() async {
     await _tokenStorage.clear();
     _api.sessionToken = null;

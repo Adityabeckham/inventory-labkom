@@ -7,6 +7,8 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/status_style.dart';
 import '../../../shared/widgets/async_view.dart';
 import '../../../shared/widgets/status_pill.dart';
+import '../../auth/application/auth_controller.dart';
+import '../../auth/presentation/profile_sheet.dart';
 import '../../peminjaman/application/peminjaman_controller.dart';
 import '../../peminjaman/domain/peminjaman.dart';
 import '../../peminjaman/presentation/peminjaman_detail_sheet.dart';
@@ -21,17 +23,53 @@ class VerifikasiScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final pengajuan = ref.watch(pengajuanMenungguProvider);
+    final user = ref.watch(currentUserProvider);
     final text = Theme.of(context).textTheme;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Verifikasi'),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: AppGradients.primaryNavy,
+            borderRadius: BorderRadius.vertical(
+              bottom: Radius.circular(AppRadius.xl),
+            ),
+          ),
+        ),
         actions: [
           IconButton(
             onPressed: () => ref.invalidate(pengajuanMenungguProvider),
             icon: const Icon(Icons.refresh),
             tooltip: 'Muat ulang',
           ),
+          IconButton(
+            onPressed: () => ProfileSheet.show(context),
+            icon: Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 1.5),
+              ),
+              child: ClipOval(
+                child: Image.asset(
+                  user.isLaboran
+                      ? 'assets/images/avatar_laboran.png'
+                      : 'assets/images/avatar_kepala_program.png',
+                  fit: BoxFit.cover,
+                  errorBuilder: (ctx, err, stack) => const Icon(
+                    Icons.person,
+                    size: 18,
+                    color: AppColors.navy,
+                  ),
+                ),
+              ),
+            ),
+            tooltip: 'Profil & Pengaturan Akun',
+          ),
+          const SizedBox(width: 4),
         ],
       ),
       body: RefreshIndicator(
