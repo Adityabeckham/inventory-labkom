@@ -1,0 +1,31 @@
+# ── Backend PHP ──────────────────────────────────────────────────────
+backend/config/config.php
+backend/vendor/
+backend/storage/
+*.log
+
+# ── Flutter / Dart ───────────────────────────────────────────────────
+mobile/.dart_tool/
+mobile/.packages
+mobile/build/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/ios/Pods/
+mobile/android/.gradle/
+mobile/android/local.properties
+# Kunci penandatanganan APK — pola rekursif, karena key.properties biasanya
+# menunjuk keystore di mobile/android/app/, bukan di root mobile/.
+**/key.properties
+**/*.jks
+**/*.keystore
+
+# ── Database ─────────────────────────────────────────────────────────
+database/*.local.sql
+database/dump/
+
+# ── Editor & OS ──────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
