@@ -62,7 +62,7 @@ Sumber kebenaran ada di `docs_project/`, semuanya berstatus FINAL:
 | Sprint | Fokus | Status |
 |---|---|---|
 | 0 | Setup fondasi | Backend, database, & dokumentasi selesai dan terverifikasi; project Flutter menunggu SDK terpasang |
-| 1 | Autentikasi & Kelola User | Belum |
+| 1 | Autentikasi & Kelola User | Backend selesai (FR-01, FR-12); frontend menunggu SDK |
 | 2 | Barang, Kategori, Peminjam, Mutasi Stok | Belum |
 | 3 | Peminjaman multi-item & Verifikasi | Belum |
 | 4 | Pengembalian & Pengaturan Denda | Belum |
@@ -71,13 +71,29 @@ Sumber kebenaran ada di `docs_project/`, semuanya berstatus FINAL:
 
 ## Verifikasi
 
-Backend punya test suite tanpa dependensi — tidak butuh Composer maupun database:
+Dua lapis pengujian, keduanya tanpa dependensi Composer.
+
+**Unit — tidak butuh server maupun database:**
 
 ```bash
 php backend/tests/run.php
 ```
 
 Menguji implementasi JWT tulis tangan (tampering payload, serangan `alg:none`, token kedaluwarsa, token tanpa `exp`, penerbit asing, `nbf` masa depan), pencocokan pola route, dan normalisasi path untuk tiap mode deploy.
+
+**Black Box — menguji API lewat HTTP**, sesuai metode pengujian di skripsi (BAB II). Butuh server jalan dan database sudah di-import:
+
+```bash
+php backend/tests/api.php
+```
+
+Menguji tiap endpoint dari sisi klien: login benar/salah, "Ingat saya", penolakan yang tidak membocorkan username mana yang valid, penegakan hak akses (Kepala Program ditolak dari endpoint kelola), CRUD akun, reset password, dan pengaman yang mencegah aplikasi terkunci.
+
+Beri argumen base URL kalau backend tidak di `127.0.0.1:8080`:
+
+```bash
+php backend/tests/api.php http://localhost/inventory
+```
 
 ## Catatan tentang `Dokumentasi-Klien/`
 

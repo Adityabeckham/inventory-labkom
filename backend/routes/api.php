@@ -5,23 +5,41 @@ declare(strict_types=1);
  * Tabel route Inventory Labkom API.
  *
  * Kontrak endpoint lengkap: docs_project/Database_Final_dan_Arsitektur.md §4.1
- * Route ditambahkan bertahap mengikuti Sprint Planning — Sprint 0 baru health check.
+ * Route ditambahkan bertahap mengikuti Sprint Planning.
+ *
+ * Otorisasi ditegakkan di sini, bukan cuma di UI. Sesuai Tabel 3.1 Use Case,
+ * Kepala Program hanya boleh Login, Verifikasi, dan Lihat Laporan — endpoint
+ * kelola apa pun dibatasi ke Laboran lewat Auth::role(Auth::LABORAN).
  */
 
+use App\Controllers\AuthController;
 use App\Controllers\HealthController;
+use App\Controllers\UserController;
 use App\Core\Router;
+use App\Middleware\Auth;
 
 $router = new Router();
 
-// ── Sprint 0 ─────────────────────────────────────────────────────────
-$router->get('/api/health', [new HealthController(), 'index']);
+$health = new HealthController();
+$auth   = new AuthController();
+$user   = new UserController();
 
-// ── Sprint 1 — FR-01 Autentikasi, FR-12 Kelola User ──────────────────
-// $router->post('/api/auth/login',  [new AuthController(), 'login']);
-// $router->get ('/api/users',       [new UserController(), 'index'],   [Auth::role(Auth::LABORAN)]);
-// $router->post('/api/users',       [new UserController(), 'store'],   [Auth::role(Auth::LABORAN)]);
-// $router->put ('/api/users/{id}',  [new UserController(), 'update'],  [Auth::role(Auth::LABORAN)]);
-// $router->delete('/api/users/{id}',[new UserController(), 'destroy'], [Auth::role(Auth::LABORAN)]);
+$laboran   = [Auth::role(Auth::LABORAN)];
+$terdaftar = [Auth::required()];
+
+// ── Sprint 0 ─────────────────────────────────────────────────────────
+$router->get('/api/health', [$health, 'index']);
+
+// ── Sprint 1 — FR-01 Autentikasi ─────────────────────────────────────
+$router->post('/api/auth/login', [$auth, 'login']);
+$router->get ('/api/auth/me',    [$auth, 'me'], $terdaftar);
+
+// ── Sprint 1 — FR-12 Kelola User (khusus Laboran) ────────────────────
+$router->get   ('/api/users',      [$user, 'index'],   $laboran);
+$router->post  ('/api/users',      [$user, 'store'],   $laboran);
+$router->get   ('/api/users/{id}', [$user, 'show'],    $laboran);
+$router->put   ('/api/users/{id}', [$user, 'update'],  $laboran);
+$router->delete('/api/users/{id}', [$user, 'destroy'], $laboran);
 
 // ── Sprint 2 — FR-02 Barang, FR-03 Kategori, FR-04 Peminjam, FR-13 Mutasi Stok
 // ── Sprint 3 — FR-05 Peminjaman, FR-07 Verifikasi
