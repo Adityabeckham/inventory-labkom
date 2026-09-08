@@ -22,7 +22,7 @@ Dibangun sebagai bagian dari skripsi *"Rancang Bangun System Inventory Laborator
 
 ## Arsitektur
 
-<img width="3938" height="600" alt="Project-2026-09-08-052625" src="https://github.com/user-attachments/assets/df22a0fd-b632-450b-a09c-89dec578202a" />
+<img width="4169" height="600" alt="Project-2026-09-08-053122" src="https://github.com/user-attachments/assets/30f7dfbf-7dae-4a9d-8caa-9b04d642f9b6" />
 
 
 Flutter **tidak** terhubung langsung ke MySQL. Seluruh akses data lewat REST API, dan otorisasi berbasis role ditegakkan di backend — Kepala Program tidak bisa mengakses endpoint kelola barang/peminjam/user meski tahu URL-nya.
