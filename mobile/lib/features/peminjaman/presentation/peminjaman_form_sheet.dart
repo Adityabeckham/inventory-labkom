@@ -82,12 +82,14 @@ class _PeminjamanFormSheetState extends ConsumerState<PeminjamanFormSheet> {
     final text = Theme.of(context).textTheme;
     final peminjam = ref.watch(peminjamListProvider);
 
-    return Padding(
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * 0.88,
+      ),
       padding: EdgeInsets.only(
         left: AppSpacing.screenMargin,
         right: AppSpacing.screenMargin,
         top: AppSpacing.lg,
-        // Menyisakan ruang untuk papan ketik yang sedang naik.
         bottom: MediaQuery.viewInsetsOf(context).bottom + AppSpacing.lg,
       ),
       child: SingleChildScrollView(
@@ -350,102 +352,13 @@ class _PeminjamanFormSheetState extends ConsumerState<PeminjamanFormSheet> {
     List<Barang> tersedia = const [],
     ItemKeranjang? existing,
   }) {
-    var idBarang = existing?.idBarang;
-    var stok = existing?.stokTersedia ?? 0;
-    final jumlah = TextEditingController(text: '${existing?.jumlah ?? 1}');
-    final formKey = GlobalKey<FormState>();
-
     return showDialog<ItemKeranjang>(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setDialogState) => AlertDialog(
-          title: Text(existing == null ? 'Tambah Barang' : 'Ubah Jumlah'),
-          content: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (existing == null)
-                  DropdownButtonFormField<int>(
-                    isExpanded: true,
-                    initialValue: idBarang,
-                    decoration: const InputDecoration(labelText: 'Barang'),
-                    items: [
-                      for (final b in tersedia)
-                        DropdownMenuItem(
-                          value: b.id,
-                          child: Text('${b.kode} · ${b.nama}',
-                              overflow: TextOverflow.ellipsis),
-                        ),
-                    ],
-                    onChanged: (v) => setDialogState(() {
-                      idBarang = v;
-                      stok = tersedia.firstWhere((b) => b.id == v).stok;
-                      // Jumlah yang tersisa dari pilihan sebelumnya bisa
-                      // melebihi stok barang baru ini.
-                      final diisi = int.tryParse(jumlah.text.trim());
-                      if (diisi == null || diisi > stok) jumlah.text = '1';
-                    }),
-                    validator: (v) => v == null ? 'Barang wajib dipilih' : null,
-                  )
-                else
-                  Text(existing.namaBarang,
-                      style: Theme.of(dialogContext).textTheme.titleMedium),
-                const SizedBox(height: AppSpacing.sm),
-                TextFormField(
-                  controller: jumlah,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: InputDecoration(
-                    labelText: 'Jumlah',
-                    helperText: idBarang == null
-                        ? 'Pilih barang dulu untuk melihat stoknya'
-                        : 'Stok tersedia $stok unit',
-                  ),
-                  validator: (v) {
-                    final n = int.tryParse((v ?? '').trim());
-                    if (n == null || n < 1) return 'Jumlah minimal 1';
-                    if (idBarang != null && n > stok) {
-                      return 'Stok tersedia hanya $stok unit';
-                    }
-                    return null;
-                  },
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Batal'),
-            ),
-            FilledButton(
-              onPressed: () {
-                if (formKey.currentState?.validate() != true) return;
-
-                final id = idBarang!;
-                final n = int.parse(jumlah.text.trim());
-                final barang = existing == null
-                    ? tersedia.firstWhere((b) => b.id == id)
-                    : null;
-
-                Navigator.of(dialogContext).pop(
-                  existing?.copyWith(jumlah: n) ??
-                      ItemKeranjang(
-                        idBarang: id,
-                        kodeBarang: barang!.kode,
-                        namaBarang: barang.nama,
-                        jumlah: n,
-                        stokTersedia: barang.stok,
-                      ),
-                );
-              },
-              child: const Text('Simpan'),
-            ),
-          ],
-        ),
+      builder: (dialogContext) => _ItemDialog(
+        tersedia: tersedia,
+        existing: existing,
       ),
-    ).whenComplete(jumlah.dispose);
+    );
   }
 
   void _simpan() {
@@ -466,3 +379,133 @@ class _PeminjamanFormSheetState extends ConsumerState<PeminjamanFormSheet> {
     );
   }
 }
+
+class _ItemDialog extends StatefulWidget {
+  const _ItemDialog({
+    this.tersedia = const [],
+    this.existing,
+  });
+
+  final List<Barang> tersedia;
+  final ItemKeranjang? existing;
+
+  @override
+  State<_ItemDialog> createState() => _ItemDialogState();
+}
+
+class _ItemDialogState extends State<_ItemDialog> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _jumlahController;
+  int? _idBarang;
+  int _stok = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _idBarang = widget.existing?.idBarang;
+    _stok = widget.existing?.stokTersedia ?? 0;
+    _jumlahController =
+        TextEditingController(text: '${widget.existing?.jumlah ?? 1}');
+  }
+
+  @override
+  void dispose() {
+    _jumlahController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.existing == null ? 'Tambah Barang' : 'Ubah Jumlah'),
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (widget.existing == null)
+              DropdownButtonFormField<int>(
+                isExpanded: true,
+                initialValue: _idBarang,
+                decoration: const InputDecoration(labelText: 'Barang'),
+                items: [
+                  for (final b in widget.tersedia)
+                    DropdownMenuItem(
+                      value: b.id,
+                      child: Text('${b.kode} · ${b.nama}',
+                          overflow: TextOverflow.ellipsis),
+                    ),
+                ],
+                onChanged: (v) {
+                  setState(() {
+                    _idBarang = v;
+                    _stok = widget.tersedia.firstWhere((b) => b.id == v).stok;
+                    final diisi = int.tryParse(_jumlahController.text.trim());
+                    if (diisi == null || diisi > _stok) {
+                      _jumlahController.text = '1';
+                    }
+                  });
+                },
+                validator: (v) => v == null ? 'Barang wajib dipilih' : null,
+              )
+            else
+              Text(
+                widget.existing!.namaBarang,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            const SizedBox(height: AppSpacing.sm),
+            TextFormField(
+              controller: _jumlahController,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: InputDecoration(
+                labelText: 'Jumlah',
+                helperText: _idBarang == null
+                    ? 'Pilih barang dulu untuk melihat stoknya'
+                    : 'Stok tersedia $_stok unit',
+              ),
+              validator: (v) {
+                final n = int.tryParse((v ?? '').trim());
+                if (n == null || n < 1) return 'Jumlah minimal 1';
+                if (_idBarang != null && n > _stok) {
+                  return 'Stok tersedia hanya $_stok unit';
+                }
+                return null;
+              },
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Batal'),
+        ),
+        FilledButton(
+          onPressed: () {
+            if (_formKey.currentState?.validate() != true) return;
+
+            final id = _idBarang!;
+            final n = int.parse(_jumlahController.text.trim());
+            final barang = widget.existing == null
+                ? widget.tersedia.firstWhere((b) => b.id == id)
+                : null;
+
+            Navigator.of(context).pop(
+              widget.existing?.copyWith(jumlah: n) ??
+                  ItemKeranjang(
+                    idBarang: id,
+                    kodeBarang: barang!.kode,
+                    namaBarang: barang.nama,
+                    jumlah: n,
+                    stokTersedia: barang.stok,
+                  ),
+            );
+          },
+          child: const Text('Simpan'),
+        ),
+      ],
+    );
+  }
+}
+
