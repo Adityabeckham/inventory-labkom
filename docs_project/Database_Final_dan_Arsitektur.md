@@ -17,9 +17,9 @@
 | Tabel `pengembalian` mengacu ke `peminjaman_detail`, bukan `peminjaman` | Kondisi & denda bisa beda tiap barang dalam satu transaksi |
 | Tabel baru `pengaturan_denda` | Menyimpan tarif denda/hari agar perhitungan otomatis bisa dikonfigurasi tanpa ubah kode |
 | `users.password` → `VARCHAR(255)` | Menampung hash bcrypt, bukan plaintext |
-| `peminjaman.status` ditambah `menunggu_verifikasi` & `dibatalkan` (bukan `ditolak`) | Mendukung alur verifikasi; penamaan `dibatalkan` mengikuti mockup asli skripsi, ditambahkan sebagai status ekstra di luar 3 status dasar (Dipinjam/Dikembalikan/Dibatalkan) — **dikonfirmasi klien** |
+| `peminjaman.status` ditambah `menunggu_verifikasi` & `dibatalkan` (bukan `ditolak`) | Mendukung alur verifikasi; penamaan `dibatalkan` mengikuti mockup asli skripsi, ditambahkan sebagai status ekstr[...]
 | `peminjam` ditambah `nis_nip` & `kelas_jabatan` | Ditemukan di mockup asli skripsi (Gambar 3.25 — layar Kelola Peminjam), belum ada di draft awal |
-| Tabel `users` dikelola lewat fitur baru **Kelola User** | Ditemukan di mockup dashboard asli skripsi — terpisah dari Data Peminjam (peminjam = subjek yang meminjam barang; user = akun login Laboran/Kepala Program) |
+| Tabel `users` dikelola lewat fitur baru **Kelola User** | Ditemukan di mockup dashboard asli skripsi — terpisah dari Data Peminjam (peminjam = subjek yang meminjam barang; user = akun login Labora[...]
 
 ---
 
@@ -33,7 +33,93 @@ peminjam ───────────< peminjaman
 peminjaman_detail ──< pengembalian
 ```
 
-Penjelasan alur: satu **peminjaman** (1 peminjam, dicatat 1 laboran) memiliki banyak **peminjaman_detail** (satu baris per barang). Saat barang dikembalikan, tiap `peminjaman_detail` punya satu baris **pengembalian** dengan kondisi & denda masing-masing.
+Penjelasan alur: satu **peminjaman** (1 peminjam, dicatat 1 laboran) memiliki banyak **peminjaman_detail** (satu baris per barang). Saat barang dikembalikan, tiap `peminjaman_detail` punya satu ba[...]
+
+---
+
+### Mermaid ER Diagram
+
+```mermaid
+erDiagram
+    USERS {
+        INT id_user PK
+        VARCHAR username
+        VARCHAR password
+        ENUM level
+        VARCHAR nip
+        TIMESTAMP created_at
+    }
+    KATEGORI {
+        INT id_kategori PK
+        VARCHAR nama_kategori
+    }
+    BARANG {
+        INT id_barang PK
+        INT id_kategori FK
+        VARCHAR kode_barang
+        VARCHAR nama_barang
+        VARCHAR merk
+        INT jumlah
+        VARCHAR kondisi
+        INT stok
+        DATE tanggal_input
+        VARCHAR serial_number
+    }
+    PEMINJAM {
+        INT id_peminjam PK
+        VARCHAR nama_peminjam
+        VARCHAR nis_nip
+        VARCHAR kelas_jabatan
+        VARCHAR no_hp
+    }
+    PEMINJAMAN {
+        INT id_peminjaman PK
+        VARCHAR kode_peminjaman
+        INT id_peminjam FK
+        INT id_user FK
+        DATE tanggal_pinjam
+        DATE tanggal_kembali
+        ENUM status
+        VARCHAR alasan_dibatalkan
+    }
+    PEMINJAMAN_DETAIL {
+        INT id_detail PK
+        INT id_peminjaman FK
+        INT id_barang FK
+        INT jumlah_pinjam
+    }
+    PENGEMBALIAN {
+        INT id_pengembalian PK
+        INT id_detail FK
+        DATE tanggal_pengembalian
+        ENUM kondisi
+        INT jumlah_hari_telat
+        DECIMAL denda
+    }
+    PENGATURAN_DENDA {
+        INT id_pengaturan PK
+        DECIMAL tarif_per_hari
+        TIMESTAMP updated_at
+    }
+    STOK_MUTASI {
+        INT id_mutasi PK
+        INT id_barang FK
+        INT id_user FK
+        ENUM jenis
+        INT jumlah
+        VARCHAR keterangan
+        DATE tanggal_mutasi
+    }
+
+    USERS ||--o{ PEMINJAMAN : "mencatat"
+    KATEGORI ||--o{ BARANG : "memiliki"
+    BARANG ||--o{ PEMINJAMAN_DETAIL : "dipinjam_di"
+    PEMINJAM ||--o{ PEMINJAMAN : "melakukan"
+    PEMINJAMAN ||--o{ PEMINJAMAN_DETAIL : "mengandung"
+    PEMINJAMAN_DETAIL ||--o{ PENGEMBALIAN : "dikembalikan_sebagai"
+    BARANG ||--o{ STOK_MUTASI : "mutasi"
+    USERS ||--o{ STOK_MUTASI : "mencatat"
+```
 
 ---
 
@@ -95,7 +181,7 @@ Penjelasan alur: satu **peminjaman** (1 peminjam, dicatat 1 laboran) memiliki ba
 #### 3.5.1 Alur Status `peminjaman`
 
 ```
-[Laboran buat transaksi] → status = menunggu_verifikasi (stok langsung berkurang)
+[Laban buat transaksi] → status = menunggu_verifikasi (stok langsung berkurang)
             │
             ▼
    Kepala Program verifikasi
@@ -112,7 +198,7 @@ status=dipinjam   status=dibatalkan
 
 Setelah `dipinjam`, status lanjut berubah jadi `sebagian_kembali` atau `dikembalikan` mengikuti proses pengembalian per-item (lihat §3.7).
 
-> **Catatan tampilan (dikonfirmasi klien)**: layar "Peminjaman" di mockup asli hanya punya tab Semua/Dipinjam/Dikembalikan/Dibatalkan — tab **"Menunggu Verifikasi"** ditambahkan sebagai tab ekstra di luar itu (bukan menggantikan struktur asli). Tab **"Sebagian Kembali"** ditambahkan di layar **Pengembalian** (lihat §3.7.1), karena status ini lebih relevan dari sisi pengembalian per-item.
+> **Catatan tampilan (dikonfirmasi klien)**: layar "Peminjaman" di mockup asli hanya punya tab Semua/Dipinjam/Dikembalikan/Dibatalkan — tab **"Menunggu Verifikasi"** ditambahkan sebagai tab ekstra d[...]
 
 ### 3.6 `peminjaman_detail` (pivot multi-barang)
 | Field | Tipe | Keterangan |
@@ -134,7 +220,7 @@ Setelah `dipinjam`, status lanjut berubah jadi `sebagian_kembali` atau `dikembal
 
 #### 3.7.1 Status Tampilan Layar "Pengembalian" (turunan, bukan kolom fisik)
 
-Layar Pengembalian di mockup asli punya tab: Semua / Belum Kembali / Sudah Kembali / Terlambat — dihitung on-the-fly dari data `peminjaman` + `peminjaman_detail` + `pengembalian` (bukan kolom baru di database):
+Layar Pengembalian di mockup asli punya tab: Semua / Belum Kembali / Sudah Kembali / Terlambat — dihitung on-the-fly dari data `peminjaman` + `peminjaman_detail` + `pengembalian` (bukan kolom b[...]
 | Tab | Kondisi |
 |---|---|
 | Belum Kembali | Ada `peminjaman_detail` yang belum punya baris `pengembalian`, dan belum lewat `tanggal_kembali` |
@@ -149,7 +235,7 @@ Layar Pengembalian di mockup asli punya tab: Semua / Belum Kembali / Sudah Kemba
 | tarif_per_hari | DECIMAL(10,2) | Nominal denda per hari keterlambatan, per barang. Diisi default via `seed.sql`, bisa diubah lewat endpoint pengaturan |
 | updated_at | TIMESTAMP | |
 
-> Logika perhitungan denda ada di **backend** (bukan trigger DB): saat Laboran input tanggal pengembalian aktual, sistem otomatis membandingkan dengan `tanggal_kembali` di header peminjaman, lalu kalikan hari telat × `tarif_per_hari`.
+> Logika perhitungan denda ada di **backend** (bukan trigger DB): saat Laboran input tanggal pengembalian aktual, sistem otomatis membandingkan dengan `tanggal_kembali` di header peminjaman, lalu kali[...]
 
 ### 3.9 `stok_mutasi` (BARU — hasil review Flowchart System asli skripsi)
 | Field | Tipe | Keterangan |
@@ -162,7 +248,7 @@ Layar Pengembalian di mockup asli punya tab: Semua / Belum Kembali / Sudah Kemba
 | keterangan | VARCHAR(255) | Alasan mutasi (contoh: "Pengadaan APBD 2026", "Rusak — dibuang") |
 | tanggal_mutasi | DATE | |
 
-> Setiap mutasi otomatis update `barang.stok` (`+jumlah` untuk masuk, `-jumlah` untuk keluar — backend validasi stok tidak boleh negatif). Ini **terpisah** dari perubahan stok akibat transaksi Peminjaman/Pengembalian — `stok_mutasi` khusus untuk penyesuaian manual oleh Laboran (Flowchart System asli menyebut ini sebagai menu "Kelola Stok Barang" terpisah dari "Kelola Barang").
+> Setiap mutasi otomatis update `barang.stok` (`+jumlah` untuk masuk, `-jumlah` untuk keluar — backend validasi stok tidak boleh negatif). Ini **terpisah** dari perubahan stok akibat transaksi Pemin[...]
 
 ---
 
@@ -171,9 +257,9 @@ Layar Pengembalian di mockup asli punya tab: Semua / Belum Kembali / Sudah Kemba
 <img width="4169" height="600" alt="Project-2026-09-08-053122" src="https://github.com/user-attachments/assets/a937dcfc-d9a4-4f59-9dd2-24f3233d2a87" />
 
 
-- **Autentikasi**: login mengembalikan JWT token, disimpan di secure storage Flutter, dikirim di header `Authorization: Bearer <token>` tiap request. Opsi "Ingat saya" (dari mockup) memperpanjang masa berlaku token/refresh token supaya user tidak perlu login ulang tiap buka app.
-- **Lupa Password**: karena app ini dipakai internal sekolah (2 role saja), alur reset disarankan sederhana — Laboran (yang punya akses Kelola User) bisa reset password akun lain secara manual lewat menu Kelola User, tanpa perlu sistem email/OTP terpisah. Perlu dikonfirmasi ke klien saat sprint planning kalau ternyata mau pakai reset via email.
-- **Otorisasi berbasis role**: setiap endpoint backend memvalidasi `level` user dari token — Kepala Program tidak bisa mengakses endpoint kelola barang/peminjam/user/pengaturan denda meski tahu URL-nya (sesuai Use Case skripsi: Kepala Program hanya Verifikasi & Lihat Laporan).
+- **Autentikasi**: login mengembalikan JWT token, disimpan di secure storage Flutter, dikirim di header `Authorization: Bearer <token>` tiap request. Opsi "Ingat saya" (dari mockup) memperpanjang masa[...]
+- **Lupa Password**: karena app ini dipakai internal sekolah (2 role saja), alur reset disarankan sederhana — Laboran (yang punya akses Kelola User) bisa reset password akun lain secara manual lewat[...]
+- **Otorisasi berbasis role**: setiap endpoint backend memvalidasi `level` user dari token — Kepala Program tidak bisa mengakses endpoint kelola barang/peminjam/user/pengaturan denda meski tahu URL-[...]
 - **Export laporan (final)**: digenerate di **backend** — PDF via `mPDF`/`TCPDF`, Word via `PHPWord`, **Excel via `PhpSpreadsheet`** (ditambahkan hasil review desain — laporan sekarang 3 format).
 
 ### 4.1 Ringkasan Endpoint API (per fitur PRD)
@@ -261,10 +347,12 @@ GitHub Release akan berisi file `.apk` hasil build (`flutter build apk --release
 | Status `menunggu_verifikasi`, tombol "Setujui/Tolak" | **Divalidasi konsisten** dengan Activity & Sequence Diagram Verifikasi asli skripsi — tidak ada perubahan |
 | Scope Kepala Program (Login/Verifikasi/Lihat Laporan) | **Divalidasi konsisten** dengan Tabel 3.1 Use Case resmi — tidak ada perubahan |
 
-**Status dokumen: FINAL.** Ada beberapa catatan minor tambahan (kode transaksi Pengembalian, dll) — detail lengkap ada di `UIUX_Wireframe_dan_Flow.md`.
+| **Status dokumen: FINAL.** Ada beberapa catatan minor tambahan (kode transaksi Pengembalian, dll) — detail lengkap ada di `UIUX_Wireframe_dan_Flow.md`.
 
 ---
 
 ## 6. Next Step
 
 Lanjut ke **Sprint Planning / Task Breakdown** — pecah FR-01 s/d FR-13 jadi task teknis per sprint dengan estimasi.
+
+```
