@@ -22,12 +22,8 @@ Dibangun sebagai bagian dari skripsi *"Rancang Bangun System Inventory Laborator
 
 ## Arsitektur
 
-```
-┌──────────────────┐    HTTPS/JSON     ┌────────────────────┐    SQL    ┌─────────┐
-│  Flutter (Android) │ ───────────────▶ │  REST API PHP       │ ────────▶ │  MySQL   │
-│                    │ ◀─────────────── │  (XAMPP saat dev)   │ ◀──────── │          │
-└──────────────────┘   JWT Bearer      └────────────────────┘           └─────────┘
-```
+<img width="3938" height="600" alt="Project-2026-09-08-052625" src="https://github.com/user-attachments/assets/df22a0fd-b632-450b-a09c-89dec578202a" />
+
 
 Flutter **tidak** terhubung langsung ke MySQL. Seluruh akses data lewat REST API, dan otorisasi berbasis role ditegakkan di backend — Kepala Program tidak bisa mengakses endpoint kelola barang/peminjam/user meski tahu URL-nya.
 
