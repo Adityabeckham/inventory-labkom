@@ -96,15 +96,8 @@ SMK Al-Madani saat ini mengelola inventaris laboratorium komputer menggunakan Mi
 
 ## 6. Arsitektur Sistem (Ringkas)
 
-```
-[Flutter Mobile App]
-      | REST API (HTTPS/JSON)
-      v
-[PHP REST API Backend] -- berjalan di atas XAMPP saat development
-      |
-      v
-[MySQL Database]
-```
+<img width="4169" height="600" alt="Project-2026-09-08-053122" src="https://github.com/user-attachments/assets/27137fa9-2534-44d3-9eb5-8c38a6c83737" />
+
 
 - Flutter app tidak terhubung langsung ke MySQL — seluruh akses data melalui REST API PHP.
 - Role-based access control ditegakkan di sisi backend, agar Kepala Program tidak bisa mengakses endpoint kelola barang/peminjam/user/pengaturan denda meski tahu URL-nya.
