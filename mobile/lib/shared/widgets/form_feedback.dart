@@ -25,6 +25,15 @@ Future<bool> jalankanAksi(
       ),
     );
     return false;
+  } catch (e) {
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(e.toString().replaceFirst(RegExp(r'^Exception:\s*'), '')),
+        backgroundColor: AppColors.crimsonDark,
+        duration: const Duration(seconds: 6),
+      ),
+    );
+    return false;
   }
 }
 

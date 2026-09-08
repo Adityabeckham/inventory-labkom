@@ -74,7 +74,7 @@ class _TransaksiScreenState extends ConsumerState<TransaksiScreen> {
           const SizedBox(width: 4),
         ],
       ),
-      floatingActionButton: _tab == 0
+      floatingActionButton: (_tab == 0 && user.isLaboran)
           ? FloatingActionButton.extended(
               onPressed: _peminjamanBaru,
               icon: const Icon(Icons.add),

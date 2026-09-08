@@ -24,36 +24,15 @@ try {
     $debug = (bool) Config::get('app.debug', false);
 
     // CORS support for web clients (e.g. Flutter Web)
-    $origin  = (string) ($_SERVER['HTTP_ORIGIN'] ?? '');
-    $allowed = (array) Config::get('app.cors_origins', ['*']);
-
-    $isAllowed = false;
-    if ($origin !== '') {
-        if ($allowed === [] || in_array('*', $allowed, true) || in_array($origin, $allowed, true)) {
-            $isAllowed = true;
-        } else {
-            foreach ($allowed as $pattern) {
-                if (is_string($pattern) && fnmatch($pattern, $origin)) {
-                    $isAllowed = true;
-                    break;
-                }
-            }
-        }
-        if (!$isAllowed && (string) Config::get('app.env', 'development') === 'development') {
-            $isAllowed = true;
-        }
-    }
-
-    if ($isAllowed && $origin !== '') {
-        header('Access-Control-Allow-Origin: ' . $origin);
-        header('Vary: Origin');
-        header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Accept');
-        header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
-        header('Access-Control-Allow-Credentials: true');
-    }
+    $origin = (string) ($_SERVER['HTTP_ORIGIN'] ?? '');
+    header('Access-Control-Allow-Origin: ' . ($origin !== '' ? $origin : '*'));
+    header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Accept');
+    header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    header('Access-Control-Allow-Credentials: true');
+    header('Vary: Origin');
 
     if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
-        http_response_code(204);
+        http_response_code(200);
         exit;
     }
 
