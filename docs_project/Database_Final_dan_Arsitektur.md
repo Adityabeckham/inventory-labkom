@@ -168,13 +168,8 @@ Layar Pengembalian di mockup asli punya tab: Semua / Belum Kembali / Sudah Kemba
 
 ## 4. Arsitektur Sistem
 
-```
-┌─────────────────────┐        HTTPS/JSON        ┌──────────────────────┐        SQL       ┌─────────────┐
-│   Flutter Mobile App │  ───────────────────────▶ │  PHP REST API Backend │ ───────────────▶ │   MySQL DB   │
-│   (Android, Dart)     │ ◀─────────────────────── │  (berjalan di atas     │ ◀─────────────── │              │
-│                       │      JWT Auth Token       │  XAMPP saat dev)       │                  │              │
-└─────────────────────┘                            └──────────────────────┘                  └─────────────┘
-```
+<img width="4169" height="600" alt="Project-2026-09-08-053122" src="https://github.com/user-attachments/assets/a937dcfc-d9a4-4f59-9dd2-24f3233d2a87" />
+
 
 - **Autentikasi**: login mengembalikan JWT token, disimpan di secure storage Flutter, dikirim di header `Authorization: Bearer <token>` tiap request. Opsi "Ingat saya" (dari mockup) memperpanjang masa berlaku token/refresh token supaya user tidak perlu login ulang tiap buka app.
 - **Lupa Password**: karena app ini dipakai internal sekolah (2 role saja), alur reset disarankan sederhana — Laboran (yang punya akses Kelola User) bisa reset password akun lain secara manual lewat menu Kelola User, tanpa perlu sistem email/OTP terpisah. Perlu dikonfirmasi ke klien saat sprint planning kalau ternyata mau pakai reset via email.
