@@ -16,6 +16,7 @@ import '../../kategori/data/kategori.dart';
 import '../application/barang_controller.dart';
 import '../domain/barang.dart';
 import '../domain/stok_mutasi.dart';
+import 'barang_detail_sheet.dart';
 import 'barang_form_sheet.dart';
 import 'mutasi_form_sheet.dart';
 
@@ -348,7 +349,7 @@ class _BarangCard extends ConsumerWidget {
       clipBehavior: Clip.antiAlias,
       elevation: 1,
       child: InkWell(
-        onTap: () => _ubah(context, ref),
+        onTap: () => BarangDetailSheet.show(context, barang),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
           child: Row(
@@ -411,24 +412,6 @@ class _BarangCard extends ConsumerWidget {
         ),
       ),
     );
-  }
-
-  Future<void> _ubah(BuildContext context, WidgetRef ref) async {
-    final kategori = await ref.read(kategoriListProvider.future);
-    if (!context.mounted) return;
-
-    final messenger = ScaffoldMessenger.of(context);
-    final body = await BarangFormSheet.show(
-      context,
-      kategori: kategori,
-      existing: barang,
-    );
-    if (body == null) return;
-
-    await jalankanAksi(messenger, () async {
-      await ref.read(asetActionsProvider).simpanBarang(body, id: barang.id);
-      return 'Barang ${barang.nama} diperbarui.';
-    });
   }
 
   Future<void> _hapus(BuildContext context, WidgetRef ref) async {

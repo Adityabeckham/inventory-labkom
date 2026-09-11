@@ -110,7 +110,7 @@ class _AngkaBento extends ConsumerWidget {
           ),
           padding: const EdgeInsets.all(AppSpacing.xl),
           child: InkWell(
-            onTap: user.isLaboran ? () => context.go('/aset') : null,
+            onTap: () => context.go('/aset'),
             borderRadius: BorderRadius.circular(AppRadius.xxl),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -138,16 +138,15 @@ class _AngkaBento extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    if (user.isLaboran)
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.north_east, size: 18, color: AppColors.primary),
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
                       ),
+                      child: const Icon(Icons.north_east, size: 18, color: AppColors.primary),
+                    ),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.md),
