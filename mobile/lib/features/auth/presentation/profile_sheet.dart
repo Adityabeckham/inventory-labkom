@@ -209,109 +209,113 @@ class _ProfileSheetState extends ConsumerState<ProfileSheet> {
     final user = ref.watch(currentUserProvider);
     final text = Theme.of(context).textTheme;
 
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
-      ),
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Handle bar
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.outlineStrong,
-                borderRadius: BorderRadius.circular(2),
+    return Material(
+      color: AppColors.surface,
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle bar
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.outlineStrong,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            ),
-            const SizedBox(height: AppSpacing.md),
+              const SizedBox(height: AppSpacing.md),
 
-            // Profile Card Header
-            Row(
-              children: [
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.navy, width: 2),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 8,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: ClipOval(
-                    child: Image.asset(
-                      user.isLaboran
-                          ? 'assets/images/avatar_laboran.png'
-                          : 'assets/images/avatar_kepala_program.png',
-                      fit: BoxFit.cover,
-                      errorBuilder: (ctx, err, stack) => const Icon(
-                        Icons.person,
-                        size: 36,
-                        color: AppColors.navy,
+              // Profile Card Header
+              Row(
+                children: [
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.navy, width: 2),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 8,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: ClipOval(
+                      child: Image.asset(
+                        user.isLaboran
+                            ? 'assets/images/avatar_laboran.png'
+                            : 'assets/images/avatar_kepala_program.png',
+                        fit: BoxFit.cover,
+                        errorBuilder: (ctx, err, stack) => const Icon(
+                          Icons.person,
+                          size: 36,
+                          color: AppColors.navy,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        user.username,
-                        style: text.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          user.username,
+                          style: text.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                      const SizedBox(height: 2),
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.xs,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: user.isLaboran
-                                  ? AppColors.crimson
-                                  : AppColors.gold,
-                              borderRadius: BorderRadius.circular(AppRadius.sm),
-                            ),
-                            child: Text(
-                              user.level.label.toUpperCase(),
-                              style: text.labelMedium?.copyWith(
+                        const SizedBox(height: 2),
+                        Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: AppSpacing.xs,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.xs,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
                                 color: user.isLaboran
-                                    ? Colors.white
-                                    : AppColors.onGold,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 10,
+                                    ? AppColors.crimson
+                                    : AppColors.gold,
+                                borderRadius: BorderRadius.circular(AppRadius.sm),
+                              ),
+                              child: Text(
+                                user.level.label.toUpperCase(),
+                                style: text.labelMedium?.copyWith(
+                                  color: user.isLaboran
+                                      ? Colors.white
+                                      : AppColors.onGold,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10,
+                                ),
                               ),
                             ),
-                          ),
-                          if (user.nip != null && user.nip!.isNotEmpty) ...[
-                            const SizedBox(width: AppSpacing.xs),
-                            Text(
-                              'NIP: ${user.nip}',
-                              style: text.bodySmall?.copyWith(color: AppColors.textMuted),
-                            ),
+                            if (user.nip != null && user.nip!.isNotEmpty)
+                              Text(
+                                'NIP: ${user.nip}',
+                                style: text.bodySmall?.copyWith(color: AppColors.textMuted),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                           ],
-                        ],
-                      ),
-                    ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
                 Image.asset(
                   'assets/images/smk_almadani_jampangkulon.png',
                   width: 44,
@@ -359,6 +363,7 @@ class _ProfileSheetState extends ConsumerState<ProfileSheet> {
           ],
         ),
       ),
+    ),
     );
   }
 }

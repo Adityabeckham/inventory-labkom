@@ -35,9 +35,10 @@ final class BarangController
             // (ATTR_EMULATE_PREPARES = false) tidak mengizinkan satu nama
             // placeholder dipakai berulang dalam satu query.
             $where[] = '(b.nama_barang LIKE :cari1 OR b.kode_barang LIKE :cari2 '
-                     . 'OR b.merk LIKE :cari3 OR b.serial_number LIKE :cari4)';
+                     . 'OR b.merk LIKE :cari3 OR b.serial_number LIKE :cari4 '
+                     . 'OR b.spesifikasi LIKE :cari5)';
             $pola = '%' . self::escapeLike($cari) . '%';
-            $params += ['cari1' => $pola, 'cari2' => $pola, 'cari3' => $pola, 'cari4' => $pola];
+            $params += ['cari1' => $pola, 'cari2' => $pola, 'cari3' => $pola, 'cari4' => $pola, 'cari5' => $pola];
         }
 
         $sql = 'SELECT b.*, k.nama_kategori
@@ -66,9 +67,9 @@ final class BarangController
 
         Database::execute(
             'INSERT INTO barang
-                (id_kategori, kode_barang, nama_barang, merk, jumlah, kondisi, stok, tanggal_input, serial_number)
+                (id_kategori, kode_barang, nama_barang, merk, jumlah, kondisi, stok, tanggal_input, serial_number, spesifikasi)
              VALUES
-                (:id_kategori, :kode_barang, :nama_barang, :merk, :jumlah, :kondisi, :stok, :tanggal_input, :serial_number)',
+                (:id_kategori, :kode_barang, :nama_barang, :merk, :jumlah, :kondisi, :stok, :tanggal_input, :serial_number, :spesifikasi)',
             $data
         );
 
@@ -96,7 +97,8 @@ final class BarangController
                 kondisi       = :kondisi,
                 stok          = :stok,
                 tanggal_input = :tanggal_input,
-                serial_number = :serial_number
+                serial_number = :serial_number,
+                spesifikasi   = :spesifikasi
              WHERE id_barang = :id',
             $data
         );
@@ -157,6 +159,7 @@ final class BarangController
             'stok'          => $stok,
             'tanggal_input' => Validator::date($request, 'tanggal_input'),
             'serial_number' => Validator::optionalString($request, 'serial_number', 50),
+            'spesifikasi'   => Validator::optionalString($request, 'spesifikasi', 255),
         ];
     }
 
@@ -175,6 +178,7 @@ final class BarangController
             'stok'          => (int) $row['stok'],
             'tanggal_input' => $row['tanggal_input'],
             'serial_number' => $row['serial_number'],
+            'spesifikasi'   => $row['spesifikasi'] ?? null,
         ];
     }
 

@@ -83,6 +83,9 @@ class BarangDetailSheet extends ConsumerWidget {
 
   /// Menghasilkan spesifikasi ringkas jika barang belum punya field spesifikasi terpisah
   String _spesifikasiRingkas(Barang b) {
+    if (b.spesifikasi != null && b.spesifikasi!.trim().isNotEmpty) {
+      return b.spesifikasi!;
+    }
     final n = b.nama.toLowerCase();
     if (n.contains('thinkpad') || n.contains('laptop')) {
       return 'Intel Core i5-8250U · RAM 8GB DDR4 · SSD 256GB NVMe · Layar 12.5" FHD IPS';
@@ -197,10 +200,7 @@ class BarangDetailSheet extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () async {
-                        Navigator.of(context).pop();
-                        await _hapus(context, ref);
-                      },
+                      onPressed: () => _hapus(context, ref),
                       icon: const Icon(Icons.delete_outline, color: AppColors.crimson),
                       label: const Text('Hapus Barang', style: TextStyle(color: AppColors.crimson)),
                     ),
@@ -208,10 +208,7 @@ class BarangDetailSheet extends ConsumerWidget {
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: FilledButton.icon(
-                      onPressed: () async {
-                        Navigator.of(context).pop();
-                        await _ubah(context, ref);
-                      },
+                      onPressed: () => _ubah(context, ref),
                       icon: const Icon(Icons.edit_outlined),
                       label: const Text('Edit Barang'),
                     ),
@@ -276,6 +273,7 @@ class BarangDetailSheet extends ConsumerWidget {
     if (!context.mounted) return;
 
     final messenger = ScaffoldMessenger.of(context);
+    final nav = Navigator.of(context);
     final body = await BarangFormSheet.show(
       context,
       kategori: kategori,
@@ -283,6 +281,7 @@ class BarangDetailSheet extends ConsumerWidget {
     );
     if (body == null) return;
 
+    nav.pop();
     await jalankanAksi(messenger, () async {
       await ref.read(asetActionsProvider).simpanBarang(body, id: barang.id);
       return 'Barang ${barang.nama} diperbarui.';
@@ -291,6 +290,7 @@ class BarangDetailSheet extends ConsumerWidget {
 
   Future<void> _hapus(BuildContext context, WidgetRef ref) async {
     final messenger = ScaffoldMessenger.of(context);
+    final nav = Navigator.of(context);
     final yakin = await konfirmasiHapus(
       context,
       judul: 'Hapus barang?',
@@ -298,6 +298,7 @@ class BarangDetailSheet extends ConsumerWidget {
     );
     if (!yakin) return;
 
+    nav.pop();
     await jalankanAksi(messenger, () async {
       await ref.read(asetActionsProvider).hapusBarang(barang.id);
       return 'Barang ${barang.nama} dihapus.';

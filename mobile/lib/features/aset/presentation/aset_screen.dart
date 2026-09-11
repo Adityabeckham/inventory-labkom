@@ -211,19 +211,91 @@ class _DaftarBarangView extends ConsumerWidget {
             emptyMessage: filter.cari.isEmpty && filter.idKategori == null
                 ? 'Belum ada barang. Tambahkan lewat tombol di bawah.'
                 : 'Tidak ada barang yang cocok dengan pencarian.',
-            builder: (list) => ListView.separated(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.screenMargin,
-                AppSpacing.xs,
-                AppSpacing.screenMargin,
-                AppSpacing.xxxl * 2,
+            builder: (list) => Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenMargin),
+              child: Card(
+                clipBehavior: Clip.antiAlias,
+                elevation: 1,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.lg),
+                  side: const BorderSide(color: AppColors.borderSubtle),
+                ),
+                child: Column(
+                  children: [
+                    // Header Tabel Data Barang
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.sm,
+                      ),
+                      decoration: const BoxDecoration(
+                        color: AppColors.navy,
+                      ),
+                      child: Row(
+                        children: [
+                          const SizedBox(
+                            width: 65,
+                            child: Text(
+                              'KODE',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.xs),
+                          const Expanded(
+                            child: Text(
+                              'NAMA BARANG & SPESIFIKASI',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.xs),
+                          const SizedBox(
+                            width: 60,
+                            child: Text(
+                              'STOK',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 24),
+                        ],
+                      ),
+                    ),
+
+                    // Body List Tabel Data Barang
+                    Expanded(
+                      child: ListView.separated(
+                        padding: EdgeInsets.zero,
+                        itemCount: list.length,
+                        separatorBuilder: (_, _) => const Divider(
+                          height: 1,
+                          thickness: 1,
+                          color: AppColors.borderSubtle,
+                        ),
+                        itemBuilder: (context, i) => _BarangTableRow(barang: list[i]),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              itemCount: list.length,
-              separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.cardGap),
-              itemBuilder: (context, i) => _BarangCard(barang: list[i]),
             ),
           ),
         ),
+        const SizedBox(height: AppSpacing.sm),
       ],
     );
   }
@@ -281,152 +353,102 @@ class _KategoriChips extends StatelessWidget {
   }
 }
 
-class _BarangCard extends ConsumerWidget {
-  const _BarangCard({required this.barang});
+class _BarangTableRow extends ConsumerWidget {
+  const _BarangTableRow({required this.barang});
 
   final Barang barang;
-
-  Widget _buildCategoryThumbnail(String namaItem, String namaKategori) {
-    final nameLower = namaItem.toLowerCase();
-    final catLower = namaKategori.toLowerCase();
-    String? assetPath;
-    IconData fallbackIcon = Icons.inventory_2_outlined;
-
-    if (nameLower.contains('laptop') || nameLower.contains('asus') || nameLower.contains('notebook')) {
-      assetPath = 'assets/images/item_laptop_asus.png';
-      fallbackIcon = Icons.laptop;
-    } else if (nameLower.contains('router') || nameLower.contains('mikrotik') || nameLower.contains('switch')) {
-      assetPath = 'assets/images/item_mikrotik_router.png';
-      fallbackIcon = Icons.router;
-    } else if (catLower.contains('komputer') || catLower.contains('pc')) {
-      assetPath = 'assets/images/cat_komputer.png';
-      fallbackIcon = Icons.computer;
-    } else if (catLower.contains('jaringan')) {
-      assetPath = 'assets/images/cat_jaringan.png';
-      fallbackIcon = Icons.hub;
-    } else if (catLower.contains('proyektor') || catLower.contains('display')) {
-      fallbackIcon = Icons.videocam_outlined;
-    } else if (catLower.contains('elektronik') || catLower.contains('kabel')) {
-      fallbackIcon = Icons.cable_outlined;
-    }
-
-    return Container(
-      width: 54,
-      height: 54,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: AppColors.outline),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        child: assetPath != null
-            ? Image.asset(
-                assetPath,
-                fit: BoxFit.cover,
-                errorBuilder: (ctx, err, stack) => Icon(fallbackIcon, color: AppColors.navy),
-              )
-            : Container(
-                decoration: const BoxDecoration(gradient: AppGradients.softBlue),
-                child: Icon(fallbackIcon, color: AppColors.navy, size: 26),
-              ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final text = Theme.of(context).textTheme;
 
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      elevation: 1,
-      child: InkWell(
-        onTap: () => BarangDetailSheet.show(context, barang),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Row(
-            children: [
-              _buildCategoryThumbnail(barang.nama, barang.namaKategori),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(barang.nama, style: text.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: AppSpacing.xxs),
-                    Text(
-                      barang.serialNumber == null || barang.serialNumber!.isEmpty
-                          ? barang.kode
-                          : '${barang.kode} · SN ${barang.serialNumber}',
-                      style: AppTypography.code(color: AppColors.textMuted),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      barang.tidakDiRak > 0
-                          ? 'Stok ${barang.stok} dari ${barang.jumlah} · '
-                              '${barang.tidakDiRak} dipinjam/diajukan'
-                          : 'Stok ${barang.stok} · ${barang.namaKategori}',
-                      style: text.bodySmall?.copyWith(color: AppColors.textMuted),
-                    ),
-                  ],
+    return InkWell(
+      onTap: () => BarangDetailSheet.show(context, barang),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        child: Row(
+          children: [
+            // Kode Barang Column
+            SizedBox(
+              width: 65,
+              child: Text(
+                barang.kode,
+                style: AppTypography.code(color: AppColors.primary).copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
                 ),
               ),
-              const SizedBox(width: AppSpacing.xs),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+            ),
+            const SizedBox(width: AppSpacing.xs),
+
+            // Nama & Spesifikasi Column
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  StatusPill(
-                    label: barang.tersedia ? 'Tersedia' : 'Habis',
-                    style: barang.tersedia ? StatusStyle.tersedia : StatusStyle.kritis,
+                  Text(
+                    barang.nama,
+                    style: text.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      InkWell(
-                        onTap: () => _hapus(context, ref),
-                        borderRadius: BorderRadius.circular(AppRadius.sm),
-                        child: const Padding(
-                          padding: EdgeInsets.all(4),
-                          child: Icon(
-                            Icons.delete_outline,
-                            size: 20,
-                            color: AppColors.crimson,
-                          ),
-                        ),
-                      ),
-                    ],
+                  const SizedBox(height: 2),
+                  Text(
+                    barang.spesifikasi ?? '${barang.namaKategori} · Merk ${barang.merk ?? '-'}',
+                    style: text.bodySmall?.copyWith(
+                      color: AppColors.textMuted,
+                      fontSize: 11,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+            const SizedBox(width: AppSpacing.xs),
+
+            // Stok Column
+            SizedBox(
+              width: 60,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '${barang.stok}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: barang.tersedia ? AppColors.navy : AppColors.crimson,
+                    ),
+                  ),
+                  Text(
+                    '/ ${barang.jumlah}',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 4),
+
+            // Detail Arrow Icon
+            const Icon(
+              Icons.chevron_right,
+              size: 20,
+              color: AppColors.textMuted,
+            ),
+          ],
         ),
       ),
     );
-  }
-
-  Future<void> _hapus(BuildContext context, WidgetRef ref) async {
-    final messenger = ScaffoldMessenger.of(context);
-    final yakin = await konfirmasiHapus(
-      context,
-      judul: 'Hapus barang?',
-      pesan: '"${barang.nama}" (${barang.kode}) akan dihapus permanen.',
-    );
-    if (!yakin) return;
-
-    await jalankanAksi(messenger, () async {
-      await ref.read(asetActionsProvider).hapusBarang(barang.id);
-      return 'Barang ${barang.nama} dihapus.';
-    });
   }
 }
 

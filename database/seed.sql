@@ -6,15 +6,15 @@
 USE `inventory_labkom`;
 
 SET FOREIGN_KEY_CHECKS = 0;
-TRUNCATE TABLE `pengembalian`;
-TRUNCATE TABLE `peminjaman_detail`;
-TRUNCATE TABLE `peminjaman`;
-TRUNCATE TABLE `stok_mutasi`;
-TRUNCATE TABLE `barang`;
-TRUNCATE TABLE `kategori`;
-TRUNCATE TABLE `peminjam`;
-TRUNCATE TABLE `pengaturan_denda`;
-TRUNCATE TABLE `users`;
+DELETE FROM TABLE `pengembalian`;
+DELETE FROM TABLE `peminjaman_detail`;
+DELETE FROM TABLE `peminjaman`;
+DELETE FROM TABLE `stok_mutasi`;
+DELETE FROM TABLE `barang`;
+DELETE FROM TABLE `kategori`;
+DELETE FROM TABLE `peminjam`;
+DELETE FROM TABLE `pengaturan_denda`;
+DELETE FROM TABLE `users`;
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- ---------------------------------------------------------------------
@@ -39,15 +39,15 @@ INSERT INTO `kategori` (`id_kategori`, `nama_kategori`) VALUES
 -- 3. barang — data barang inventaris laboratorium
 -- ---------------------------------------------------------------------
 INSERT INTO `barang`
-  (`id_barang`, `id_kategori`, `kode_barang`, `nama_barang`, `merk`, `jumlah`, `kondisi`, `stok`, `tanggal_input`, `serial_number`) VALUES
-(1, 1, 'BRG-A01', 'Laptop Lenovo ThinkPad X280', 'Lenovo',   40, 'Baik', 37, '2026-01-15', 'LNV-TP-9921'),
-(2, 3, 'BRG-A02', 'Monitor LG 24 Inch IPS',       'LG',       25, 'Baik', 24, '2026-01-15', 'LG-M24-8842'),
-(3, 1, 'BRG-A03', 'Keyboard Logitech K120 USB',   'Logitech', 40, 'Baik', 40, '2026-01-20', 'LOG-K120-112'),
-(4, 1, 'BRG-A04', 'Mouse Logitech B100 Optical',  'Logitech', 40, 'Baik', 40, '2026-01-20', 'LOG-B100-334'),
-(5, 2, 'BRG-A05', 'Switch Hub TP-Link 16 Port',   'TP-Link',  50, 'Baik', 48, '2026-02-03', 'TPL-SW16-551'),
-(6, 2, 'BRG-A06', 'Mikrotik RouterBoard RB951',   'MikroTik', 15, 'Baik', 14, '2026-02-03', 'MT-RB951-778'),
-(7, 3, 'BRG-A07', 'Proyektor Epson EB-X51 3800',  'Epson',     4, 'Baik',  2, '2026-02-10', 'EPS-X51-0001'),
-(8, 4, 'BRG-A08', 'Crimping Tool & Cable Tester',  'TNS Tools', 20, 'Baik', 20, '2026-02-12', 'TNS-CRMP-09');
+  (`id_barang`, `id_kategori`, `kode_barang`, `nama_barang`, `merk`, `jumlah`, `kondisi`, `stok`, `tanggal_input`, `serial_number`, `spesifikasi`) VALUES
+(1, 1, 'BRG-A01', 'Laptop Lenovo ThinkPad X280', 'Lenovo',   40, 'Baik', 37, '2026-01-15', 'LNV-TP-9921', 'Core i5-8250U · RAM 8GB DDR4 · SSD 256GB NVMe · Layar 12.5" FHD IPS'),
+(2, 3, 'BRG-A02', 'Monitor LG 24 Inch IPS',       'LG',       25, 'Baik', 24, '2026-01-15', 'LG-M24-8842', 'Panel IPS 24" Full HD (1920x1080) · 75Hz Refresh Rate · HDMI & VGA'),
+(3, 1, 'BRG-A03', 'Keyboard Logitech K120 USB',   'Logitech', 40, 'Baik', 40, '2026-01-20', 'LOG-K120-112', 'Layout Full-Size Standard · Konektivitas USB Plug-and-Play · Spill-Resistant'),
+(4, 1, 'BRG-A04', 'Mouse Logitech B100 Optical',  'Logitech', 40, 'Baik', 40, '2026-01-20', 'LOG-B100-334', 'Sensor Optik 800 DPI · Ambidextrous Design · USB Wired Connection'),
+(5, 2, 'BRG-A05', 'Switch Hub TP-Link 16 Port',   'TP-Link',  50, 'Baik', 48, '2026-02-03', 'TPL-SW16-551', '16-Port 10/100/1000Mbps Gigabit RJ45 · Auto MDI/MDIX · Metal Rackmount'),
+(6, 2, 'BRG-A06', 'Mikrotik RouterBoard RB951',   'MikroTik', 15, 'Baik', 14, '2026-02-03', 'MT-RB951-778', 'Atheros 600MHz CPU · RAM 64MB · 5x LAN Ports · Wireless 2.4GHz High Power'),
+(7, 3, 'BRG-A07', 'Proyektor Epson EB-X51 3800',  'Epson',     4, 'Baik',  2, '2026-02-10', 'EPS-X51-0001', '3800 Lumens Brightness · Resolusi XGA (1024x768) · Contrast 16.000:1 · HDMI'),
+(8, 4, 'BRG-A08', 'Crimping Tool & Cable Tester',  'TNS Tools', 20, 'Baik', 20, '2026-02-12', 'TNS-CRMP-09', 'Tang Crimp RJ45/RJ11 + Cable Tester LAN Multi-Function & Pouch');
 
 -- ---------------------------------------------------------------------
 -- 4. peminjam — daftar siswa & guru

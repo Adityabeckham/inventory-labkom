@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../aset/application/barang_controller.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../pengembalian/domain/pengembalian.dart' show rupiah;
 import '../application/dashboard_controller.dart';
@@ -110,7 +111,10 @@ class _AngkaBento extends ConsumerWidget {
           ),
           padding: const EdgeInsets.all(AppSpacing.xl),
           child: InkWell(
-            onTap: () => context.go('/aset'),
+            onTap: () {
+              ref.read(barangFilterProvider.notifier).pilihKategori(null);
+              context.go('/aset');
+            },
             borderRadius: BorderRadius.circular(AppRadius.xxl),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

@@ -44,6 +44,7 @@ class _BarangFormSheetState extends State<BarangFormSheet> {
   late final TextEditingController _stok;
   late final TextEditingController _kondisi;
   late final TextEditingController _serial;
+  late final TextEditingController _spesifikasi;
 
   int? _idKategori;
   late DateTime _tanggal;
@@ -59,13 +60,14 @@ class _BarangFormSheetState extends State<BarangFormSheet> {
     _stok = TextEditingController(text: b?.stok.toString() ?? '');
     _kondisi = TextEditingController(text: b?.kondisi ?? 'Baik');
     _serial = TextEditingController(text: b?.serialNumber ?? '');
+    _spesifikasi = TextEditingController(text: b?.spesifikasi ?? '');
     _idKategori = b?.idKategori ?? widget.kategori.firstOrNull?.id;
     _tanggal = DateTime.tryParse(b?.tanggalInput ?? '') ?? DateTime.now();
   }
 
   @override
   void dispose() {
-    for (final c in [_kode, _nama, _merk, _jumlah, _stok, _kondisi, _serial]) {
+    for (final c in [_kode, _nama, _merk, _jumlah, _stok, _kondisi, _serial, _spesifikasi]) {
       c.dispose();
     }
     super.dispose();
@@ -99,6 +101,7 @@ class _BarangFormSheetState extends State<BarangFormSheet> {
       'stok': int.parse(_stok.text.trim()),
       'tanggal_input': _fmt(_tanggal),
       'serial_number': _serial.text.trim(),
+      'spesifikasi': _spesifikasi.text.trim(),
     });
   }
 
@@ -235,6 +238,17 @@ class _BarangFormSheetState extends State<BarangFormSheet> {
                 decoration: const InputDecoration(
                   labelText: 'Serial Number (opsional)',
                   prefixIcon: Icon(Icons.tag),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+
+              TextFormField(
+                controller: _spesifikasi,
+                maxLines: 2,
+                decoration: const InputDecoration(
+                  labelText: 'Spesifikasi / Detail Ringkas (opsional)',
+                  hintText: 'mis. Core i5-8250U, RAM 8GB, SSD 256GB',
+                  prefixIcon: Icon(Icons.memory_outlined),
                 ),
               ),
               const SizedBox(height: AppSpacing.md),

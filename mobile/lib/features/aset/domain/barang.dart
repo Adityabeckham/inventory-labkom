@@ -14,6 +14,7 @@ class Barang {
     this.merk,
     this.kondisi,
     this.serialNumber,
+    this.spesifikasi,
   });
 
   final int id;
@@ -32,6 +33,7 @@ class Barang {
   final String? merk;
   final String? kondisi;
   final String? serialNumber;
+  final String? spesifikasi;
 
   /// Unit yang tidak ada di rak: sudah diambil peminjam ATAU masih tertahan
   /// pengajuan yang menunggu verifikasi.
@@ -56,5 +58,6 @@ class Barang {
         merk: json['merk'] as String?,
         kondisi: json['kondisi'] as String?,
         serialNumber: json['serial_number'] as String?,
+        spesifikasi: json['spesifikasi'] as String?,
       );
 }

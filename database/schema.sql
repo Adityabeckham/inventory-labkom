@@ -58,6 +58,7 @@ CREATE TABLE `barang` (
   `stok`          INT(11)      NOT NULL DEFAULT 0 COMMENT 'unit tersedia',
   `tanggal_input` DATE         NOT NULL,
   `serial_number` VARCHAR(50)  DEFAULT NULL,
+  `spesifikasi`   VARCHAR(255) DEFAULT NULL COMMENT 'informasi ringkas spesifikasi barang',
   PRIMARY KEY (`id_barang`),
   UNIQUE KEY `uq_barang_kode` (`kode_barang`),
   KEY `fk_barang_kategori` (`id_kategori`),

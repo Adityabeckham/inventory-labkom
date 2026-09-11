@@ -9,14 +9,12 @@ void main() {
   group('Tema mengikuti DESIGN.md', () {
     final theme = AppTheme.light();
 
-    test('primary memakai Deep Navy #384C9D', () {
-      // Nilai ini dikutip PRD §10, wireframe UI/UX, dan prosa DESIGN.md.
-      expect(theme.colorScheme.primary, AppColors.navy);
-      expect(theme.appBarTheme.backgroundColor, AppColors.navy);
+    test('primary memakai Electric Blue #1622E5', () {
+      expect(theme.colorScheme.primary, AppColors.primary);
     });
 
-    test('FAB memakai Crimson #D8232A', () {
-      expect(theme.floatingActionButtonTheme.backgroundColor, AppColors.crimson);
+    test('FAB memakai Primary Electric Blue #1622E5', () {
+      expect(theme.floatingActionButtonTheme.backgroundColor, AppColors.primary);
     });
 
     test('app bar melengkung 24px di sudut bawah', () {

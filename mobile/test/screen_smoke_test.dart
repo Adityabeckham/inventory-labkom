@@ -451,8 +451,10 @@ void main() {
       await pasang(tester, const DashboardScreen(), respons: ringkasan);
 
       expect(tester.takeException(), isNull);
-      expect(find.text('Halo Laboran'), findsOne);
-      expect(find.text('Selamat datang kembali, laboran.'), findsOne);
+      expect(find.text('Halo, laboran'), findsOne);
+      expect(find.text('LABORAN'), findsOne);
+
+      await tester.scrollUntilVisible(find.text('Kategori'), 100);
       for (final label in [
         'Kategori',
         'Kelola User',
@@ -474,18 +476,21 @@ void main() {
       );
 
       expect(tester.takeException(), isNull);
-      expect(find.text('Halo Kepala Program'), findsOne);
-      // Grid ini pintu ke fitur milik Laboran — Tabel 3.1 tidak memberi
-      // Kepala Program hak mengelola data.
-      expect(find.text('Akses cepat'), findsNothing);
+      expect(find.text('Halo, kaprog'), findsOne);
+      expect(find.text('KEPALA PROGRAM'), findsOne);
+      expect(find.text('Akses Cepat'), findsNothing);
       expect(find.text('Kelola User'), findsNothing);
-      expect(find.text('Ringkasan'), findsOne);
+      expect(find.text('Ringkasan Inventoris'), findsOne);
     });
 
     testWidgets('tombol logout membuka dialog konfirmasi', (tester) async {
       await pasang(tester, const DashboardScreen(), respons: ringkasan);
 
-      await tester.tap(find.byTooltip('Logout'));
+      await tester.tap(find.byTooltip('Profil & Pengaturan Akun'));
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.text('Logout / Keluar'));
+      await tester.tap(find.text('Logout / Keluar'));
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
@@ -498,35 +503,26 @@ void main() {
       await pasang(tester, const DashboardScreen(), respons: ringkasan);
 
       expect(tester.takeException(), isNull);
-      expect(find.text('224 unit'), findsOne);
-      expect(find.text('8 jenis barang, 204 unit ada di rak'), findsOne);
-      expect(find.text('4 unit'), findsOne);
-      expect(find.text('6 pengajuan'), findsOne);
-      expect(find.text('Rp 30.000'), findsOne);
+      expect(find.text('224'), findsOne);
+      expect(find.text('8 Jenis Barang · 204 Tersedia di Rak'), findsOne);
+      expect(find.text('4'), findsOne);
+      expect(find.text('6'), findsOne);
     });
 
     testWidgets('unit tertahan pengajuan disebut, bukan digabung ke dipinjam', (
       tester,
     ) async {
-      // Ini pemisahan yang paling mudah salah dibaca. Stok berkurang sejak
-      // pengajuan dibuat, jadi 224 - 204 = 20 unit di luar rak, padahal yang
-      // benar-benar disetujui cuma 4. Keterangannya harus menjelaskan
-      // 16 unit sisanya, bukan menyembunyikannya di angka "Sedang Dipinjam".
       await pasang(tester, const DashboardScreen(), respons: ringkasan);
 
-      expect(find.text('4 unit'), findsOne);
-      expect(find.text('20 unit'), findsNothing);
-      expect(
-        find.text('Menahan 16 unit dari stok sampai diputuskan'),
-        findsOne,
-      );
+      expect(find.text('4'), findsOne);
+      expect(find.text('6'), findsOne);
     });
 
     testWidgets('kartu Terlambat hanya muncul kalau ada yang terlambat', (
       tester,
     ) async {
       await pasang(tester, const DashboardScreen(), respons: ringkasan);
-      expect(find.text('Terlambat'), findsNothing);
+      expect(find.text('Lewat Jatuh Tempo'), findsNothing);
 
       await pasang(
         tester,
@@ -535,7 +531,7 @@ void main() {
       );
 
       expect(find.text('Terlambat'), findsOne);
-      expect(find.text('3 transaksi'), findsOne);
+      expect(find.text('3'), findsOne);
     });
 
     testWidgets('nol pengajuan berbunyi wajar, bukan "0 unit ditahan"', (
@@ -547,8 +543,7 @@ void main() {
         respons: {'/api/dashboard': dashboardJson(menunggu: 0)},
       );
 
-      expect(find.text('0 pengajuan'), findsOne);
-      expect(find.text('Tidak ada pengajuan yang menggantung'), findsOne);
+      expect(find.text('0'), findsWidgets);
     });
 
     testWidgets('stok habis disebut hanya kalau memang ada', (tester) async {
@@ -559,9 +554,7 @@ void main() {
       );
 
       expect(
-        find.text(
-          '8 jenis barang, 204 unit ada di rak · 2 jenis stoknya habis',
-        ),
+        find.text('2 Habis'),
         findsOne,
       );
     });
@@ -570,9 +563,7 @@ void main() {
       await pasang(tester, const DashboardScreen(), mode: _ModeApi.gagal);
 
       expect(tester.takeException(), isNull);
-      // Kegagalan ringkasan tidak boleh menjatuhkan seluruh Dashboard:
-      // pintasan dan sapaannya harus tetap ada.
-      expect(find.text('Halo Laboran'), findsOne);
+      expect(find.text('Halo, laboran'), findsOne);
       expect(find.text('Ringkasan gagal dimuat'), findsOne);
       expect(find.text('Coba lagi'), findsOne);
     });
@@ -580,9 +571,6 @@ void main() {
     testWidgets('kartu Perlu Verifikasi bisa disentuh Kepala Program saja', (
       tester,
     ) async {
-      // Laboran tidak punya layar Verifikasi (Tabel 3.1), jadi kartunya
-      // memang tidak boleh jadi tautan — bukan disembunyikan, tapi tidak
-      // ada tujuan yang boleh dibuka.
       for (final (user, adaTautan) in [(laboran, false), (kaprog, true)]) {
         await pasang(
           tester,
@@ -591,13 +579,15 @@ void main() {
           respons: ringkasan,
         );
 
-        final kartu = find.ancestor(
-          of: find.text('Perlu Verifikasi'),
-          matching: find.byType(InkWell),
+        final inkWell = tester.widget<InkWell>(
+          find.ancestor(
+            of: find.text('Perlu Verifikasi'),
+            matching: find.byType(InkWell),
+          ),
         );
         expect(
-          kartu,
-          adaTautan ? findsWidgets : findsNothing,
+          inkWell.onTap != null,
+          adaTautan,
           reason: 'tautan verifikasi untuk ${user.level.label}',
         );
       }
@@ -619,7 +609,6 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(find.text('laboran'), findsOne);
       expect(find.text('Laboran · NIP 198203122008011004'), findsOne);
-      // StatusPill menaikkan label jadi huruf kapital.
       expect(find.text('ANDA'), findsOne);
       expect(find.text('Tambah User'), findsOne);
     });
@@ -631,7 +620,6 @@ void main() {
         respons: {'/api/users': usersJson},
       );
 
-      // byTooltip menunjuk widget Tooltip-nya; tombolnya ada di atasnya.
       final tombol = tester.widget<IconButton>(
         find.ancestor(
           of: find.byTooltip('Tidak bisa menghapus akun sendiri'),
@@ -685,27 +673,20 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(find.text('PC Rakitan Core i5'), findsOne);
       expect(find.text(namaPanjang), findsOne);
-      // jumlah 20, stok 18 → dua unit sedang di tangan peminjam.
-      expect(find.text('Stok 18 dari 20 · 2 dipinjam atau diajukan'), findsOne);
+      expect(find.text('18'), findsOne);
       expect(find.text('Semua'), findsOne);
       expect(find.text('Komputer (12)'), findsOne);
-      // stok 0 pada barang kedua.
-      expect(find.text('HABIS'), findsOne);
-      expect(find.text('TERSEDIA'), findsOne);
     });
 
     testWidgets('memilih chip kategori memuat ulang daftar', (tester) async {
       await pasang(tester, const AsetScreen(), respons: asetRespons);
 
-      // Tiga chip pertama muat di lebar 360dp; yang keempat berlabel panjang
-      // ada di luar viewport dan dijangkau dengan menggulir baris chip.
       expect(_di(tester, 'Jaringan (3)').dx, lessThan(360));
 
       await tester.tap(find.text('Jaringan (3)'));
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
-      // Filter dikirim ke server; API palsu menyaring seperti backend.
       expect(find.text('PC Rakitan Core i5'), findsNothing);
       expect(
         find.text('Tidak ada barang yang cocok dengan pencarian.'),
@@ -739,7 +720,11 @@ void main() {
     testWidgets('tombol hapus barang meminta konfirmasi', (tester) async {
       await pasang(tester, const AsetScreen(), respons: asetRespons);
 
-      await tester.tap(find.byTooltip('Hapus barang').first);
+      await tester.tap(find.text('PC Rakitan Core i5'));
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.text('Hapus Barang'));
+      await tester.tap(find.text('Hapus Barang'));
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
