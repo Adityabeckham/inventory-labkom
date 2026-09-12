@@ -192,5 +192,8 @@
 
 ---
 
-## 6. Next Step
-Setelah Sprint 0 selesai (environment siap), mulai eksekusi Sprint 1. Dokumen ini bisa dipakai langsung sebagai checklist/board (Trello, GitHub Projects, dll).
+## 6. Status Akhir Proyek
+ Seluruh Sprint (Sprint 0 hingga Sprint 6) beserta **Revisi Feedback Klien** (Penyederhanaan Tabel Data Barang, Filter Chip Kategori 1-Klik, Kolom Spesifikasi Fleksibel, dan Modal Pop-up Detail Specs Sheet) telah **100% SELESAI, TERUJI, DAN FINAL**.
+- **Backend PHP**: 28/28 Unit Tests Passing.
+- **Frontend Flutter**: 172/172 Tests Passing, 0 errors/warnings (`flutter analyze`).
+- **Build Release APK**: Siap untuk dipasang di perangkat HP Android / Laptop untuk demo & sidang skripsi.

@@ -109,7 +109,7 @@ SMK Al-Madani saat ini mengelola inventaris laboratorium komputer menggunakan Mi
 | ID | Fitur | Aktor | Deskripsi |
 |---|---|---|---|
 | FR-01 | Login | Laboran, Kepala Program | Autentikasi username/password, opsi "Ingat saya", link "Lupa Password" (reset manual oleh Laboran), redirect ke dashboard sesuai role |
-| FR-02 | Kelola Barang | Laboran | Tambah/ubah/hapus/lihat barang: kode, nama, merk, kategori, jumlah, kondisi, stok, tanggal input |
+| FR-02 | Kelola Barang | Laboran | Tambah/ubah/hapus/lihat barang: kode, nama, merk, kategori, jumlah, kondisi, stok, tanggal input, serial number, dan **spesifikasi ringkas fleksibel** (RAM/SSD/CPU/Display/Port/Lumens). Tampilan menggunakan **Tabel Data Barang terstruktur**, **Filter Chip Kategori 1-Klik**, serta **Pop-up Modal Detail Spesifikasi** (`BarangDetailSheet`) yang fleksibel untuk barang laptop maupun non-laptop. |
 | FR-03 | Kelola Kategori | Laboran | CRUD kategori barang |
 | FR-04 | Kelola Peminjam | Laboran | CRUD data peminjam: nama, **NIS/NIP**, **kelas/jabatan**, no HP |
 | FR-05 | Peminjaman Barang | Laboran | Input transaksi: pilih peminjam, pilih satu atau lebih barang (multi-item) dengan jumlah masing-masing, tanggal pinjam & rencana kembali → status awal `menunggu_verifikasi`, stok langsung berkurang |

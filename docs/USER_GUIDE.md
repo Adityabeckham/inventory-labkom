@@ -88,21 +88,21 @@ Di bawah sapaan ada empat pintasan yang tidak punya tab sendiri:
 
 ## 4. Aset Lab — barang dan stoknya (Laboran)
 
-Tab **Aset Lab** memuat daftar barang beserta stoknya.
+Tab **Aset Lab** (atau diklik dari kartu **Total Barang** di Dashboard) memuat tabel data barang beserta stoknya secara terstruktur.
 
-- **Mencari barang** — ketik di kotak pencarian: nama, kode, merk, atau serial number.
-- **Menyaring per kategori** — sentuh chip kategori di bawah kotak pencarian.
-- **Melihat rincian** — sentuh kartu barangnya.
+- **Buka dari Dashboard** — Sentuh kartu **Total Barang** di Dashboard untuk langsung berpindah ke tabel barang dengan filter ter-reset ke `Semua`.
+- **Filter Kategori 1-Klik** — Sentuh tombol filter chip di atas tabel (`Semua`, `Komputer`, `Jaringan`, `Elektronik`, `Aksesori & Tools`). Begitu diklik, data langsung menyaring secara instan (*real-time*).
+- **Mencari barang** — Ketik di kotak pencarian: nama barang, kode, merk, serial number, atau spesifikasi ringkas.
+- **Melihat Detail Spesifikasi (Pop-up Sheet)** — Sentuh baris barang apa saja pada tabel untuk memunculkan modal pop-up detail spesifikasi (Merk, Tipe, RAM/SSD/Resolusi/Port, Serial Number, Stok & Kondisi).
 
 ### Menambah barang baru
 
 1. Tekan tombol **Tambah Barang**.
-2. Isi **Kode Barang**, **Nama Barang**, **Kategori**, dan **Jumlah unit**.
-   **Merk** dan **Serial Number** boleh dikosongkan.
+2. Isi **Kode Barang**, **Nama Barang**, **Kategori**, **Spesifikasi / Detail Ringkas** (*fleksibel untuk laptop maupun Switch/Proyektor/Kabel*), dan **Jumlah unit**.
+   **Merk** dan **Serial Number** boleh dikosongkan jika tidak ada.
 3. Tekan **Simpan**.
 
-Untuk mengubah barang yang sudah ada, buka barangnya lalu **Ubah Barang** →
-**Simpan Perubahan**.
+Untuk mengubah atau menghapus barang yang sudah ada, buka baris barangnya pada tabel untuk menampilkan pop-up detail, lalu tekan **Edit Barang** atau **Hapus Barang**.
 
 ### Mengubah jumlah stok (mutasi)
 

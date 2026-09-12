@@ -93,7 +93,7 @@ akun Anda" (reset manual lewat menu Kelola User)
 [Search bar "Cari Produk"]
 [Grid 2x2 — fitur sekunder]: Kategori | Kelola User
                               Data Peminjam | Pengaturan Denda
-[Ringkasan angka]: Total Barang, Sedang Dipinjam, Perlu Verifikasi
+[Ringkasan angka]: Total Barang (klik → /aset), Sedang Dipinjam, Perlu Verifikasi, Terlambat
 [FAB "+ Peminjaman Baru" mengambang kanan bawah, warna Crimson #D8232A]
 [Bottom Nav]: Dashboard(aktif) | Aset Lab | Transaksi | Laporan
 ```
@@ -101,17 +101,19 @@ Dashboard Kepala Program: app bar sama, tanpa grid sekunder (karena tidak ada fi
 
 ### 3.3 Aset Lab — Segmented Control (Daftar Barang | Mutasi Stok)
 ```
-Bottom Nav → [Aset Lab] → Segmented Control: [Daftar Barang] | Mutasi Stok
-   Search bar "Cari nama barang...."
-   Filter chip kategori (pill): Semua | Komputer | Jaringan | Elektronik
-   Tombol "+ Tambah Barang" (full-width, atau via FAB kontekstual di tab ini)
+Bottom Nav / Klik Card "Total Barang" → [Aset Lab] → Segmented Control: [Daftar Barang] | Mutasi Stok
+   Search bar "Cari nama, kode, merk, atau SN...."
+   Filter chip kategori 1-Klik: Semua | Komputer | Jaringan | Elektronik | Aksesori & Tools
+   FAB "+ Tambah Barang"
         │
         ▼
-   List card: nama barang (title-md), kode & stok (body-sm, #64748B),
-   badge status pill kanan (Nominal/In-Service hijau = "Tersedia")
+   Tabel Data Barang terstruktur: Header Navy (KODE | NAMA BARANG & SPESIFIKASI | STOK)
         │
         ▼
-   Tap → Detail/Edit Barang → Simpan / Hapus (konfirmasi dialog)
+   Tap Baris Barang → Pop-up Modal Detail Spesifikasi Pop-up (BarangDetailSheet):
+   - Header visual thumbnail barang & status pill (Tersedia/Habis)
+   - Tabel Rincian: Merk, Tipe, RAM/SSD/Resolusi/Port (Spesifikasi Fleksibel), Serial Number, Stok, Kondisi, Tanggal Input
+   - Tombol "Edit Barang" & "Hapus Barang" (konfirmasi dialog)
 ```
 
 ### 3.3b Aset Lab — Mutasi Stok (BARU, FR-13, hasil review Flowchart System asli)

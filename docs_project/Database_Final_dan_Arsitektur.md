@@ -64,6 +64,7 @@ erDiagram
         INT stok
         DATE tanggal_input
         VARCHAR serial_number
+        VARCHAR spesifikasi
     }
     PEMINJAM {
         INT id_peminjam PK
@@ -154,6 +155,7 @@ erDiagram
 | stok | INT(11) | Stok tersedia (berkurang saat dipinjam, bertambah saat kembali) |
 | tanggal_input | DATE | |
 | serial_number | VARCHAR(50) NULL | **Rekomendasi baru** (hasil review desain Figma) — SN per unit barang, opsional |
+| spesifikasi | VARCHAR(255) NULL | **BARU (Feedback Klien)** — Spesifikasi / detail ringkas fleksibel (RAM/SSD/CPU/Display/Port/Lumens) |
 
 ### 3.4 `peminjam` (subjek peminjam — UPDATE: tambah 2 field baru)
 | Field | Tipe | Keterangan |
