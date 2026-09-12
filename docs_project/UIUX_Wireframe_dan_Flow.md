@@ -63,62 +63,48 @@
 ## 3. User Flow per Fitur
 
 ### 3.1 Login
-```
-<img width="710" height="1542" alt="Tampilan-Login" src="https://github.com/user-attachments/assets/b742fba4-c924-4b2e-bb10-a960a96c8923" />
 
-```
+<img width="710" height="1542" alt="Tampilan-Login" src="https://github.com/user-attachments/assets/b742fba4-c924-4b2e-bb10-a960a96c8923" />
 
 ### 3.2 Dashboard (tab pertama di Bottom Nav)
 
 ### 3.2.1 Ringkasan Inventoris
-```
+
 <img width="710" height="1542" alt="Dashboard-Laboran" src="https://github.com/user-attachments/assets/a217d5df-e731-4715-9ec2-20bf6cc88c43" />
 
-```
+### 3.2.2 Dashboard Laboran + Akses Cepat
 
-### 3.2.1 Dasboard Laboran + Akses Cepat
-```
 <img width="710" height="1542" alt="Dashboard-Laboran + Akses Cepat" src="https://github.com/user-attachments/assets/cfd162af-44e2-4064-9b5f-b7c167db4c02" />
 
-```
-
-
-
 ### 3.3 Aset Lab — Segmented Control (Daftar Barang | Mutasi Stok)
-```
+
 <img width="710" height="1542" alt="Daftar-Barang-Semua-Kategori" src="https://github.com/user-attachments/assets/08d73489-8ce6-4912-8477-636c980676ea" />
 
-```
+### 3.3.1 Aset Lab — Mutasi Stok 
 
-### 3.3 Aset Lab — Mutasi Stok 
-```
 <img width="710" height="1542" alt="Mutasi-Stok" src="https://github.com/user-attachments/assets/e3954e2a-3c22-41a8-9fc0-34d143f3a8db" />
 
-
-```
 Fitur ini **terpisah** dari perubahan stok akibat transaksi Peminjaman/Pengembalian — khusus penyesuaian manual (barang baru datang, rusak, hilang, dll), sesuai Flowchart System asli skripsi yang memisahkan menu "Kelola Stok Barang" dari "Kelola Barang".
 
-
-
 ### 3.4 Kelola User (dari grid Dashboard)
-```
+
 <img width="710" height="1542" alt="Kelola-User" src="https://github.com/user-attachments/assets/bbd95957-9f79-4fd8-a956-4a160b31465f" />
 
-
+### 3.6 Data Peminjam (dari grid Dashboard) — Tampilan Tabel
 ```
-
-### 3.6 Data Peminjam (dari grid Dashboard) — tampilan tabel
-```
-
+┌────────────────────────────────────────────────────────────────────────┐
+│ No │ Nama Peminjam    │ Identitas & Kelas          │ No HP       │ Aksi │
+├────┼──────────────────┼────────────────────────────┼─────────────┼──────┤
+│ 1  │ Raka Maulana     │ 0051234567 · XI RPL 2      │ 0812345678  │ ✎ 🗑  │
+│ 2  │ Siti Aminah      │ -                          │ -           │ ✎ 🗑  │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### 3.7 Transaksi — Peminjaman (segmented control kiri)
-```
-<<<<<<< HEAD
+
 <img width="742" height="1612" alt="Peminjaman" src="https://github.com/user-attachments/assets/fd870288-905a-4fa7-a3ce-1c6ccee47929" />
 
-
-=======
+```
 Bottom Nav → [Transaksi] → Segmented Control: [Peminjaman] | Pengembalian
    Search bar "Cari kode, nama peminjam, atau NIS..."
    Filter chip: Semua | Menunggu Verifikasi* | Dipinjam | Dikembalikan | Dibatalkan
@@ -133,28 +119,19 @@ Bottom Nav → [Transaksi] → Segmented Control: [Peminjaman] | Pengembalian
         │
         ▼
    FAB "+ Peminjaman Baru" → form multi-item (lihat §3.8)
->>>>>>> 323412c (feat(ui): update Data Peminjam and Peminjaman to Data Table layout and Laporan to Category Switcher with 3 export options)
 ```
 
 ### 3.8 Peminjaman Baru — Multi-Item (dibuka dari FAB + Peminjaman Baru)
-```
+
 <img width="742" height="1612" alt="Peminjaman-Baru" src="https://github.com/user-attachments/assets/8ff0bcdf-77ee-4699-b37b-0d022a3c0e91" />
 
-
-```
-
 ### 3.9 Transaksi — Pengembalian (segmented control kanan)
-```
+
 <img width="742" height="1612" alt="Pengembalian" src="https://github.com/user-attachments/assets/4669611f-abd7-4853-9101-3e0cdac30110" />
 
-```
-
 ### 3.10 Verifikasi Peminjaman (Kepala Program)
-```
+
 <img width="742" height="1612" alt="Verifikasi-Peminjaman" src="https://github.com/user-attachments/assets/b8b53c49-b5c3-41a8-b67b-f10dcd2c6928" />
-
-
-```
 
 ### 3.11 Laporan (5 jenis dengan Category Switcher Chips)
 ```
@@ -173,10 +150,8 @@ Laboran: generate & unduh. Kepala Program: read-only, label "Mode Lihat Saja".
 "Laporan Denda" ditambahkan hasil review Flowchart System asli skripsi — rekap seluruh denda keterlambatan pengembalian.
 
 ### 3.12 Pengaturan Denda (dari grid Dashboard)
-```
-<img width="742" height="1612" alt="Penganturan-Denda" src="https://github.com/user-attachments/assets/b1455add-4dfb-4fe3-861f-551d168da4b5" />
 
-```
+<img width="742" height="1612" alt="Penganturan-Denda" src="https://github.com/user-attachments/assets/b1455add-4dfb-4fe3-861f-551d168da4b5" />
 
 ---
 
@@ -205,10 +180,8 @@ DESIGN.md mendefinisikan 3 gaya badge dasar (Nominal/Hijau, Pending/Gold, Critic
 
 
 ### 5.3 Transaksi — Peminjaman (segmented control)
-```
-<img width="742" height="1612" alt="Peminjaman" src="https://github.com/user-attachments/assets/3c231398-c9ac-484b-aaa6-cb23e8e5a712" />
 
-```
+<img width="742" height="1612" alt="Peminjaman" src="https://github.com/user-attachments/assets/3c231398-c9ac-484b-aaa6-cb23e8e5a712" />
 
 ### 5.4 Data Peminjam — Tabel
 ```
@@ -223,11 +196,9 @@ DESIGN.md mendefinisikan 3 gaya badge dasar (Nominal/Hijau, Pending/Gold, Critic
 ```
 
 ### 5.5 Verifikasi (Kepala Program)
-```
+
 <img width="742" height="1612" alt="Verifikasi-Peminjaman" src="https://github.com/user-attachments/assets/e90ddce2-c406-4621-ad4a-666779d1a899" />
 
-
-```
 
 ---
 
