@@ -126,7 +126,7 @@ SMK Al-Madani saat ini mengelola inventaris laboratorium komputer menggunakan Mi
 
 ## 8. Database Schema
 
-Skema final ada di dokumen terpisah: **`Database_Final_dan_Arsitektur.md`** (v1.3), agar tidak ada dua sumber kebenaran yang bisa tidak sinkron. Ringkasan perubahan terbaru (Putaran 3, hasil cek mockup asli skripsi):
+Skema final ada di dokumen terpisah: **`Database_Final_dan_Arsitektur.md`**, agar tidak ada dua sumber kebenaran yang bisa tidak sinkron. Ringkasan perubahan terbaru (Putaran 3, hasil cek mockup asli skripsi):
 - `peminjam` ditambah `nis_nip` & `kelas_jabatan`.
 - Status `ditolak` diganti jadi `dibatalkan` (istilah dari mockup), plus kolom `alasan_dibatalkan`.
 - Status `menunggu_verifikasi` & `sebagian_kembali` ditambahkan sebagai tab ekstra di layar Peminjaman/Pengembalian, di luar 3 tab dasar mockup asli.
