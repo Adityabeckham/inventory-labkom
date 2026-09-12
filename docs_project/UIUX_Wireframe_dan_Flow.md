@@ -91,35 +91,14 @@ Fitur ini **terpisah** dari perubahan stok akibat transaksi Peminjaman/Pengembal
 <img width="710" height="1542" alt="Kelola-User" src="https://github.com/user-attachments/assets/bbd95957-9f79-4fd8-a956-4a160b31465f" />
 
 ### 3.6 Data Peminjam (dari grid Dashboard) — Tampilan Tabel
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│ No │ Nama Peminjam    │ Identitas & Kelas          │ No HP       │ Aksi │
-├────┼──────────────────┼────────────────────────────┼─────────────┼──────┤
-│ 1  │ Raka Maulana     │ 0051234567 · XI RPL 2      │ 0812345678  │ ✎ 🗑  │
-│ 2  │ Siti Aminah      │ -                          │ -           │ ✎ 🗑  │
-└────────────────────────────────────────────────────────────────────────┘
-```
+<img width="742" height="1612" alt="Data-Peminjam" src="https://github.com/user-attachments/assets/d32036a1-a576-466e-87dd-19c190785930" />
+
+
 
 ### 3.7 Transaksi — Peminjaman (segmented control kiri)
 
 <img width="742" height="1612" alt="Peminjaman" src="https://github.com/user-attachments/assets/fd870288-905a-4fa7-a3ce-1c6ccee47929" />
 
-```
-Bottom Nav → [Transaksi] → Segmented Control: [Peminjaman] | Pengembalian
-   Search bar "Cari kode, nama peminjam, atau NIS..."
-   Filter chip: Semua | Menunggu Verifikasi* | Dipinjam | Dikembalikan | Dibatalkan
-   (*tab tambahan — dikonfirmasi klien, di luar 3 status dasar mockup asli)
-        │
-        ▼
-   Tabel Data Peminjaman (Data Table): Kolom Kode, Peminjam, Identitas (NIS/NIP & Kelas),
-   Status Pill, Total Unit, Tgl Pinjam, Tgl Kembali, Aksi (Detail)
-        │
-        ▼
-   Tap Baris / Tombol Detail → Detail Peminjaman Sheet (lihat detail barang & status)
-        │
-        ▼
-   FAB "+ Peminjaman Baru" → form multi-item (lihat §3.8)
-```
 
 ### 3.8 Peminjaman Baru — Multi-Item (dibuka dari FAB + Peminjaman Baru)
 
@@ -134,18 +113,9 @@ Bottom Nav → [Transaksi] → Segmented Control: [Peminjaman] | Pengembalian
 <img width="742" height="1612" alt="Verifikasi-Peminjaman" src="https://github.com/user-attachments/assets/b8b53c49-b5c3-41a8-b67b-f10dcd2c6928" />
 
 ### 3.11 Laporan (5 jenis dengan Category Switcher Chips)
-```
-Bottom Nav → [Laporan]
-   Banner Deep Navy: "Laporan Inventaris — Buat dan cetak laporan data
-   barang sesuai kebutuhan"
-   Filter Periode: Tanggal Dari - Sampai
-        │
-        ▼
-   Kategori Chips: [Semua] | [Data Barang] | [Peminjaman] | [Pengembalian] | [Stok Barang] | [Denda]
-        │
-        ▼
-   Kartu Laporan Terpilih → Informasi Ringkas → 3 Tombol Export: **PDF** | **Word** | **Excel (Spreadsheet)**
-```
+
+<img width="742" height="1612" alt="Galaxy-S22+-localhost (1)" src="https://github.com/user-attachments/assets/4db75ca0-f38d-44c8-908c-169072c5f61b" />
+
 Laboran: generate & unduh. Kepala Program: read-only, label "Mode Lihat Saja".
 "Laporan Denda" ditambahkan hasil review Flowchart System asli skripsi — rekap seluruh denda keterlambatan pengembalian.
 
@@ -184,16 +154,8 @@ DESIGN.md mendefinisikan 3 gaya badge dasar (Nominal/Hijau, Pending/Gold, Critic
 <img width="742" height="1612" alt="Peminjaman" src="https://github.com/user-attachments/assets/3c231398-c9ac-484b-aaa6-cb23e8e5a712" />
 
 ### 5.4 Data Peminjam — Tabel
-```
-┌─────────────────────────────────────┐
-│ ←   Kelola Peminjam                    │
-├─────────────────────────────────────┤
-│ 🔍 Cari peminjam...   + Tambah Peminjam │
-├─────────────────────────────────────┤
-│ No│Nama       │NIS/NIP│Kelas   │HP │✎🗑│
-│ 1 │Raka Maulana│190001│XII TKJ1│08..│✎🗑│
-└─────────────────────────────────────┘
-```
+<img width="742" height="1612" alt="Data-Peminjam" src="https://github.com/user-attachments/assets/5196b47a-cb9b-4366-ab7c-07753fcf3d81" />
+
 
 ### 5.5 Verifikasi (Kepala Program)
 
