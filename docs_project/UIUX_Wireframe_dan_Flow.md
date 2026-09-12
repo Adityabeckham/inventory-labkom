@@ -64,191 +64,84 @@
 
 ### 3.1 Login
 ```
-[Splash: logo "INVENTORY LABKOM"] → [Form Login]
-   Username, Password (toggle show/hide)
-   ☐ Ingat saya          Lupa Password?
-        │
-        ▼
-   Tombol "Masuk" (Deep Navy, full-width, 48px height, radius 12px)
-        │
-   ┌────┴────┐
-   ▼         ▼
- Sukses    Gagal → pesan error, tetap di form
-   │
-   ▼
-"Ingat saya" dicentang → refresh token disimpan lebih lama
-   │
-   ▼
-Redirect sesuai role → Dashboard Laboran (Bottom Nav 5 tab) /
-                        Dashboard Kepala Program (Bottom Nav 4 tab)
-
-[Lupa Password?] → instruksi: "Hubungi Laboran/Admin untuk reset password
-akun Anda" (reset manual lewat menu Kelola User)
+<img width="710" height="1542" alt="Galaxy-S22+-localhost" src="https://github.com/user-attachments/assets/c6723feb-8fbe-4d35-9354-2c5e1c781633" />
 ```
 
 ### 3.2 Dashboard (tab pertama di Bottom Nav)
+
+### 3.2.1 Ringkasan Inventoris
 ```
-[App bar Deep Navy #384C9D, sudut bawah melengkung 24px]
-  "Dashboard" + "Halo Laboran, Selamat Datang Kembali"
-[Search bar "Cari Produk"]
-[Grid 2x2 — fitur sekunder]: Kategori | Kelola User
-                              Data Peminjam | Pengaturan Denda
-[Ringkasan angka]: Total Barang (klik → /aset), Sedang Dipinjam, Perlu Verifikasi, Terlambat
-[FAB "+ Peminjaman Baru" mengambang kanan bawah, warna Crimson #D8232A]
-[Bottom Nav]: Dashboard(aktif) | Aset Lab | Transaksi | Laporan
+<img width="710" height="1542" alt="Galaxy-S22+-localhost (1)" src="https://github.com/user-attachments/assets/144d338c-edd0-4497-84f9-5c802bf20333" />
 ```
-Dashboard Kepala Program: app bar sama, tanpa grid sekunder (karena tidak ada fitur kelola), langsung ringkasan pengajuan menunggu + Bottom Nav 3 tab.
+
+### 3.2.1 Dasboard Laboran + Akses Cepat
+```
+<img width="710" height="1542" alt="Galaxy-S22+-localhost (2)" src="https://github.com/user-attachments/assets/a1f3cea3-ffa0-4c82-83f0-2bc030dfb7c7" />
+```
+
+
 
 ### 3.3 Aset Lab — Segmented Control (Daftar Barang | Mutasi Stok)
 ```
-Bottom Nav / Klik Card "Total Barang" → [Aset Lab] → Segmented Control: [Daftar Barang] | Mutasi Stok
-   Search bar "Cari nama, kode, merk, atau SN...."
-   Filter chip kategori 1-Klik: Semua | Komputer | Jaringan | Elektronik | Aksesori & Tools
-   FAB "+ Tambah Barang"
-        │
-        ▼
-   Tabel Data Barang terstruktur: Header Navy (KODE | NAMA BARANG & SPESIFIKASI | STOK)
-        │
-        ▼
-   Tap Baris Barang → Pop-up Modal Detail Spesifikasi Pop-up (BarangDetailSheet):
-   - Header visual thumbnail barang & status pill (Tersedia/Habis)
-   - Tabel Rincian: Merk, Tipe, RAM/SSD/Resolusi/Port (Spesifikasi Fleksibel), Serial Number, Stok, Kondisi, Tanggal Input
-   - Tombol "Edit Barang" & "Hapus Barang" (konfirmasi dialog)
+<img width="710" height="1542" alt="Galaxy-S22+-localhost" src="https://github.com/user-attachments/assets/9feaa955-2c64-42f7-aace-54e8f0976447" />
+
 ```
 
-### 3.3b Aset Lab — Mutasi Stok (BARU, FR-13, hasil review Flowchart System asli)
+### 3.3 Aset Lab — Mutasi Stok 
 ```
-Bottom Nav → [Aset Lab] → Segmented Control: Daftar Barang | [Mutasi Stok]
-   Tombol "+ Catat Mutasi"
-        │
-        ▼
-   Form: pilih Barang, jenis (toggle Masuk/Keluar), jumlah, keterangan
-   (contoh: "Pengadaan APBD 2026" / "Rusak — dibuang"), tanggal → Simpan
-        │
-        ▼
-   Sistem: update `barang.stok` otomatis (+jumlah masuk / -jumlah keluar,
-   validasi tidak boleh negatif) + catat ke riwayat
-        │
-        ▼
-   Riwayat Mutasi — list: nama barang, jenis (badge hijau Masuk / merah
-   Keluar), jumlah, keterangan, tanggal, siapa yang mencatat
+<img width="710" height="1542" alt="Galaxy-S22+-localhost" src="https://github.com/user-attachments/assets/7876c955-73c2-45e5-a4d4-6537aa969bc9" />
+
 ```
 Fitur ini **terpisah** dari perubahan stok akibat transaksi Peminjaman/Pengembalian — khusus penyesuaian manual (barang baru datang, rusak, hilang, dll), sesuai Flowchart System asli skripsi yang memisahkan menu "Kelola Stok Barang" dari "Kelola Barang".
 
-### 3.4 Kategori (dari grid Dashboard)
-```
-Dashboard → [Kategori] → List kategori → (+) Tambah Kategori (nama_kategori)
-```
 
-### 3.5 Kelola User (dari grid Dashboard)
+
+### 3.4 Kelola User (dari grid Dashboard)
 ```
-Dashboard → [Kelola User]
-   List akun: username, badge level (Laboran = navy tint / Kepala Program =
-   gold tint), ikon edit & hapus
-        │
-        ▼
-   (+) Tambah User → form: username, password, level (dropdown) → Simpan
+<img width="710" height="1542" alt="Kelola-User" src="https://github.com/user-attachments/assets/83baa0c7-0cf6-4990-9dc8-c5dc263715c0" />
+
 ```
 
 ### 3.6 Data Peminjam (dari grid Dashboard) — tampilan tabel
 ```
-Dashboard → [Data Peminjam]
-   Search bar + tombol "+ Tambah Peminjam"
-        │
-        ▼
-   Tabel: No | Nama Peminjam | NIS/NIP | Kelas/Jabatan | No. HP | Aksi
-        │
-        ▼
-   Form tambah/edit: Nama, NIS/NIP, Kelas/Jabatan, No. HP → Simpan
+
 ```
 
 ### 3.7 Transaksi — Peminjaman (segmented control kiri)
 ```
-Bottom Nav → [Transaksi] → Segmented Control: [Peminjaman] | Pengembalian
-   Search bar "Cari peminjaman....'
-   Filter chip: Semua | Menunggu Verifikasi* | Dipinjam | Dikembalikan | Dibatalkan
-   (*tab tambahan — dikonfirmasi klien, di luar 3 status dasar mockup asli)
-        │
-        ▼
-   List card: kode PMJ-2026-001, badge status pill kanan atas, nama peminjam,
-   tgl pinjam, jatuh tempo
-        │
-        ▼
-   FAB "+ Peminjaman Baru" → form multi-item (lihat §3.8)
+<img width="742" height="1612" alt="Peminjaman" src="https://github.com/user-attachments/assets/b0cc5e18-f577-44d9-995e-c7c07370e55a" />
+
 ```
 
-### 3.8 Peminjaman Baru — Multi-Item (dibuka dari FAB)
+### 3.8 Peminjaman Baru — Multi-Item (dibuka dari FAB + Peminjaman Baru)
 ```
-Pilih Peminjam (cari/tambah baru)
-     │
-     ▼
-[Keranjang Barang] — tambah barang satu per satu (cari, pilih, isi jumlah),
-     ulangi untuk barang berikutnya
-     │
-     ▼
-Tanggal Pinjam & Jatuh Tempo
-     │
-     ▼
-Review → Simpan
-     │
-     ▼
-Sistem: buat header `peminjaman` (status = menunggu_verifikasi, kode
-PMJ-otomatis) + N baris `peminjaman_detail` + kurangi stok tiap barang
+<img width="742" height="1612" alt="Galaxy-S22+-localhost (3)" src="https://github.com/user-attachments/assets/529e4f56-c448-4b44-bb4a-009cbef4e109" />
+
 ```
 
 ### 3.9 Transaksi — Pengembalian (segmented control kanan)
 ```
-Bottom Nav → [Transaksi] → Segmented Control: Peminjaman | [Pengembalian]
-   Search bar "Cari pengembalian...."
-   Filter chip: Semua | Belum Kembali | Sebagian Kembali* | Sudah Kembali | Terlambat
-   (*tab tambahan — dikonfirmasi klien)
-        │
-        ▼
-   List card (per PMJ-code) → tap → Detail Pengembalian (status per-item:
-   ✅ Sudah kembali / ⏳ Masih dipinjam)
-        │
-        ▼
-   Tap salah satu barang → Form Pengembalian: tanggal, kondisi (toggle
-   Baik/Rusak), info denda otomatis (read-only) → Konfirmasi
+<img width="742" height="1612" alt="Galaxy-S22+-localhost (1)" src="https://github.com/user-attachments/assets/7ffe7652-11b1-4833-a490-019bd2e91ef0" />
+
 ```
 
 ### 3.10 Verifikasi Peminjaman (Kepala Program)
 ```
-Bottom Nav → [Verifikasi]
-   List pengajuan menunggu_verifikasi (peminjam, laboran pencatat, jumlah
-   barang, waktu pengajuan)
-        │
-        ▼
-   Tap → Detail Pengajuan (daftar barang, tanggal pinjam & jatuh tempo)
-        │
-        ▼
-   ┌─────────┴─────────┐
-   ▼                   ▼
- Setujui            Tolak (isi Alasan Dibatalkan)
-   │                   │
-   ▼                   ▼
-status → dipinjam   status → dibatalkan
-                     + stok semua barang di transaksi ini
-                       OTOMATIS dikembalikan
+<img width="742" height="1612" alt="Galaxy-S22+-localhost (6)" src="https://github.com/user-attachments/assets/364f47a6-5ad7-4d11-91ea-8acdd5dbe8f6" />
+
 ```
 
 ### 3.11 Laporan (5 jenis)
 ```
-Bottom Nav → [Laporan]
-   Banner Deep Navy: "Laporan Inventaris — Buat dan cetak laporan data
-   barang sesuai kebutuhan"
-   5 card: Laporan Data Barang | Laporan Peminjaman | Laporan Pengembalian
-   | Laporan Stok Barang | Laporan Denda
-        │
-        ▼
-   Tap → filter tanggal (opsional) → pilih format **PDF / Word / Excel** → Export & Unduh
+
 ```
 Laboran: generate & unduh. Kepala Program: read-only, label "Mode Lihat Saja".
 "Laporan Denda" ditambahkan hasil review Flowchart System asli skripsi — rekap seluruh denda keterlambatan pengembalian.
 
 ### 3.12 Pengaturan Denda (dari grid Dashboard)
 ```
-Dashboard → [Pengaturan Denda] → input Tarif Denda per Hari (Rp) → Simpan
+<img width="742" height="1612" alt="Galaxy-S22+-localhost (4)" src="https://github.com/user-attachments/assets/af177d16-e83a-4a8c-9243-ed222273c00f" />
+
 ```
 
 ---
@@ -278,24 +171,8 @@ DESIGN.md mendefinisikan 3 gaya badge dasar (Nominal/Hijau, Pending/Gold, Critic
 
 ### 5.3 Transaksi — Peminjaman (segmented control)
 ```
-┌─────────────────────────────┐
-│ ←   Transaksi                  │
-├─────────────────────────────┤
-│ [ Peminjaman ][ Pengembalian ] │ ← segmented control, aktif = putih+shadow
-│ 🔍 Cari peminjaman....          │
-│ [Semua][Menunggu][Dipinjam]    │
-│ [Dikembalikan][Dibatalkan]     │
-├─────────────────────────────┤
-│ PMJ-2026-001      🟡 Dipinjam  │
-│ Ahmad — Tgl Pinjam 04 Mei      │
-│ Jatuh Tempo: 09 Mei             │
-├─────────────────────────────┤
-│ PMJ-2026-002    ⚪ Menunggu     │
-│ Sari — Tgl Pinjam 05 Mei        │
-│                          ⊕FAB  │
-├─────────────────────────────┤
-│ [Dashboard][Aset Lab][Transaksi][Laporan] │
-└─────────────────────────────┘
+<img width="742" height="1612" alt="Peminjaman" src="https://github.com/user-attachments/assets/40e215bf-80da-47d3-932e-9f66be17fb80" />
+
 ```
 
 ### 5.4 Data Peminjam — Tabel
@@ -312,19 +189,8 @@ DESIGN.md mendefinisikan 3 gaya badge dasar (Nominal/Hijau, Pending/Gold, Critic
 
 ### 5.5 Verifikasi (Kepala Program)
 ```
-┌─────────────────────────────┐
-│ ← Detail Pengajuan            │
-├─────────────────────────────┤
-│ Peminjam: Ahmad                │
-│ Dicatat oleh: Laboran Rina     │
-│ Jatuh Tempo: 09 Mei 2026       │
-│ 3 barang — lihat detail ▾     │
-├─────────────────────────────┤
-│  [Tolak, outline merah]        │
-│  [Setujui, navy solid]         │
-├─────────────────────────────┤
-│ [Dashboard][Verifikasi][Laporan] │ ← Bottom Nav 3 tab
-└─────────────────────────────┘
+<img width="742" height="1612" alt="Galaxy-S22+-localhost (6)" src="https://github.com/user-attachments/assets/815e40c4-9b08-4592-95d2-c552bd01af42" />
+
 ```
 
 ---
