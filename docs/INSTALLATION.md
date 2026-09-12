@@ -178,7 +178,7 @@ Alamat API dipetakan di file `mobile/lib/core/config/app_config.dart`. Secara de
 
 ---
 
-<<<<<<< HEAD
+
 ## 6. Membangun APK Rilis
 
 ```bash
