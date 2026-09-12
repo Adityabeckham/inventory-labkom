@@ -1541,7 +1541,7 @@ void main() {
     /// kelimanya benar-benar terjangkau di layar 360dp.
     Future<void> gulirKe(WidgetTester tester, String judul) async {
       await tester.scrollUntilVisible(
-        find.text(judul),
+        find.descendant(of: find.byType(Card), matching: find.text(judul)),
         200,
         scrollable: find.byType(Scrollable).first,
       );
@@ -1568,7 +1568,7 @@ void main() {
       ]) {
         await gulirKe(tester, judul);
         expect(
-          find.text(judul),
+          find.descendant(of: find.byType(Card), matching: find.text(judul)),
           findsOne,
           reason: 'kartu $judul tak terjangkau',
         );
@@ -1632,6 +1632,8 @@ void main() {
     ) async {
       await pasangLaporan(tester);
 
+      await tester.ensureVisible(find.text('Excel').first);
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Excel').first);
       await tester.pumpAndSettle();
 

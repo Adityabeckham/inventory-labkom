@@ -17,13 +17,24 @@ import '../domain/laporan.dart';
 /// Satu layar untuk kedua peran. Endpoint dan datanya sama — Kepala Program
 /// memang berhak membaca seluruh laporan; yang berbeda hanya penandaan
 /// "Mode Lihat Saja" supaya jelas bahwa dari sini tidak ada yang bisa diubah.
-class LaporanScreen extends ConsumerWidget {
+class LaporanScreen extends ConsumerStatefulWidget {
   const LaporanScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LaporanScreen> createState() => _LaporanScreenState();
+}
+
+class _LaporanScreenState extends ConsumerState<LaporanScreen> {
+  JenisLaporan? _terpilih;
+
+  @override
+  Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
     final text = Theme.of(context).textTheme;
+
+    final daftarTampil = _terpilih == null
+        ? JenisLaporan.values
+        : [_terpilih!];
 
     return Scaffold(
       appBar: AppBar(
@@ -122,9 +133,20 @@ class LaporanScreen extends ConsumerWidget {
           const _FilterPeriode(),
           const SizedBox(height: AppSpacing.lg),
 
-          Text('Jenis laporan', style: text.titleMedium),
-          const SizedBox(height: AppSpacing.sm),
-          for (final jenis in JenisLaporan.values) ...[
+          Text('Kategori & Jenis Laporan', style: text.titleMedium),
+          const SizedBox(height: AppSpacing.xs),
+          Wrap(
+            spacing: AppSpacing.xs,
+            runSpacing: AppSpacing.xs,
+            children: [
+              _chip('Semua', aktif: _terpilih == null, onTap: () => setState(() => _terpilih = null)),
+              for (final j in JenisLaporan.values)
+                _chip(j.judul, aktif: _terpilih == j, onTap: () => setState(() => _terpilih = j)),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+
+          for (final jenis in daftarTampil) ...[
             _KartuLaporan(jenis: jenis),
             const SizedBox(height: AppSpacing.cardGap),
           ],
@@ -132,7 +154,22 @@ class LaporanScreen extends ConsumerWidget {
       ),
     );
   }
+
+  Widget _chip(String label, {required bool aktif, required VoidCallback onTap}) {
+    return ChoiceChip(
+      label: Text(label),
+      selected: aktif,
+      onSelected: (_) => onTap(),
+      selectedColor: AppColors.navy,
+      labelStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
+            color: aktif ? AppColors.onNavy : AppColors.neutralFg,
+          ),
+      showCheckmark: false,
+    );
+  }
 }
+
+
 
 /// Periode berlaku untuk seluruh laporan berperiode sekaligus — satu tempat,
 /// bukan diulang di tiap kartu.

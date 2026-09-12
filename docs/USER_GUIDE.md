@@ -247,8 +247,7 @@ atasnya Rp 1.000.000 per hari.
 
 ## 9. Laporan (kedua peran)
 
-Tab **Laporan** menyediakan lima jenis laporan, masing-masing dalam tiga format:
-**PDF**, **Word**, dan **Excel**.
+Tab **Laporan** menyediakan lima jenis laporan, disajikan dengan **Kategori Filter Switcher Chips** (`Semua`, `Data Barang`, `Peminjaman`, `Pengembalian`, `Stok Barang`, `Denda`) di mana masing-masing laporan dapat di-export ke **3 format**: **PDF**, **Word**, dan **Excel (Spreadsheet)**.
 
 | Laporan | Isinya |
 |---|---|
@@ -260,11 +259,12 @@ Tab **Laporan** menyediakan lima jenis laporan, masing-masing dalam tiga format:
 
 **Cara mengunduh:**
 
-1. Atur **Periode** bila perlu — isi **Dari** dan/atau **Sampai**.
+1. **Pilih Kategori / Jenis Laporan** — Sentuh chip kategori di atas (`Semua`, `Data Barang`, `Peminjaman`, `Pengembalian`, `Stok Barang`, `Denda`) untuk langsung menyaring tampilan laporan yang diinginkan.
+2. **Atur Periode (opsional)** — Isi **Dari** dan/atau **Sampai**.
    Dibiarkan kosong berarti seluruh periode. Tekan **Bersihkan** untuk
    mengosongkannya lagi.
-2. Tekan tombol format yang diinginkan pada kartu laporannya.
-3. Berkasnya tersimpan dan langsung terbuka di aplikasi pembaca yang ada di HP.
+3. **Pilih Format Export** — Tekan tombol format yang diinginkan (**PDF**, **Word**, atau **Excel**) pada kartu laporan terpilih.
+4. Berkasnya tersimpan dan langsung terbuka di aplikasi pembaca yang ada di HP.
 
 > Laporan **Stok** tidak terpengaruh filter periode — isinya keadaan sekarang,
 > bukan rentang waktu.

@@ -169,16 +169,90 @@ class _PeminjamanView extends ConsumerWidget {
             emptyMessage: filter.cari.isEmpty && filter.status == null
                 ? 'Belum ada transaksi peminjaman. Buat lewat tombol di bawah.'
                 : 'Tidak ada transaksi yang cocok dengan filter ini.',
-            builder: (list) => ListView.separated(
+            builder: (list) => SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.screenMargin,
                 AppSpacing.xs,
                 AppSpacing.screenMargin,
                 AppSpacing.xxxl * 2,
               ),
-              itemCount: list.length,
-              separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.cardGap),
-              itemBuilder: (context, i) => _PeminjamanCard(peminjaman: list[i]),
+              child: Card(
+                clipBehavior: Clip.antiAlias,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: DataTable(
+                    headingRowColor: WidgetStateProperty.all(
+                      AppColors.navyTint.withAlpha(128),
+                    ),
+                    columns: const [
+                      DataColumn(label: Text('Kode')),
+                      DataColumn(label: Text('Peminjam')),
+                      DataColumn(label: Text('Identitas')),
+                      DataColumn(label: Text('Status')),
+                      DataColumn(label: Text('Total Unit')),
+                      DataColumn(label: Text('Pinjam')),
+                      DataColumn(label: Text('Kembali')),
+                      DataColumn(label: Text('Aksi')),
+                    ],
+                    rows: List.generate(list.length, (i) {
+                      final p = list[i];
+                      void bukaDetail() =>
+                          PeminjamanDetailSheet.show(context, id: p.id);
+
+                      return DataRow(
+                        cells: [
+                          DataCell(
+                            InkWell(
+                              onTap: bukaDetail,
+                              child: Text(
+                                p.kode,
+                                style: AppTypography.code(
+                                  color: AppColors.navy,
+                                ).copyWith(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                          DataCell(
+                            InkWell(
+                              onTap: bukaDetail,
+                              child: Text(
+                                p.namaPeminjam,
+                                style: const TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ),
+                          DataCell(
+                            Text(
+                              p.identitasPeminjam.isNotEmpty ? p.identitasPeminjam : '-',
+                              style: AppTypography.code(color: AppColors.textMuted),
+                            ),
+                          ),
+                          DataCell(
+                            StatusPill(
+                              label: p.status.label,
+                              style: StatusStyle.of(p.status),
+                            ),
+                          ),
+                          DataCell(
+                            Text('${p.totalUnit} unit (${p.jumlahItem} jenis)'),
+                          ),
+                          DataCell(Text(p.tanggalPinjam)),
+                          DataCell(Text(p.tanggalKembali)),
+                          DataCell(
+                            IconButton(
+                              onPressed: bukaDetail,
+                              icon: const Icon(Icons.visibility_outlined),
+                              tooltip: 'Lihat Detail Peminjaman',
+                              color: AppColors.navy,
+                              iconSize: 20,
+                            ),
+                          ),
+                        ],
+                      );
+                    }),
+                  ),
+                ),
+              ),
             ),
           ),
         ),
@@ -242,48 +316,3 @@ class _StatusChips extends StatelessWidget {
   }
 }
 
-class _PeminjamanCard extends StatelessWidget {
-  const _PeminjamanCard({required this.peminjaman});
-
-  final Peminjaman peminjaman;
-
-  @override
-  Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    final p = peminjaman;
-
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => PeminjamanDetailSheet.show(context, id: p.id),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(child: Text(p.kode, style: AppTypography.code())),
-                  const SizedBox(width: AppSpacing.xs),
-                  StatusPill(label: p.status.label, style: StatusStyle.of(p.status)),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(p.namaPeminjam,
-                  style: text.titleMedium, overflow: TextOverflow.ellipsis),
-              if (p.identitasPeminjam.isNotEmpty)
-                Text(p.identitasPeminjam,
-                    style: AppTypography.code(color: AppColors.textMuted)),
-              const SizedBox(height: AppSpacing.xxs),
-              Text(
-                '${p.jumlahItem} jenis · ${p.totalUnit} unit · '
-                'pinjam ${p.tanggalPinjam} · tempo ${p.tanggalKembali}',
-                style: text.bodySmall,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}

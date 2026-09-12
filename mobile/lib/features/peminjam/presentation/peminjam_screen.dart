@@ -58,20 +58,78 @@ class PeminjamScreen extends ConsumerWidget {
               emptyMessage: cari.isEmpty
                   ? 'Belum ada data peminjam.'
                   : 'Tidak ada peminjam yang cocok dengan pencarian.',
-              builder: (list) => ListView.separated(
+              builder: (list) => SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.screenMargin,
                   0,
                   AppSpacing.screenMargin,
                   AppSpacing.xxxl * 2,
                 ),
-                itemCount: list.length,
-                separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.cardGap),
-                itemBuilder: (context, i) => _PeminjamCard(
-                  peminjam: list[i],
-                  nomor: i + 1,
-                  onEdit: () => _form(context, ref, existing: list[i]),
-                  onHapus: () => _hapus(context, ref, list[i]),
+                child: Card(
+                  clipBehavior: Clip.antiAlias,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: DataTable(
+                      headingRowColor: WidgetStateProperty.all(
+                        AppColors.navyTint.withAlpha(128),
+                      ),
+                      columns: const [
+                        DataColumn(label: Text('#')),
+                        DataColumn(label: Text('Nama Peminjam')),
+                        DataColumn(label: Text('Identitas & Kelas')),
+                        DataColumn(label: Text('No HP')),
+                        DataColumn(label: Text('Aksi')),
+                      ],
+                      rows: List.generate(list.length, (i) {
+                        final p = list[i];
+                        final identitas = [
+                          if (p.nisNip?.isNotEmpty ?? false) p.nisNip!,
+                          if (p.kelasJabatan?.isNotEmpty ?? false) p.kelasJabatan!,
+                        ].join(' · ');
+
+                        return DataRow(
+                          cells: [
+                            DataCell(Text('${i + 1}')),
+                            DataCell(
+                              Text(p.nama, style: const TextStyle(fontWeight: FontWeight.bold)),
+                            ),
+                            DataCell(
+                              Text(
+                                identitas.isNotEmpty ? identitas : '-',
+                                style: AppTypography.code(color: AppColors.textMuted),
+                              ),
+                            ),
+                            DataCell(
+                              Text(
+                                (p.noHp?.isNotEmpty ?? false) ? p.noHp! : '-',
+                              ),
+                            ),
+                            DataCell(
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    onPressed: () => _form(context, ref, existing: p),
+                                    icon: const Icon(Icons.edit_outlined),
+                                    tooltip: 'Ubah data',
+                                    color: AppColors.navy,
+                                    iconSize: 20,
+                                  ),
+                                  IconButton(
+                                    onPressed: () => _hapus(context, ref, p),
+                                    icon: const Icon(Icons.delete_outline),
+                                    tooltip: 'Hapus peminjam',
+                                    color: AppColors.crimson,
+                                    iconSize: 20,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        );
+                      }),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -117,70 +175,3 @@ class PeminjamScreen extends ConsumerWidget {
   }
 }
 
-class _PeminjamCard extends StatelessWidget {
-  const _PeminjamCard({
-    required this.peminjam,
-    required this.nomor,
-    required this.onEdit,
-    required this.onHapus,
-  });
-
-  final Peminjam peminjam;
-  final int nomor;
-  final VoidCallback onEdit;
-  final VoidCallback onHapus;
-
-  @override
-  Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Row(
-          children: [
-            CircleAvatar(
-              backgroundColor: AppColors.navyTint,
-              foregroundColor: AppColors.navy,
-              child: Text('$nomor', style: text.labelLarge?.copyWith(
-                color: AppColors.navy,
-              )),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(peminjam.nama, style: text.titleMedium),
-                  const SizedBox(height: AppSpacing.xxs),
-                  Text(
-                    [
-                      if (peminjam.nisNip?.isNotEmpty ?? false) peminjam.nisNip!,
-                      if (peminjam.kelasJabatan?.isNotEmpty ?? false)
-                        peminjam.kelasJabatan!,
-                    ].join(' · '),
-                    style: AppTypography.code(color: AppColors.textMuted),
-                  ),
-                  if (peminjam.noHp?.isNotEmpty ?? false)
-                    Text(peminjam.noHp!, style: text.bodySmall),
-                ],
-              ),
-            ),
-            IconButton(
-              onPressed: onEdit,
-              icon: const Icon(Icons.edit_outlined),
-              tooltip: 'Ubah data',
-              color: AppColors.navy,
-            ),
-            IconButton(
-              onPressed: onHapus,
-              icon: const Icon(Icons.delete_outline),
-              tooltip: 'Hapus peminjam',
-              color: AppColors.crimson,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

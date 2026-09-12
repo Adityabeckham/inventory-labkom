@@ -114,9 +114,26 @@ Fitur ini **terpisah** dari perubahan stok akibat transaksi Peminjaman/Pengembal
 
 ### 3.7 Transaksi — Peminjaman (segmented control kiri)
 ```
+<<<<<<< HEAD
 <img width="742" height="1612" alt="Peminjaman" src="https://github.com/user-attachments/assets/fd870288-905a-4fa7-a3ce-1c6ccee47929" />
 
 
+=======
+Bottom Nav → [Transaksi] → Segmented Control: [Peminjaman] | Pengembalian
+   Search bar "Cari kode, nama peminjam, atau NIS..."
+   Filter chip: Semua | Menunggu Verifikasi* | Dipinjam | Dikembalikan | Dibatalkan
+   (*tab tambahan — dikonfirmasi klien, di luar 3 status dasar mockup asli)
+        │
+        ▼
+   Tabel Data Peminjaman (Data Table): Kolom Kode, Peminjam, Identitas (NIS/NIP & Kelas),
+   Status Pill, Total Unit, Tgl Pinjam, Tgl Kembali, Aksi (Detail)
+        │
+        ▼
+   Tap Baris / Tombol Detail → Detail Peminjaman Sheet (lihat detail barang & status)
+        │
+        ▼
+   FAB "+ Peminjaman Baru" → form multi-item (lihat §3.8)
+>>>>>>> 323412c (feat(ui): update Data Peminjam and Peminjaman to Data Table layout and Laporan to Category Switcher with 3 export options)
 ```
 
 ### 3.8 Peminjaman Baru — Multi-Item (dibuka dari FAB + Peminjaman Baru)
@@ -139,9 +156,18 @@ Fitur ini **terpisah** dari perubahan stok akibat transaksi Peminjaman/Pengembal
 
 ```
 
-### 3.11 Laporan (5 jenis)
+### 3.11 Laporan (5 jenis dengan Category Switcher Chips)
 ```
-
+Bottom Nav → [Laporan]
+   Banner Deep Navy: "Laporan Inventaris — Buat dan cetak laporan data
+   barang sesuai kebutuhan"
+   Filter Periode: Tanggal Dari - Sampai
+        │
+        ▼
+   Kategori Chips: [Semua] | [Data Barang] | [Peminjaman] | [Pengembalian] | [Stok Barang] | [Denda]
+        │
+        ▼
+   Kartu Laporan Terpilih → Informasi Ringkas → 3 Tombol Export: **PDF** | **Word** | **Excel (Spreadsheet)**
 ```
 Laboran: generate & unduh. Kepala Program: read-only, label "Mode Lihat Saja".
 "Laporan Denda" ditambahkan hasil review Flowchart System asli skripsi — rekap seluruh denda keterlambatan pengembalian.
