@@ -18,7 +18,7 @@ abstract final class AppConfig {
     if (_override.isNotEmpty) return _override;
     if (kIsWeb) return 'http://127.0.0.1:8080';
     return defaultTargetPlatform == TargetPlatform.android
-        ? 'http://10.0.2.2:8080' // alias host dari emulator Android
+        ? 'http://10.100.116.226:8080' // alias host dari emulator Android
         : 'http://127.0.0.1:8080';
   }
 
