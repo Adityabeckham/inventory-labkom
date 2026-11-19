@@ -331,7 +331,7 @@ void main() {
       final repo = BarangRepository(await clientLaboran());
 
       expect(await repo.fetch(cari: 'Lenovo'), isNotEmpty);
-      expect((await repo.fetch(cari: 'A05')).first.kode, 'A05');
+      expect((await repo.fetch(cari: 'A05')).first.kode, 'BRG-A05');
     });
 
     test('wildcard % diperlakukan sebagai teks, bukan cocok-semua', () async {

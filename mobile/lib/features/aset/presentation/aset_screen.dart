@@ -36,6 +36,8 @@ class _AsetScreenState extends ConsumerState<AsetScreen> {
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
 
+    final readOnly = !user.isLaboran;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Aset Lab'),
@@ -77,40 +79,45 @@ class _AsetScreenState extends ConsumerState<AsetScreen> {
           const SizedBox(width: 4),
         ],
       ),
-      floatingActionButton: _tab == 0
-          ? FloatingActionButton.extended(
-              onPressed: _tambahBarang,
-              icon: const Icon(Icons.add),
-              label: const Text('Tambah Barang'),
-            )
-          : FloatingActionButton.extended(
-              onPressed: _catatMutasi,
-              icon: const Icon(Icons.swap_vert),
-              label: const Text('Catat Mutasi'),
-            ),
+      floatingActionButton: readOnly
+          ? null
+          : (_tab == 0
+              ? FloatingActionButton.extended(
+                  onPressed: _tambahBarang,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Tambah Barang'),
+                )
+              : FloatingActionButton.extended(
+                  onPressed: _catatMutasi,
+                  icon: const Icon(Icons.swap_vert),
+                  label: const Text('Catat Mutasi'),
+                )),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.screenMargin),
-            child: SegmentedButton<int>(
-              segments: const [
-                ButtonSegment(
-                  value: 0,
-                  label: Text('Daftar Barang'),
-                  icon: Icon(Icons.inventory_2_outlined),
-                ),
-                ButtonSegment(
-                  value: 1,
-                  label: Text('Mutasi Stok'),
-                  icon: Icon(Icons.swap_vert_outlined),
-                ),
-              ],
-              selected: {_tab},
-              onSelectionChanged: (s) => setState(() => _tab = s.first),
+          if (!readOnly)
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.screenMargin),
+              child: SegmentedButton<int>(
+                segments: const [
+                  ButtonSegment(
+                    value: 0,
+                    label: Text('Daftar Barang'),
+                    icon: Icon(Icons.inventory_2_outlined),
+                  ),
+                  ButtonSegment(
+                    value: 1,
+                    label: Text('Mutasi Stok'),
+                    icon: Icon(Icons.swap_vert_outlined),
+                  ),
+                ],
+                selected: {_tab},
+                onSelectionChanged: (s) => setState(() => _tab = s.first),
+              ),
             ),
-          ),
           Expanded(
-            child: _tab == 0 ? const _DaftarBarangView() : const _MutasiView(),
+            child: readOnly
+                ? const _DaftarBarangView()
+                : (_tab == 0 ? const _DaftarBarangView() : const _MutasiView()),
           ),
         ],
       ),

@@ -226,8 +226,8 @@ if (is_int($idUji)) {
 // ── FR-03 Kelola Kategori ────────────────────────────────────────────
 echo "\nFR-03 Kelola Kategori\n";
 
-status('Kepala Program ditolak dari kategori',
-    req('GET', '/api/kategori', null, $tokenKaprog), 403);
+status('Kepala Program BOLEH membaca kategori (read-only)',
+    req('GET', '/api/kategori', null, $tokenKaprog), 200);
 
 $r = req('GET', '/api/kategori', null, $tokenLaboran);
 status('Laboran melihat daftar kategori', $r, 200);
@@ -264,7 +264,7 @@ ok('pencarian "Lenovo" menemukan hasil', count($r['json']['data'] ?? []) > 0);
 
 $r = req('GET', '/api/barang?cari=A05', null, $tokenLaboran);
 ok('pencarian juga menjangkau kode barang',
-   ($r['json']['data'][0]['kode_barang'] ?? '') === 'A05');
+   ($r['json']['data'][0]['kode_barang'] ?? '') === 'BRG-A05');
 
 $r = req('GET', '/api/barang?cari=%', null, $tokenLaboran);
 ok('wildcard "%" diperlakukan sebagai teks biasa, bukan cocok-semua',

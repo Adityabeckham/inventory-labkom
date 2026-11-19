@@ -108,16 +108,16 @@ void main() {
       }
     });
 
-    test('Kepala Program DITOLAK dari seluruh rute kelola', () {
-      for (final path in ['/users', '/aset', '/kategori', '/peminjam', '/transaksi']) {
+    test('Kepala Program DITOLAK dari rute kelola (kecuali Aset Lab read-only)', () {
+      for (final path in ['/users', '/kategori', '/peminjam', '/transaksi']) {
         expect(isPathAllowedForLevel(path, UserLevel.kepalaProgram), isFalse,
             reason: 'Kepala Program seharusnya ditolak dari $path');
       }
     });
 
-    test('Kepala Program boleh Dashboard, Verifikasi, dan Laporan', () {
-      // Persis scope di Tabel 3.1 Use Case.
-      for (final path in ['/dashboard', '/verifikasi', '/laporan']) {
+    test('Kepala Program boleh Dashboard, Verifikasi, Laporan, dan Aset Lab (read-only)', () {
+      // Persis scope di Tabel 3.1 Use Case + akses read-only Total Barang.
+      for (final path in ['/dashboard', '/verifikasi', '/laporan', '/aset']) {
         expect(isPathAllowedForLevel(path, UserLevel.kepalaProgram), isTrue,
             reason: 'Kepala Program seharusnya boleh $path');
       }

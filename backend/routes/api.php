@@ -63,15 +63,22 @@ $router->put   ('/api/users/{id}', [$user, 'update'],  $laboran);
 $router->delete('/api/users/{id}', [$user, 'destroy'], $laboran);
 
 // ── Sprint 2 — FR-03 Kelola Kategori ─────────────────────────────────
-$router->get   ('/api/kategori',      [$kategori, 'index'],   $laboran);
+// GET dibuka untuk kedua level: Kepala Program perlu membaca kategori
+// (nama + jumlah barang) supaya kartu Total Barang di Dashboard bisa
+// membuka daftar barang read-only seperti Laboran. Yang mengubah tetap
+// hanya Laboran.
+$router->get   ('/api/kategori',      [$kategori, 'index'],   $terdaftar);
 $router->post  ('/api/kategori',      [$kategori, 'store'],   $laboran);
 $router->put   ('/api/kategori/{id}', [$kategori, 'update'],  $laboran);
 $router->delete('/api/kategori/{id}', [$kategori, 'destroy'], $laboran);
 
 // ── Sprint 2 — FR-02 Kelola Barang ───────────────────────────────────
-$router->get   ('/api/barang',      [$barang, 'index'],   $laboran);
+// GET dibuka untuk kedua level: Kepala Program boleh membaca daftar dan
+// detail barang (read-only) lewat kartu Total Barang di Dashboard. Yang
+// membuat/mengubah/menghapus tetap hanya Laboran.
+$router->get   ('/api/barang',      [$barang, 'index'],   $terdaftar);
 $router->post  ('/api/barang',      [$barang, 'store'],   $laboran);
-$router->get   ('/api/barang/{id}', [$barang, 'show'],    $laboran);
+$router->get   ('/api/barang/{id}', [$barang, 'show'],    $terdaftar);
 $router->put   ('/api/barang/{id}', [$barang, 'update'],  $laboran);
 $router->delete('/api/barang/{id}', [$barang, 'destroy'], $laboran);
 

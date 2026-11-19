@@ -107,7 +107,9 @@ bool _isAllowed(String path, UserLevel level) {
     '/transaksi',
     '/pengaturan-denda',
   };
-  final khususKepalaProgram = {'/verifikasi'};
+  // Kepala Program boleh membuka Aset Lab read-only lewat kartu Total
+  // Barang di Dashboard (FR-09 sejalan dengan tampilan barang).
+  final khususKepalaProgram = {'/verifikasi', '/aset'};
 
   return switch (level) {
     UserLevel.laboran =>
